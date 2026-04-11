@@ -30,3 +30,6 @@ desktop.ini
 
 # ── TypeScript cache ──────────────────────────────────────────────────────────
 *.tsbuildinfo
+
+#- OTHER
+.VSCodeCounter/
