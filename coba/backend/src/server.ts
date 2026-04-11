@@ -1,0 +1,27 @@
+// Load environment variables from backend/.env
+import 'dotenv/config'
+
+import { seedProjects } from './seed/projects'
+import { seedTeam } from './seed/team'
+import { seedRequirements } from './seed/requirements'
+import { seedTasks } from './seed/tasks'
+
+import { serve } from '@hono/node-server'
+import app from './index'
+
+const port = Number(process.env.PORT) || 3000
+
+// Run seeds sequentially (seedTeam is async for PDF generation), then start server
+seedProjects()
+seedTeam()
+  .then(() => {
+    seedRequirements()
+    seedTasks()
+    serve({ fetch: app.fetch, port }, (info) => {
+      console.log(`Server running at http://localhost:${info.port}`)
+    })
+  })
+  .catch(err => {
+    console.error('Seed failed:', err)
+    process.exit(1)
+  })

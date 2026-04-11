@@ -1,0 +1,149 @@
+"filename", "language", "JSON", "Markdown", "JSON with Comments", "TypeScript", "PostCSS", "TypeScript JSX", "HTML", "JavaScript", "XML", "comment", "blank", "total"
+"d:\code\.claude\settings.local.json", "JSON", 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8
+"d:\code\CLAUDE.md", "Markdown", 0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 24, 105
+"d:\code\coba\.claude\launch.json", "JSON with Comments", 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 1, 21
+"d:\code\coba\.claude\settings.local.json", "JSON", 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 70
+"d:\code\coba\AGENTS.md", "Markdown", 0, 265, 0, 0, 0, 0, 0, 0, 0, 0, 52, 317
+"d:\code\coba\README.md", "Markdown", 0, 348, 0, 0, 0, 0, 0, 0, 0, 0, 97, 445
+"d:\code\coba\backend\package-lock.json", "JSON", 1548, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1549
+"d:\code\coba\backend\package.json", "JSON", 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 36
+"d:\code\coba\backend\src\db.ts", "TypeScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 1, 5
+"d:\code\coba\backend\src\db\client.ts", "TypeScript", 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 3, 7
+"d:\code\coba\backend\src\db\index.ts", "TypeScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 3, 3, 15
+"d:\code\coba\backend\src\db\schema.ts", "TypeScript", 0, 0, 0, 247, 0, 0, 0, 0, 0, 0, 2, 249
+"d:\code\coba\backend\src\db\statements\features.ts", "TypeScript", 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 2, 7
+"d:\code\coba\backend\src\db\statements\geo.ts", "TypeScript", 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 3, 31
+"d:\code\coba\backend\src\db\statements\projects.ts", "TypeScript", 0, 0, 0, 16, 0, 0, 0, 0, 0, 1, 3, 20
+"d:\code\coba\backend\src\db\statements\requirements.ts", "TypeScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 3, 12
+"d:\code\coba\backend\src\db\statements\structures.ts", "TypeScript", 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 3, 28
+"d:\code\coba\backend\src\db\statements\tasks.ts", "TypeScript", 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 4, 17
+"d:\code\coba\backend\src\db\statements\team.ts", "TypeScript", 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 7, 38
+"d:\code\coba\backend\src\index.ts", "TypeScript", 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 6, 24
+"d:\code\coba\backend\src\lib\generateCv.ts", "TypeScript", 0, 0, 0, 188, 0, 0, 0, 0, 0, 18, 25, 231
+"d:\code\coba\backend\src\lib\parseCv.ts", "TypeScript", 0, 0, 0, 141, 0, 0, 0, 0, 0, 4, 13, 158
+"d:\code\coba\backend\src\lib\parseProject.ts", "TypeScript", 0, 0, 0, 155, 0, 0, 0, 0, 0, 3, 14, 172
+"d:\code\coba\backend\src\lib\parseRequirements.ts", "TypeScript", 0, 0, 0, 126, 0, 0, 0, 0, 0, 4, 22, 152
+"d:\code\coba\backend\src\lib\suggestMembersAi.ts", "TypeScript", 0, 0, 0, 84, 0, 0, 0, 0, 0, 0, 12, 96
+"d:\code\coba\backend\src\router\features.ts", "TypeScript", 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 5, 23
+"d:\code\coba\backend\src\router\geo.ts", "TypeScript", 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 5, 22
+"d:\code\coba\backend\src\router\index.ts", "TypeScript", 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 3, 21
+"d:\code\coba\backend\src\router\projects.ts", "TypeScript", 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 10, 48
+"d:\code\coba\backend\src\router\requirements.ts", "TypeScript", 0, 0, 0, 56, 0, 0, 0, 0, 0, 0, 15, 71
+"d:\code\coba\backend\src\router\structures.ts", "TypeScript", 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 5, 22
+"d:\code\coba\backend\src\router\tasks.ts", "TypeScript", 0, 0, 0, 68, 0, 0, 0, 0, 0, 0, 16, 84
+"d:\code\coba\backend\src\router\team.ts", "TypeScript", 0, 0, 0, 81, 0, 0, 0, 0, 0, 0, 17, 98
+"d:\code\coba\backend\src\schemas\features.ts", "TypeScript", 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 3, 16
+"d:\code\coba\backend\src\schemas\geo.ts", "TypeScript", 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 3, 24
+"d:\code\coba\backend\src\schemas\projects.ts", "TypeScript", 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 4, 28
+"d:\code\coba\backend\src\schemas\requirements.ts", "TypeScript", 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 6, 33
+"d:\code\coba\backend\src\schemas\structures.ts", "TypeScript", 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 3, 24
+"d:\code\coba\backend\src\schemas\tasks.ts", "TypeScript", 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 4, 25
+"d:\code\coba\backend\src\schemas\team.ts", "TypeScript", 0, 0, 0, 66, 0, 0, 0, 0, 0, 0, 6, 72
+"d:\code\coba\backend\src\seed\projects.ts", "TypeScript", 0, 0, 0, 792, 0, 0, 0, 0, 0, 35, 38, 865
+"d:\code\coba\backend\src\seed\requirements.ts", "TypeScript", 0, 0, 0, 72, 0, 0, 0, 0, 0, 7, 9, 88
+"d:\code\coba\backend\src\seed\tasks.ts", "TypeScript", 0, 0, 0, 821, 0, 0, 0, 0, 0, 36, 127, 984
+"d:\code\coba\backend\src\seed\team.ts", "TypeScript", 0, 0, 0, 1574, 0, 0, 0, 0, 0, 41, 112, 1727
+"d:\code\coba\backend\src\server.ts", "TypeScript", 0, 0, 0, 21, 0, 0, 0, 0, 0, 2, 5, 28
+"d:\code\coba\backend\src\services\features.ts", "TypeScript", 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 4, 26
+"d:\code\coba\backend\src\services\geo.ts", "TypeScript", 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 4, 37
+"d:\code\coba\backend\src\services\matching.ts", "TypeScript", 0, 0, 0, 11, 0, 0, 0, 0, 0, 1, 1, 13
+"d:\code\coba\backend\src\services\projects.ts", "TypeScript", 0, 0, 0, 266, 0, 0, 0, 0, 0, 0, 17, 283
+"d:\code\coba\backend\src\services\requirements.ts", "TypeScript", 0, 0, 0, 239, 0, 0, 0, 0, 0, 12, 44, 295
+"d:\code\coba\backend\src\services\structures.ts", "TypeScript", 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 4, 31
+"d:\code\coba\backend\src\services\tasks.ts", "TypeScript", 0, 0, 0, 186, 0, 0, 0, 0, 0, 3, 26, 215
+"d:\code\coba\backend\src\services\team.ts", "TypeScript", 0, 0, 0, 290, 0, 0, 0, 0, 0, 4, 48, 342
+"d:\code\coba\backend\src\trpc.ts", "TypeScript", 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 3, 7
+"d:\code\coba\backend\src\types\features.ts", "TypeScript", 0, 0, 0, 12, 0, 0, 0, 0, 0, 1, 3, 16
+"d:\code\coba\backend\src\types\geo.ts", "TypeScript", 0, 0, 0, 20, 0, 0, 0, 0, 0, 1, 3, 24
+"d:\code\coba\backend\src\types\projects.ts", "TypeScript", 0, 0, 0, 46, 0, 0, 0, 0, 0, 1, 3, 50
+"d:\code\coba\backend\src\types\requirements.ts", "TypeScript", 0, 0, 0, 38, 0, 0, 0, 0, 0, 2, 7, 47
+"d:\code\coba\backend\src\types\structures.ts", "TypeScript", 0, 0, 0, 20, 0, 0, 0, 0, 0, 1, 4, 25
+"d:\code\coba\backend\src\types\tasks.ts", "TypeScript", 0, 0, 0, 21, 0, 0, 0, 0, 0, 1, 6, 28
+"d:\code\coba\backend\src\types\team.ts", "TypeScript", 0, 0, 0, 44, 0, 0, 0, 0, 0, 2, 14, 60
+"d:\code\coba\backend\tsconfig.json", "JSON with Comments", 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 1, 12
+"d:\code\coba\docs\AUTH_PLAN.md", "Markdown", 0, 310, 0, 0, 0, 0, 0, 0, 0, 0, 100, 410
+"d:\code\coba\docs\PROJECT_LAYOUT_PLAN.md", "Markdown", 0, 323, 0, 0, 0, 0, 0, 0, 0, 0, 57, 380
+"d:\code\coba\docs\README.md", "Markdown", 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 5, 34
+"d:\code\coba\docs\TEAM_MEMBER_REWORK_PLAN.md", "Markdown", 0, 401, 0, 0, 0, 0, 0, 0, 0, 0, 151, 552
+"d:\code\coba\docs\TESTING_STRATEGY.md", "Markdown", 0, 806, 0, 0, 0, 0, 0, 0, 0, 0, 200, 1006
+"d:\code\coba\docs\backend\db.md", "Markdown", 0, 52, 0, 0, 0, 0, 0, 0, 0, 0, 14, 66
+"d:\code\coba\docs\backend\lib-generateCv.md", "Markdown", 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 12, 38
+"d:\code\coba\docs\backend\lib-parseCv.md", "Markdown", 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 12, 37
+"d:\code\coba\docs\backend\lib-suggestMembersAi.md", "Markdown", 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 12, 36
+"d:\code\coba\docs\backend\router-features.md", "Markdown", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 11, 34
+"d:\code\coba\docs\backend\router-geo.md", "Markdown", 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 12, 37
+"d:\code\coba\docs\backend\router-projects.md", "Markdown", 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 12, 41
+"d:\code\coba\docs\backend\router-requirements.md", "Markdown", 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 14, 50
+"d:\code\coba\docs\backend\router-structures.md", "Markdown", 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 11, 36
+"d:\code\coba\docs\backend\router-tasks.md", "Markdown", 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 12, 46
+"d:\code\coba\docs\backend\router-team.md", "Markdown", 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 12, 50
+"d:\code\coba\docs\backend\server-and-index.md", "Markdown", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 12, 35
+"d:\code\coba\docs\backend\trpc.md", "Markdown", 0, 18, 0, 0, 0, 0, 0, 0, 0, 0, 11, 29
+"d:\code\coba\docs\frontend\App.md", "Markdown", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 13, 36
+"d:\code\coba\docs\frontend\Home.md", "Markdown", 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 12, 36
+"d:\code\coba\docs\frontend\Layout.md", "Markdown", 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 12, 33
+"d:\code\coba\docs\frontend\ProjectDetail.md", "Markdown", 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 14, 41
+"d:\code\coba\docs\frontend\Requirements.md", "Markdown", 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 12, 38
+"d:\code\coba\docs\frontend\SearchProjects.md", "Markdown", 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 12, 32
+"d:\code\coba\docs\frontend\StatsView.md", "Markdown", 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 13, 37
+"d:\code\coba\docs\frontend\TaskDetail.md", "Markdown", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 14, 37
+"d:\code\coba\docs\frontend\TeamMemberDetail.md", "Markdown", 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 15, 39
+"d:\code\coba\docs\frontend\TeamMembers.md", "Markdown", 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 14, 38
+"d:\code\coba\docs\frontend\auth.md", "Markdown", 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 12, 36
+"d:\code\coba\docs\frontend\i18n-context.md", "Markdown", 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 12, 34
+"d:\code\coba\docs\index.md", "Markdown", 0, 52, 0, 0, 0, 0, 0, 0, 0, 0, 17, 69
+"d:\code\coba\frontend\README.md", "Markdown", 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 14, 74
+"d:\code\coba\frontend\eslint.config.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 2, 24
+"d:\code\coba\frontend\index.html", "HTML", 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 1, 14
+"d:\code\coba\frontend\package-lock.json", "JSON", 3078, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3079
+"d:\code\coba\frontend\package.json", "JSON", 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 35
+"d:\code\coba\frontend\public\favicon.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1
+"d:\code\coba\frontend\public\icons.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 24, 0, 1, 25
+"d:\code\coba\frontend\src\App.css", "PostCSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2
+"d:\code\coba\frontend\src\App.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 47, 0, 0, 0, 2, 9, 58
+"d:\code\coba\frontend\src\api\features.ts", "TypeScript", 0, 0, 0, 19, 0, 0, 0, 0, 0, 2, 6, 27
+"d:\code\coba\frontend\src\api\geo.ts", "TypeScript", 0, 0, 0, 19, 0, 0, 0, 0, 0, 2, 6, 27
+"d:\code\coba\frontend\src\api\projects.ts", "TypeScript", 0, 0, 0, 40, 0, 0, 0, 0, 0, 2, 11, 53
+"d:\code\coba\frontend\src\api\requirements.ts", "TypeScript", 0, 0, 0, 70, 0, 0, 0, 0, 0, 2, 15, 87
+"d:\code\coba\frontend\src\api\structures.ts", "TypeScript", 0, 0, 0, 19, 0, 0, 0, 0, 0, 2, 6, 27
+"d:\code\coba\frontend\src\api\tasks.ts", "TypeScript", 0, 0, 0, 75, 0, 0, 0, 0, 0, 2, 18, 95
+"d:\code\coba\frontend\src\api\team.ts", "TypeScript", 0, 0, 0, 77, 0, 0, 0, 0, 0, 2, 16, 95
+"d:\code\coba\frontend\src\assets\react.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1
+"d:\code\coba\frontend\src\assets\vite.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2
+"d:\code\coba\frontend\src\auth\index.ts", "TypeScript", 0, 0, 0, 43, 0, 0, 0, 0, 0, 21, 14, 78
+"d:\code\coba\frontend\src\components\Layout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 89, 0, 0, 0, 3, 11, 103
+"d:\code\coba\frontend\src\components\UserSwitcher.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 81, 0, 0, 0, 1, 8, 90
+"d:\code\coba\frontend\src\components\shared\Field.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 1, 14
+"d:\code\coba\frontend\src\components\shared\GeoSection.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 68, 0, 0, 0, 0, 4, 72
+"d:\code\coba\frontend\src\components\shared\StructureSection.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 68, 0, 0, 0, 0, 4, 72
+"d:\code\coba\frontend\src\components\shared\index.ts", "TypeScript", 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 1, 7
+"d:\code\coba\frontend\src\constants\geo.ts", "TypeScript", 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 2, 7
+"d:\code\coba\frontend\src\constants\projects.ts", "TypeScript", 0, 0, 0, 31, 0, 0, 0, 0, 0, 1, 6, 38
+"d:\code\coba\frontend\src\constants\structures.ts", "TypeScript", 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 3, 13
+"d:\code\coba\frontend\src\constants\tasks.ts", "TypeScript", 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 2, 12
+"d:\code\coba\frontend\src\i18n\context.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 8, 34
+"d:\code\coba\frontend\src\i18n\en.ts", "TypeScript", 0, 0, 0, 395, 0, 0, 0, 0, 0, 27, 21, 443
+"d:\code\coba\frontend\src\i18n\pt.ts", "TypeScript", 0, 0, 0, 395, 0, 0, 0, 0, 0, 27, 21, 443
+"d:\code\coba\frontend\src\index.css", "PostCSS", 0, 0, 0, 0, 1140, 0, 0, 0, 0, 56, 123, 1319
+"d:\code\coba\frontend\src\main.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 2, 18
+"d:\code\coba\frontend\src\trpc.ts", "TypeScript", 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 4, 21
+"d:\code\coba\frontend\src\types\pages.ts", "TypeScript", 0, 0, 0, 44, 0, 0, 0, 0, 0, 1, 11, 56
+"d:\code\coba\frontend\src\types\suggestions.ts", "TypeScript", 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 1, 7
+"d:\code\coba\frontend\src\utils\download.ts", "TypeScript", 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 2, 13
+"d:\code\coba\frontend\src\utils\format.ts", "TypeScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 4, 13
+"d:\code\coba\frontend\src\views\AddProject.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 317, 0, 0, 0, 4, 23, 344
+"d:\code\coba\frontend\src\views\Home.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 329, 0, 0, 0, 14, 25, 368
+"d:\code\coba\frontend\src\views\ProjectDetail.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 722, 0, 0, 0, 19, 43, 784
+"d:\code\coba\frontend\src\views\Reports.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 405, 0, 0, 0, 11, 25, 441
+"d:\code\coba\frontend\src\views\Requirements.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 633, 0, 0, 0, 15, 63, 711
+"d:\code\coba\frontend\src\views\SearchProjects.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 131, 0, 0, 0, 2, 11, 144
+"d:\code\coba\frontend\src\views\TaskDetail.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 244, 0, 0, 0, 6, 23, 273
+"d:\code\coba\frontend\src\views\TeamMemberDetail.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 529, 0, 0, 0, 21, 39, 589
+"d:\code\coba\frontend\src\views\TeamMembers.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 406, 0, 0, 0, 19, 44, 469
+"d:\code\coba\frontend\tsconfig.app.json", "JSON", 21, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 27
+"d:\code\coba\frontend\tsconfig.json", "JSON with Comments", 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1, 8
+"d:\code\coba\frontend\tsconfig.node.json", "JSON", 20, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 25
+"d:\code\coba\frontend\vite.config.ts", "TypeScript", 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 2, 20
+"d:\code\coba\package-lock.json", "JSON", 332, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 333
+"d:\code\coba\package.json", "JSON", 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 18
+"Total", "-", 5161, 3335, 38, 7484, 1140, 4124, 13, 22, 27, 455, 2404, 24203

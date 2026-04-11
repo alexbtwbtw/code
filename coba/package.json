@@ -1,0 +1,77 @@
+{
+  "name": "coba",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron-dist/main.js",
+  "engines": {
+    "node": ">=25.0.0"
+  },
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+
+    "electron:compile": "npx --prefix backend tsc --project electron/tsconfig.json",
+    "electron:rebuild": "electron-rebuild --module-dir backend",
+    "electron:dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"wait-on tcp:5173 tcp:3000 && electron .\"",
+    "electron:build": "npm run build && npm run electron:rebuild && npm run electron:compile && node scripts/assemble-electron.mjs",
+    "electron:pack": "npm run electron:compile && node scripts/assemble-electron.mjs"
+  },
+  "build": {
+    "appId": "com.coba.app",
+    "productName": "COBA",
+    "asar": false,
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron-dist/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/dist",
+        "to": "backend/dist"
+      },
+      {
+        "from": "backend/node_modules",
+        "to": "backend/node_modules",
+        "filter": [
+          "**/*",
+          "!.bin/**",
+          "!@esbuild/**",
+          "!esbuild/**",
+          "!tsx/**",
+          "!typescript/**",
+          "!@types/**"
+        ]
+      },
+      {
+        "from": "frontend/dist",
+        "to": "frontend/dist"
+      }
+    ],
+    "win": {
+      "target": "dir"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "@types/node": "^25.6.0",
+    "concurrently": "^9.1.2",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "wait-on": "^9.0.5"
+  }
+}
