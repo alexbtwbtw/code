@@ -87,7 +87,7 @@ jobs:
             rm /tmp/backend-artifact.zip
 
             # Write .env file so pm2 picks up secrets on every restart
-            printf 'ANTHROPIC_API_KEY=%s\nS3_FILES_BUCKET=%s\n' "$ANTHROPIC_KEY" "$S3_BUCKET" > /app/.env
+            printf 'ANTHROPIC_API_KEY=%s\nS3_FILES_BUCKET=%s\nDB_PATH=%s\n' "$ANTHROPIC_KEY" "$S3_BUCKET" "$DB_PATH" > /app/.env
 
             pm2 reload /app/ecosystem.config.cjs --update-env \
               || pm2 start /app/ecosystem.config.cjs
