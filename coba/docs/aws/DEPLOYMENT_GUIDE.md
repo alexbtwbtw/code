@@ -47,10 +47,10 @@ cd terraform/environments/poc
 terraform init
 
 # Preview what will be created (read the output carefully)
-terraform plan -var="github_repo=YOUR_GITHUB_ORG/YOUR_REPO_NAME"
+terraform plan
 
 # Apply — this provisions EC2, EBS, S3, CloudFront, IAM
-terraform apply -var="github_repo=YOUR_GITHUB_ORG/YOUR_REPO_NAME"
+terraform apply
 ```
 
 **What gets created:**
@@ -65,8 +65,7 @@ terraform apply -var="github_repo=YOUR_GITHUB_ORG/YOUR_REPO_NAME"
 | S3 `coba-frontend-…` | Static frontend assets (public via CloudFront) |
 | CloudFront distribution | HTTPS with default `*.cloudfront.net` cert |
 | SSM parameters | `/coba/poc/anthropic-api-key`, etc. |
-| IAM OIDC provider | `token.actions.githubusercontent.com` |
-| IAM deploy role | `coba-github-actions-role` — trusted by your repo |
+| IAM role (EC2) | Grants EC2 access to S3, SSM, and CloudWatch Logs |
 
 **Collect the outputs** (you'll need them in step 3):
 
