@@ -89,7 +89,7 @@ resource "aws_instance" "backend" {
 
     # Create app and log directories with correct ownership
     mkdir -p /app /var/log/coba
-    chown -R ec2-user:ec2-user /app /var/log/coba
+    chown -R ec2-user:ec2-user /app /var/log/coba /data
   EOF
 
   tags = { Name = "coba-poc-backend" }
