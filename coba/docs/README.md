@@ -4,6 +4,17 @@ File-level documentation for all main source files in the COBA project.
 
 See [index.md](index.md) for the full directory with links to every doc.
 
+## AWS Deployment
+
+- [Overview](aws/overview.md) — architecture, costs, EC2 vs Fargate comparison
+- [Database](aws/database.md) — SQLite on EBS
+- [Storage](aws/storage.md) — S3 for CV files and frontend
+- [Compute & Networking](aws/compute.md) — EC2, CloudFront, networking, secrets
+- [Terraform](aws/terraform.md) — full HCL for all modules
+- [Deploy Pipeline](aws/pipeline.md) — GitHub Actions workflow
+- [Codebase Changes](aws/codebase-changes.md) — what to change in the app
+- [Rollout Order](aws/rollout.md) — step-by-step deployment sequence
+
 ## Quick Navigation
 
 - [Backend entry points](backend/server-and-index.md) — server.ts + index.ts
