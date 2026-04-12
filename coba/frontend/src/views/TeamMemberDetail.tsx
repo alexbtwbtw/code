@@ -524,26 +524,18 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
               {!memberTime?.length ? (
                 <p className="muted">{t('timeEmpty')}</p>
               ) : (
-                <table className="time-table">
-                  <thead>
-                    <tr>
-                      <th>{t('timeDate')}</th>
-                      <th>{t('timeProject')}</th>
-                      <th>{t('timeHours')}</th>
-                      <th>{t('timeDesc')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {memberTime.map(entry => (
-                      <tr key={entry.id}>
-                        <td>{entry.date.slice(0, 10)}</td>
-                        <td>{entry.projectName}</td>
-                        <td>{entry.hours.toFixed(1)}</td>
-                        <td>{entry.description}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="time-list">
+                  {memberTime.map(entry => (
+                    <div key={entry.id} className="time-entry">
+                      <span className="time-entry-date">{entry.date.slice(0, 10)}</span>
+                      <div className="time-entry-meta">
+                        <span className="time-entry-who">{entry.projectName}</span>
+                        {entry.description && <span className="time-entry-desc">{entry.description}</span>}
+                      </div>
+                      <span className="time-entry-hours">{entry.hours.toFixed(1)} h</span>
+                    </div>
+                  ))}
+                </div>
               )}
             </>
           )
