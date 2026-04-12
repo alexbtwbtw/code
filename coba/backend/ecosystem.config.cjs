@@ -8,6 +8,7 @@ module.exports = {
       PORT: '3000',
       USE_REAL_AI: 'false',
       AWS_REGION: 'eu-west-2',
+      DB_PATH: '/data/coba.db',
     },
     log_date_format: 'YYYY-MM-DD HH:mm:ss',
     error_file: '/var/log/coba/err.log',
