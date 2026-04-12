@@ -50,3 +50,4 @@ e2e/playwright-report/
 !**/*.tfvars.example
 **/*.auto.tfvars
 terraform/bootstrap/.terraform.lock.hcl
+**/*.pem
