@@ -1009,16 +1009,214 @@ div.tagged-project-row:hover { border-color: var(--border); }
   .report-tables { grid-template-columns: 1fr; }
   .form-grid--3 { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 700px) {
-  .topbar-inner { padding: 0 16px; gap: 16px; }
+
+/* ── Tablet (≤ 768px) ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Topbar: allow nav to wrap under brand row */
+  .topbar-inner {
+    padding: 0 16px;
+    gap: 8px;
+    height: auto;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .topbar-brand { flex-shrink: 0; }
+  .topbar-nav {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 2px;
+    flex: none;
+  }
+  .nav-btn { padding: 7px 12px; font-size: 12.5px; }
+  .lang-btn { margin-left: 0; }
+  .user-switcher { margin-left: auto; }
+
+  /* Main layout */
   .main { padding: 16px 14px 40px; }
-  .project-hero { padding: 24px 22px; }
-  .project-name { font-size: 22px; }
+  .breadcrumb-inner { padding: 8px 14px; }
+
+  /* Headings */
+  .search-header h1,
+  .view-header h1 { font-size: 19px; }
+  .project-name  { font-size: 22px; }
+  .task-hero-title { font-size: 20px; }
+
+  /* Project hero */
+  .project-hero { padding: 22px 20px; }
+  .project-hero-top { flex-wrap: wrap; gap: 10px; }
+
+  /* Project list */
   .project-list { grid-template-columns: 1fr; }
-  .kpi-grid { grid-template-columns: 1fr 1fr; }
-  .form-grid--2, .form-grid--3 { grid-template-columns: 1fr; }
+
+  /* Detail cards: 2 columns on tablet */
   .detail-cards { grid-template-columns: repeat(2, 1fr); }
+
+  /* Form grids */
+  .form-grid--2, .form-grid--3 { grid-template-columns: 1fr; }
+
+  /* Geo / structure grids */
   .geo-grid { grid-template-columns: 1fr; }
+  .structure-grid { grid-template-columns: 1fr; }
+  .history-sub-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Detail section padding */
+  .detail-section { padding: 18px 16px; }
+  .form-section   { padding: 18px 16px; }
+
+  /* KPI grid */
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .report-tables { grid-template-columns: 1fr; }
+
+  /* Member grid */
+  .member-grid { grid-template-columns: 1fr; }
+
+  /* Member hero */
+  .member-hero { padding: 22px 20px; gap: 16px; }
+
+  /* Requirement books */
+  .req-books-grid { grid-template-columns: 1fr; }
+
+  /* Section heading rows: let buttons wrap below titles */
+  .section-heading-row { flex-wrap: wrap; gap: 10px; }
+
+  /* Header action rows */
+  .req-detail-hero { flex-wrap: wrap; }
+  .req-detail-actions { flex-wrap: wrap; }
+
+  /* Suggest panel */
+  .suggest-controls { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+  /* Tables: make horizontally scrollable */
+  .report-table-card { overflow-x: auto; }
+  .report-table { min-width: 300px; }
+  .priority-list-table-wrap { overflow-x: auto; }
+  .oversight-risk-table { min-width: 420px; }
+
+  /* Task hero */
+  .task-hero { padding: 20px 16px; }
+  .task-hero-top { flex-wrap: wrap; gap: 8px; }
+  .task-hero-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
+
+  /* Form actions */
+  .form-actions { flex-wrap: wrap; }
+
+  /* CV add actions */
+  .cv-add-actions { flex-wrap: wrap; }
+
+  /* User switcher dropdown */
+  .user-switcher-dropdown { width: 280px; }
+
+  /* Filter row: stack filters */
+  .filter-row { gap: 8px; }
+  .filter-row select,
+  .filter-row input { flex: 1 1 calc(50% - 8px); min-width: 120px; }
+
+  /* Report filter bar */
+  .report-filter-bar { flex-wrap: wrap; gap: 6px; }
+
+  /* Tagged project rows */
+  .tagged-project-row { flex-wrap: wrap; }
+  .tagged-project-name { min-width: 0; flex-basis: 60%; }
+}
+
+/* ── Phone (≤ 480px) ───────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Topbar: tighter */
+  .topbar-inner { padding: 8px 12px; gap: 6px; }
+  .brand-logo   { font-size: 17px; letter-spacing: 3px; }
+  .brand-sub    { display: none; }
+  .brand-divider { display: none; }
+  .nav-btn      { padding: 6px 10px; font-size: 12px; }
+
+  /* Main */
+  .main { padding: 12px 10px 32px; }
+  .breadcrumb-inner { padding: 6px 10px; font-size: 12px; }
+
+  /* Headings */
+  .search-header h1,
+  .view-header h1 { font-size: 17px; }
+  .project-name   { font-size: 19px; }
+  .task-hero-title { font-size: 18px; }
+  .req-detail-title { font-size: 18px; }
+
+  /* Project hero */
+  .project-hero { padding: 16px 14px; border-radius: var(--r-sm); }
+  .project-client { font-size: 13px; }
+
+  /* Detail cards: single column on phones */
+  .detail-cards { grid-template-columns: 1fr; }
+
+  /* KPI grid: 2 columns still fine */
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kpi-value { font-size: 22px; }
+
+  /* Section padding */
+  .detail-section { padding: 14px 12px; }
+  .form-section   { padding: 14px 12px; }
+
+  /* History sub-grid: 1 col */
+  .history-sub-grid { grid-template-columns: 1fr; }
+
+  /* Member hero: stack avatar + info */
+  .member-hero { flex-direction: column; align-items: center; text-align: center; padding: 18px 14px; }
+  .member-hero-contacts { justify-content: center; }
+  .member-hero-top { flex-wrap: wrap; justify-content: center; }
+
+  /* Member card: full width */
+  .member-card { width: 100%; }
+
+  /* Inputs always full width */
+  .filter-row select,
+  .filter-row input { flex: 1 1 100%; }
+
+  /* Form actions: stack */
+  .form-actions { flex-direction: column; align-items: stretch; }
+  .form-actions .btn-submit,
+  .form-actions .btn-cancel { width: 100%; text-align: center; justify-content: center; }
+
+  /* Search header: stack */
+  .search-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+  /* Suggest card: stack rank/avatar inline still ok, but tighten */
+  .suggest-card { padding: 10px 12px; gap: 8px; }
+  .suggest-card-badges { flex-wrap: wrap; }
+
+  /* Task hero */
+  .task-hero { padding: 14px 12px; }
+  .task-meta-row { gap: 10px; }
+
+  /* Task detail page */
+  .task-detail-page { max-width: 100%; }
+
+  /* Req assign form: stack */
+  .req-assign-form { flex-direction: column; align-items: stretch; }
+  .req-assign-form .input { width: 100%; }
+
+  /* CV upload row */
+  .cv-upload-row { flex-wrap: wrap; }
+  .cv-add-actions { flex-direction: column; align-items: stretch; }
+
+  /* Report filter bar */
+  .report-filter-bar { flex-wrap: wrap; }
+  .report-filter-btn { font-size: 12px; padding: 5px 12px; }
+
+  /* Tables: ensure scrollable on small screens */
+  .report-table-card { padding: 14px 12px; overflow-x: auto; }
+
+  /* Geo form card */
+  .geo-form-card { padding: 14px 14px; }
+  .geo-form-header { flex-wrap: wrap; gap: 8px; }
+
+  /* Tagged project: simplify */
+  .tagged-project-ref { display: none; }
+
+  /* Priority table */
+  .priority-tasks-list { padding-left: 1rem; }
+
+  /* User switcher dropdown: full width on phone */
+  .user-switcher-dropdown { width: calc(100vw - 24px); right: -10px; }
 }
 
 /* ── Tasks ──────────────────────────────────────────────────────────────── */
