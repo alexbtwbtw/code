@@ -67,3 +67,11 @@ module "cdn" {
   ec2_public_dns                  = module.compute.public_dns
   frontend_bucket_regional_domain = module.storage.frontend_bucket_regional_domain
 }
+
+# ── GitHub Actions OIDC role ──────────────────────────────────────────────────
+module "github_oidc" {
+  source = "../../modules/github_oidc"
+
+  github_repo          = var.github_repo
+  frontend_bucket_name = var.frontend_bucket_name
+}

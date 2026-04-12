@@ -29,3 +29,8 @@ variable "anthropic_api_key" {
   sensitive   = true
   description = "Pass via TF_VAR_anthropic_api_key env var — never hardcode"
 }
+
+variable "github_repo" {
+  type        = string
+  description = "GitHub repo in owner/name format, e.g. alexbtwbtw/code"
+}
