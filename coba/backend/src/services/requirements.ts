@@ -219,6 +219,7 @@ export function matchMembersLocal(requirementId: number, topN: number) {
       cvId: m.cvId, cvFilename: m.cvFilename,
       recentHistory: m.recentHistory.map(h => ({ projectName: h.project_name, category: h.category, country: h.country })),
       score, rationale, evidence,
+      cvPageRef: null as number | null,
     }
   })
 
@@ -243,10 +244,21 @@ export async function matchMembersAi(requirementId: number, topN: number) {
     yearsExperience: req.yearsExperience, certifications: req.certifications,
     description: req.description, notes: req.notes,
   }
-  const membersPayload = memberData.map(m => ({
-    id: m.id, name: m.name, title: m.title, bio: m.bio,
-    history: m.historyCats.map((c, i) => ({ category: c, project: m.recentHistory[i]?.project_name ?? '' })),
-  }))
+  // Include full history notes so the AI can reference specific project entries
+  const fullHistory = memberData.map(m => {
+    const rows = db.prepare(
+      `SELECT project_name, category, country, notes FROM member_history WHERE team_member_id = ? ORDER BY created_at DESC LIMIT 5`
+    ).all(m.id) as { project_name: string; category: string; country: string; notes: string }[]
+    return { id: m.id, history: rows }
+  })
+
+  const membersPayload = memberData.map(m => {
+    const hist = fullHistory.find(h => h.id === m.id)?.history ?? []
+    return {
+      id: m.id, name: m.name, title: m.title, bio: m.bio,
+      history: hist.map(h => ({ projectName: h.project_name, category: h.category, country: h.country, notes: h.notes })),
+    }
+  })
 
   const prompt = `You are helping find the best team members for a single engineering requirement ("Requisito de Engenharia").
 
@@ -262,7 +274,8 @@ Return ONLY a JSON array of exactly ${topN} objects ordered best-to-worst:
 [{
   "memberId": <number>,
   "rationale": "<1-2 sentences in Portuguese explaining why this person fits this specific requirement>",
-  "evidence": "<verbatim excerpt copied word-for-word from the candidate's bio field — do NOT paraphrase or rewrite, quote exactly as written; use empty string if nothing relevant>"
+  "evidence": "<Specific evidence string that: (1) quotes a short verbatim excerpt from the candidate's bio field AND/OR (2) references at least one specific history entry by project name (e.g. 'Projeto X — notas: ...'). Combine both sources if relevant. Do NOT invent or paraphrase — only use text that appears verbatim in the bio or history.notes fields. Use empty string if nothing relevant.>",
+  "cvPageRef": <estimated PDF page number (integer, 1-based) where the most relevant history entry appears in the CV — typically page 1 is bio/summary, pages 2+ are project history entries in order; null if unsure>
 }]
 
 No markdown, no extra text — only the JSON array.`
@@ -276,7 +289,7 @@ No markdown, no extra text — only the JSON array.`
   const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
   const jsonText = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
 
-  let aiResults: { memberId: number; rationale: string; evidence: string }[]
+  let aiResults: { memberId: number; rationale: string; evidence: string; cvPageRef?: number | null }[]
   try { aiResults = JSON.parse(jsonText) } catch {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Resposta inválida da IA. Tente novamente.' })
   }
@@ -289,6 +302,7 @@ No markdown, no extra text — only the JSON array.`
       cvId: m?.cvId ?? null, cvFilename: m?.cvFilename ?? null,
       recentHistory: (m?.recentHistory ?? []).map(h => ({ projectName: h.project_name, category: h.category, country: h.country })),
       rationale: r.rationale, evidence: r.evidence ?? '',
+      cvPageRef: typeof r.cvPageRef === 'number' ? r.cvPageRef : null,
     }
   })
 }

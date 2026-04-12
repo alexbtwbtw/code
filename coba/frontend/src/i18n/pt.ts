@@ -327,6 +327,9 @@ export const pt: Record<TranslationKey, string> = {
   importSelectAll: 'Selecionar todos',
   importDeselectAll: 'Desselecionar todos',
   importSourceEvidence: 'Origem',
+  suggestEvidenceLabel: 'Evidência',
+  suggestOpenCv: 'Abrir CV',
+  suggestOpenCvPage: 'Ver no CV (pág. {page})',
 
   // Tasks
   tasksTitle: 'Tarefas',

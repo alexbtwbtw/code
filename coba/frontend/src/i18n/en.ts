@@ -325,6 +325,9 @@ export const en = {
   importSelectAll: 'Select all',
   importDeselectAll: 'Deselect all',
   importSourceEvidence: 'Source',
+  suggestEvidenceLabel: 'Evidence',
+  suggestOpenCv: 'Open CV',
+  suggestOpenCvPage: 'See in CV (p. {page})',
 
   // Tasks
   tasksTitle: 'Tasks',

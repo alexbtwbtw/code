@@ -6,6 +6,7 @@ import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { appRouter } from './router'
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
+import { db } from './db'
 
 const app = new Hono()
 
@@ -34,6 +35,25 @@ app.use('*', cors({
 // ── API routes ─────────────────────────────────────────────────────────────────
 
 app.get('/api/health', (c) => c.json({ status: 'ok' }))
+
+// Serve CV PDFs inline so the browser can display them (with #page=N fragment)
+app.get('/api/cv/:cvId', (c) => {
+  const cvId = parseInt(c.req.param('cvId'), 10)
+  if (isNaN(cvId)) return c.json({ error: 'Invalid CV id' }, 400)
+  const row = db.prepare(`SELECT file_data, filename FROM member_cvs WHERE id = ?`).get(cvId) as
+    { file_data: string; filename: string } | undefined
+  if (!row) return c.json({ error: 'CV not found' }, 404)
+  const bytes = Buffer.from(row.file_data, 'base64')
+  return new Response(bytes, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="${row.filename}"`,
+      'Content-Length': String(bytes.length),
+      'Cache-Control': 'private, max-age=3600',
+    },
+  })
+})
 
 app.all('/trpc/*', (c) =>
   fetchRequestHandler({

@@ -30,6 +30,7 @@ export type AiSuggestion = {
   memberId: number
   rationale: string
   evidence: string
+  cvPageRef: number | null
 }
 
 // ── Mock / real dispatcher ────────────────────────────────────────────────────
@@ -80,7 +81,8 @@ Return ONLY a JSON array of exactly ${topN} objects (fewer if there are fewer ca
   {
     "memberId": <number>,
     "rationale": "<1-2 sentences in Portuguese explaining why this person is a strong fit>",
-    "evidence": "<verbatim excerpt copied word-for-word from the candidate's bio field above — do NOT paraphrase or rewrite, quote exactly as written; use empty string if nothing relevant>"
+    "evidence": "<A specific evidence string that: (1) quotes a short verbatim excerpt from the candidate's bio field AND/OR (2) references at least one specific history entry by project name (e.g. 'Projeto X — notas: ...'). Combine both sources if relevant. Do NOT invent or paraphrase — only use text that appears verbatim in the bio or history.notes fields. Use empty string if nothing relevant.>",
+    "cvPageRef": <estimated PDF page number (integer, 1-based) where the most relevant history entry appears in the CV, or null if unknown>
   }
 ]
 
@@ -109,5 +111,10 @@ No markdown, no extra text — only the JSON array.`
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI returned unexpected format.' })
   }
 
-  return (parsed as AiSuggestion[]).filter(s => typeof s.memberId === 'number' && typeof s.rationale === 'string')
+  return (parsed as AiSuggestion[])
+    .filter(s => typeof s.memberId === 'number' && typeof s.rationale === 'string')
+    .map(s => ({
+      ...s,
+      cvPageRef: typeof s.cvPageRef === 'number' ? s.cvPageRef : null,
+    }))
 }
