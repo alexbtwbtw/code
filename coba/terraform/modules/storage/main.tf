@@ -16,7 +16,9 @@ resource "aws_s3_bucket_cors_configuration" "files" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT", "POST"]
-    allowed_origins = ["https://${var.domain_name}"]
+    # Allow any origin since the CloudFront domain isn't known at plan time.
+    # The bucket is private — CORS only applies to presigned URL requests from the browser.
+    allowed_origins = ["*"]
     max_age_seconds = 3000
   }
 }
