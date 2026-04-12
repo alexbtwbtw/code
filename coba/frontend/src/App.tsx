@@ -9,6 +9,9 @@ import TeamMembers from './views/TeamMembers'
 import TeamMemberDetail from './views/TeamMemberDetail'
 import Requirements, { RequirementBookDetail } from './views/Requirements'
 import TaskDetail from './views/TaskDetail'
+import CompanyTeams from './views/CompanyTeams'
+import AdminPanel from './views/AdminPanel'
+import TimeReport from './views/TimeReport'
 import { type Page, pageToPath, pathToPage } from './types/pages'
 
 export type { Page }
@@ -52,6 +55,9 @@ export default function App() {
       {page.view === 'requirements'     && <Requirements onNavigate={navigate} />}
       {page.view === 'requirement-book' && <RequirementBookDetail id={page.id} onNavigate={navigate} />}
       {page.view === 'task'             && <TaskDetail id={page.id} projectId={page.projectId} projectName={page.projectName} onNavigate={navigate} />}
+      {page.view === 'company-teams'    && <CompanyTeams />}
+      {page.view === 'admin'            && <AdminPanel />}
+      {page.view === 'time-report'      && <TimeReport />}
     </Layout>
   )
 }

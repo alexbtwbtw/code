@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Page } from '../App'
 import { useTranslation } from '../i18n/context'
+import { useCurrentUser } from '../auth'
 import UserSwitcher from './UserSwitcher'
 
 interface Props {
@@ -11,12 +12,14 @@ interface Props {
 
 export default function Layout({ page, onNavigate, children }: Props) {
   const { t, lang, setLang } = useTranslation()
+  const { user } = useCurrentUser()
+  const isOversight = user?.role === 'oversight'
 
   const activeTab = (page.view === 'project') ? 'search'
     : (page.view === 'member') ? 'team'
     : (page.view === 'requirement-book') ? 'requirements'
     : (page.view === 'task') ? 'search'
-    : page.view
+    : page.view as string
 
   const hasBreadcrumb = page.view === 'project' || page.view === 'member' || page.view === 'requirement-book'
 
@@ -37,7 +40,12 @@ export default function Layout({ page, onNavigate, children }: Props) {
             <NavBtn active={activeTab === 'add'}          label={t('navAdd')}          onClick={() => onNavigate({ view: 'add' })} />
             <NavBtn active={activeTab === 'team'}         label={t('navTeam')}         onClick={() => onNavigate({ view: 'team' })} />
             <NavBtn active={activeTab === 'requirements'} label={t('navRequirements')} onClick={() => onNavigate({ view: 'requirements' })} />
-            <NavBtn active={activeTab === 'reports'}      label={t('navReports')}      onClick={() => onNavigate({ view: 'reports' })} />
+            <NavBtn active={activeTab === 'reports'}       label={t('navReports')}       onClick={() => onNavigate({ view: 'reports' })} />
+            <NavBtn active={activeTab === 'time-report'}   label={t('timeReportNav')}    onClick={() => onNavigate({ view: 'time-report' })} />
+            <NavBtn active={activeTab === 'company-teams'} label={t('companyTeamsNav')} onClick={() => onNavigate({ view: 'company-teams' })} />
+            {isOversight && (
+              <NavBtn active={activeTab === 'admin'} label={t('adminNav')} onClick={() => onNavigate({ view: 'admin' })} />
+            )}
           </nav>
 
           <button

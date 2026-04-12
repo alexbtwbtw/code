@@ -458,6 +458,16 @@ export const en = {
   timeEmpty: 'No time logged yet.',
   timeNoUser: 'Select a user to log time.',
 
+  // Time Report
+  timeReportNav: 'Time Report',
+  timeReportTitle: 'Time Tracking Report',
+  timeReportTotalHours: 'Total Hours Logged',
+  timeReportActiveMembers: 'Members Logging Time',
+  timeReportUnderreporting: 'Members with No Time Logged',
+  timeReportByProject: 'Hours by Project',
+  timeReportByMember: 'Hours by Member',
+  timeReportNoData: 'No time entries yet.',
+
   // Company Teams
   companyTeamsNav: 'Company Teams',
   companyTeamsTitle: 'Company Teams',

@@ -460,6 +460,16 @@ export const pt: Record<TranslationKey, string> = {
   timeEmpty: 'Sem tempo registado.',
   timeNoUser: 'Selecione um utilizador para registar tempo.',
 
+  // Time Report
+  timeReportNav: 'Relatório de Tempo',
+  timeReportTitle: 'Relatório de Registo de Tempo',
+  timeReportTotalHours: 'Total de Horas Registadas',
+  timeReportActiveMembers: 'Membros a Registar Tempo',
+  timeReportUnderreporting: 'Membros sem Tempo Registado',
+  timeReportByProject: 'Horas por Projeto',
+  timeReportByMember: 'Horas por Membro',
+  timeReportNoData: 'Sem registos de tempo.',
+
   // Company Teams
   companyTeamsNav: 'Equipas Internas',
   companyTeamsTitle: 'Equipas Internas',

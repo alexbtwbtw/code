@@ -9,6 +9,9 @@ export type Page =
   | { view: 'requirements' }
   | { view: 'requirement-book'; id: number; title?: string }
   | { view: 'task'; id: number; projectId: number; projectName?: string }
+  | { view: 'admin' }
+  | { view: 'company-teams' }
+  | { view: 'time-report' }
 
 // ── URL ↔ Page mapping ──────────────────────────────────────────────────────
 
@@ -24,18 +27,24 @@ export function pageToPath(page: Page): string {
     case 'requirements':     return '/requirements'
     case 'requirement-book': return `/requirements/${page.id}`
     case 'task':             return `/projects/${page.projectId}/tasks/${page.id}`
+    case 'admin':            return '/admin'
+    case 'company-teams':    return '/company-teams'
+    case 'time-report':      return '/time-report'
   }
 }
 
 export function pathToPage(path: string): Page {
   const s = path.replace(/\/+$/, '') || '/'
 
-  if (s === '/')            return { view: 'home' }
-  if (s === '/projects')    return { view: 'search' }
-  if (s === '/add')         return { view: 'add' }
-  if (s === '/reports')     return { view: 'reports' }
-  if (s === '/team')        return { view: 'team' }
-  if (s === '/requirements') return { view: 'requirements' }
+  if (s === '/')              return { view: 'home' }
+  if (s === '/projects')      return { view: 'search' }
+  if (s === '/add')           return { view: 'add' }
+  if (s === '/reports')       return { view: 'reports' }
+  if (s === '/team')          return { view: 'team' }
+  if (s === '/requirements')  return { view: 'requirements' }
+  if (s === '/admin')         return { view: 'admin' }
+  if (s === '/company-teams') return { view: 'company-teams' }
+  if (s === '/time-report')   return { view: 'time-report' }
 
   let m: RegExpMatchArray | null
 
