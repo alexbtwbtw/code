@@ -91,7 +91,7 @@ export default function SearchProjects({ onNavigate }: Props) {
             return (
               <button
                 key={p.id}
-                className="project-card"
+                className={`project-card project-card--${p.status}`}
                 onClick={() => onNavigate({ view: 'project', id: p.id, name: p.name })}
               >
                 <div className="pc-top">
