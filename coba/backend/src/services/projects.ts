@@ -11,7 +11,8 @@ export function listProjects(input: {
   sortBy: 'relevance' | 'newest' | 'budget' | 'priority'
 }) {
   let sql = `
-    SELECT DISTINCT p.*
+    SELECT DISTINCT p.*,
+      COALESCE((SELECT SUM(t.hours) FROM time_entries t WHERE t.project_id = p.id), 0) AS total_hours
     FROM projects p
     LEFT JOIN geo_entries g ON g.project_id = p.id
     WHERE 1=1
@@ -45,7 +46,7 @@ export function listProjects(input: {
   if (input.country)  { sql += ` AND p.country LIKE ?`;      params.push(`%${input.country}%`) }
 
   if (input.sortBy === 'budget') {
-    sql += ` ORDER BY p.budget DESC NULLS LAST`
+    sql += ` ORDER BY total_hours DESC`
   } else if (input.sortBy === 'newest') {
     sql += ` ORDER BY p.start_date DESC NULLS LAST`
   } else if (input.sortBy === 'priority') {

@@ -373,7 +373,7 @@ export const pt: Record<TranslationKey, string> = {
   filterPlanningActive: 'Planeamento + Ativos',
   sortRelevance: 'Relevância',
   sortNewest: 'Mais Recentes',
-  sortBudget: 'Orçamento',
+  sortBudget: 'Mais Horas',
   reportsFilterAll: 'Todos os Projetos',
   reportsFilterActive: 'Apenas Ativos',
   reportsOverdueTitle: 'Tarefas em Atraso',

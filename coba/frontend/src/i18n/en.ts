@@ -371,7 +371,7 @@ export const en = {
   filterPlanningActive: 'Planning + Active',
   sortRelevance: 'Relevance',
   sortNewest: 'Most Recent',
-  sortBudget: 'Budget',
+  sortBudget: 'Most Hours',
   reportsFilterAll: 'All Projects',
   reportsFilterActive: 'Active Only',
   reportsOverdueTitle: 'Overdue Tasks',

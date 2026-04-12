@@ -21,6 +21,7 @@ export type RawProject = {
   tags: string
   created_at: string
   updated_at: string
+  total_hours?: number
 }
 
 export function mapProject(r: RawProject) {
@@ -45,5 +46,6 @@ export function mapProject(r: RawProject) {
     tags: r.tags,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
+    totalHours: r.total_hours ?? 0,
   }
 }
