@@ -50,9 +50,17 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: coba/frontend/package-lock.json
+          cache-dependency-path: |
+            coba/frontend/package-lock.json
+            coba/backend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install backend dependencies
+        # tsc -b follows the @backend path alias into ../backend/src and needs
+        # backend's node_modules to resolve @trpc/server, zod, etc.
+        run: npm ci
+        working-directory: coba/backend
+
+      - name: Install frontend dependencies
         run: npm ci
 
       - name: Typecheck
