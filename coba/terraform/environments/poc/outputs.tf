@@ -25,6 +25,6 @@ output "ec2_private_key" {
 }
 
 output "github_actions_role_arn" {
-  description = "Add this as the GITHUB_ACTIONS_ROLE_ARN variable in your GitHub repo"
+  description = "Add this as the AWS_DEPLOY_ROLE_ARN variable in your GitHub repo"
   value       = module.github_oidc.role_arn
 }
