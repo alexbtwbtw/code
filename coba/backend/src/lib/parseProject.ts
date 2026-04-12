@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { STRUCTURE_TYPES } from '../router/structures'
+import { STRUCTURE_TYPES } from '../types/structures'
 
 // ── Output schema ─────────────────────────────────────────────────────────────
 

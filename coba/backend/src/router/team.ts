@@ -55,7 +55,7 @@ export const teamRouter = router({
       teamMemberId: z.number().int(),
       filename:     z.string(),
       fileSize:     z.number().int(),
-      fileData:     z.string(),
+      fileData:     z.string().optional(),
     }))
     .mutation(({ input }) => teamService.attachCv(input)),
 
