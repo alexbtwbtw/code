@@ -8,11 +8,6 @@ variable "account_id" {
   description = "12-digit AWS account ID"
 }
 
-variable "ssh_key_name" {
-  type        = string
-  description = "Name of the EC2 key pair for SSH access"
-}
-
 variable "deploy_ssh_cidr" {
   type        = string
   description = "CIDR allowed to SSH — restrict to your IP or GitHub Actions IPs in production"
