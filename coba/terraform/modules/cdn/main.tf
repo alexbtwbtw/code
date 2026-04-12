@@ -14,7 +14,7 @@ resource "aws_cloudfront_distribution" "main" {
   # Origin 1: EC2 backend (port 3000)
   origin {
     origin_id   = "ec2-backend"
-    domain_name = var.ec2_public_dns
+    domain_name = var.ec2_public_ip
     custom_origin_config {
       http_port              = 3000
       https_port             = 443

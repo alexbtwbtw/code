@@ -64,7 +64,7 @@ module "storage" {
 module "cdn" {
   source = "../../modules/cdn"
 
-  ec2_public_dns                  = module.compute.public_dns
+  ec2_public_ip                   = module.networking.elastic_ip
   frontend_bucket_regional_domain = module.storage.frontend_bucket_regional_domain
 }
 
