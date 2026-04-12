@@ -64,7 +64,8 @@ db.exec(`
     team_member_id INTEGER NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
     filename       TEXT    NOT NULL DEFAULT '',
     file_size      INTEGER NOT NULL DEFAULT 0,
-    file_data      TEXT    NOT NULL DEFAULT '',
+    file_data      TEXT,
+    s3_key         TEXT,
     uploaded_at    TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 

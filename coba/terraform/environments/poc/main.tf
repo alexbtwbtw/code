@@ -1,0 +1,60 @@
+terraform {
+  required_version = ">= 1.6"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.region
+}
+
+# ── Compute (EC2 + EBS + IAM + SSM) ──────────────────────────────────────────
+# Note: compute module is declared before networking so that its instance_id
+# can be passed into networking for the Elastic IP association.
+module "compute" {
+  source = "../../modules/compute"
+
+  region            = var.region
+  account_id        = var.account_id
+  public_subnet_id  = module.networking.public_subnet_id
+  ec2_sg_id         = module.networking.ec2_sg_id
+  ssh_key_name      = var.ssh_key_name
+  files_bucket_name = var.files_bucket_name
+  anthropic_api_key = var.anthropic_api_key
+}
+
+# ── Networking (VPC + subnet + IGW + SG + EIP) ───────────────────────────────
+module "networking" {
+  source = "../../modules/networking"
+
+  region          = var.region
+  deploy_ssh_cidr = var.deploy_ssh_cidr
+  ec2_instance_id = module.compute.instance_id
+}
+
+# ── Storage (S3 files + S3 frontend + VPC endpoint) ──────────────────────────
+module "storage" {
+  source = "../../modules/storage"
+
+  region                      = var.region
+  vpc_id                      = module.networking.vpc_id
+  public_route_table_id       = module.networking.public_route_table_id
+  files_bucket_name           = var.files_bucket_name
+  frontend_bucket_name        = var.frontend_bucket_name
+  domain_name                 = var.domain_name
+  cloudfront_distribution_arn = module.cdn.distribution_arn
+}
+
+# ── CDN (CloudFront + ACM cert + Route 53) ───────────────────────────────────
+module "cdn" {
+  source = "../../modules/cdn"
+
+  domain_name                     = var.domain_name
+  route53_zone_id                 = var.route53_zone_id
+  ec2_public_dns                  = module.compute.public_dns
+  frontend_bucket_regional_domain = module.storage.frontend_bucket_regional_domain
+}

@@ -1,0 +1,60 @@
+resource "aws_s3_bucket" "files" {
+  bucket = var.files_bucket_name
+  tags   = { Name = "coba-poc-files" }
+}
+
+resource "aws_s3_bucket_public_access_block" "files" {
+  bucket                  = aws_s3_bucket.files.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_cors_configuration" "files" {
+  bucket = aws_s3_bucket.files.id
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST"]
+    allowed_origins = ["https://${var.domain_name}"]
+    max_age_seconds = 3000
+  }
+}
+
+resource "aws_s3_bucket" "frontend" {
+  bucket = var.frontend_bucket_name
+  tags   = { Name = "coba-poc-frontend" }
+}
+
+resource "aws_s3_bucket_public_access_block" "frontend" {
+  bucket                  = aws_s3_bucket.frontend.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_policy" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "cloudfront.amazonaws.com" }
+      Action    = "s3:GetObject"
+      Resource  = "${aws_s3_bucket.frontend.arn}/*"
+      Condition = {
+        StringEquals = { "AWS:SourceArn" = var.cloudfront_distribution_arn }
+      }
+    }]
+  })
+}
+
+# S3 Gateway VPC Endpoint — keeps EC2↔S3 traffic on AWS backbone (free)
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = var.vpc_id
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [var.public_route_table_id]
+  tags              = { Name = "coba-poc-s3-endpoint" }
+}
