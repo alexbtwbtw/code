@@ -138,13 +138,13 @@ jobs:
 
       - name: Sync frontend to S3
         run: |
-          aws s3 sync coba/frontend/dist/_assets/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/_assets/ \
+          aws s3 sync coba/frontend/dist/assets/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/assets/ \
             --cache-control "public,max-age=31536000,immutable" \
             --delete
 
           aws s3 sync coba/frontend/dist/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/ \
             --cache-control "no-cache,no-store,must-revalidate" \
-            --exclude "_assets/*" \
+            --exclude "assets/*" \
             --delete
 
       - name: Invalidate CloudFront
