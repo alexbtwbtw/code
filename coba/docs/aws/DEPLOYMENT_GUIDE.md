@@ -105,26 +105,23 @@ Go to **Settings → Secrets and variables → Actions** in your GitHub repo.
 |--------|-------|
 | `EC2_SSH_KEY` | Private SSH key (PEM format, no passphrase) — see below |
 
-**Generating the SSH key pair:**
+**Saving the SSH key (Terraform generates it):**
 
-```bash
-ssh-keygen -t ed25519 -f coba-ec2-key -N ""
-# coba-ec2-key     ← private key → paste into EC2_SSH_KEY secret
-# coba-ec2-key.pub ← public key  → add to EC2 (see next step)
+```powershell
+# Save the private key from Terraform output
+terraform output -raw ec2_private_key > coba-ec2-key.pem
+
+# Fix permissions if SSH complains about unprotected key file
+icacls coba-ec2-key.pem /inheritance:r /grant:r "$($env:USERNAME):(R)"
 ```
+
+Paste the contents of `coba-ec2-key.pem` into the `EC2_SSH_KEY` GitHub secret.
 
 ---
 
 ## Step 4 — Add SSH Public Key to EC2
 
-```bash
-# Copy your public key to the EC2 instance (first time, use AWS Console Session Manager or EC2 Instance Connect)
-# Or add it to terraform/modules/compute/main.tf before apply:
-#   resource "aws_key_pair" "deploy" { public_key = file("coba-ec2-key.pub") }
-
-# Alternatively via SSH once you have any access:
-echo "$(cat coba-ec2-key.pub)" >> ~/.ssh/authorized_keys
-```
+Terraform generates the key pair and registers it with EC2 automatically via `aws_key_pair` — no manual step needed here. The key is ready to use as soon as `terraform apply` completes.
 
 ---
 
@@ -141,7 +138,7 @@ The EC2 instance is provisioned by Terraform's `user_data` script, which runs on
 **After Terraform apply**, SSH in and fill in real values:
 
 ```bash
-ssh -i coba-ec2-key ec2-user@<ec2_public_ip>
+ssh -i coba-ec2-key.pem ec2-user@<ec2_public_ip>
 
 # Edit the env file
 sudo nano /app/.env
@@ -211,10 +208,10 @@ Seeding only runs once. On every subsequent pm2 restart the existing data is pre
 curl http://<ec2_public_ip>:3000/api/health
 
 # Check pm2 status
-ssh -i coba-ec2-key ec2-user@<ec2_public_ip> 'pm2 list'
+ssh -i coba-ec2-key.pem ec2-user@<ec2_public_ip> 'pm2 list'
 
 # Check backend logs
-ssh -i coba-ec2-key ec2-user@<ec2_public_ip> 'pm2 logs coba --lines 50'
+ssh -i coba-ec2-key.pem ec2-user@<ec2_public_ip> 'pm2 logs coba --lines 50'
 ```
 
 Open `https://<cloudfront_domain>` in your browser — you should see the COBA login screen.
@@ -260,7 +257,7 @@ Just push to `main` — the workflow runs automatically.
 ### View logs
 
 ```bash
-ssh -i coba-ec2-key ec2-user@<ec2_public_ip>
+ssh -i coba-ec2-key.pem ec2-user@<ec2_public_ip>
 pm2 logs coba --lines 100
 ```
 
@@ -273,7 +270,7 @@ pm2 restart coba
 ### Reset the database (wipe all data)
 
 ```bash
-ssh -i coba-ec2-key ec2-user@<ec2_public_ip>
+ssh -i coba-ec2-key.pem ec2-user@<ec2_public_ip>
 pm2 stop coba
 sudo rm /data/coba.db
 pm2 start coba   # seeds fresh data on startup
