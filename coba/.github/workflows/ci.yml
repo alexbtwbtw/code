@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '25'
           cache: 'npm'
       - name: Install backend deps
         run: npm ci --prefix backend
@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '25'
           cache: 'npm'
       - name: Install frontend deps
         run: npm ci --prefix frontend
@@ -46,21 +46,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '25'
           cache: 'npm'
       - name: Install all deps
-        run: npm install && npm ci --prefix backend && npm ci --prefix frontend
+        run: npm ci --prefix backend && npm ci --prefix frontend && npm ci --prefix e2e
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-      - name: Build frontend
-        run: npm run build --prefix frontend
-      - name: Start backend
-        run: npm run dev:backend &
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - name: Wait for backend health
-        run: npx wait-on http://localhost:3000/api/health --timeout 30000
+        run: npx --prefix e2e playwright install --with-deps chromium
       - name: Run E2E tests
-        run: npx playwright test
+        run: npm run test:e2e
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

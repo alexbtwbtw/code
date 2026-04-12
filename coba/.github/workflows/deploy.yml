@@ -11,7 +11,12 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Requires a GitHub environment named 'poc' with these variables and secrets set:
+    #   Variables: AWS_ACCOUNT_ID, EC2_PUBLIC_IP, FRONTEND_BUCKET_NAME, CLOUDFRONT_DISTRIBUTION_ID
+    #   Secrets:   EC2_SSH_PRIVATE_KEY
+    # See README.md → AWS Deployment for full setup instructions.
     environment: poc
+    if: vars.AWS_ACCOUNT_ID != ''
 
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +30,7 @@ jobs:
       # ── Backend build ──────────────────────────────────────────────────────
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '25'
           cache: 'npm'
 
       - name: Install backend dependencies
