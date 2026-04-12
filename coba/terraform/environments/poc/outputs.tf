@@ -23,3 +23,8 @@ output "ec2_private_key" {
   value       = tls_private_key.ec2.private_key_openssh
   sensitive   = true
 }
+
+output "github_actions_role_arn" {
+  description = "Add this as the GITHUB_ACTIONS_ROLE_ARN variable in your GitHub repo"
+  value       = module.github_oidc.role_arn
+}
