@@ -297,3 +297,94 @@ i18n/context.tsx← LanguageProvider + useTranslation()
 Sample requirement books and task assignments are also seeded.
 
 All narrative text (descriptions, notes, bios) is in **Portuguese**.
+
+---
+
+## AWS Deployment
+
+COBA can be deployed to AWS at ~$13/month (eu-west-2) using EC2 + SQLite on EBS + S3 + CloudFront. Pushing to `main` triggers an automatic deploy via GitHub Actions.
+
+No custom domain is required — the app is served over the free `*.cloudfront.net` HTTPS URL that CloudFront assigns automatically (e.g. `https://d1abc23def.cloudfront.net`).
+
+**Full infrastructure docs:** [`docs/aws/`](docs/aws/)
+
+### Architecture
+
+```
+Browser → https://dXXXXXXXXX.cloudfront.net (free CloudFront domain)
+  ├─ /api/* and /trpc/* → EC2 t3.micro (Node.js + pm2, port 3000)
+  │                          └─ SQLite on EBS 30 GB at /data/coba.db
+  └─ /*               → S3 (Vite SPA build)
+
+CV files (upload/download) → S3 via presigned URLs
+Secrets → SSM Parameter Store (free tier)
+```
+
+### Environment variables
+
+#### Local development (`backend/.env`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for CV parsing, requirements extraction, and member matching |
+| `DB_PATH` | No | SQLite file path. Omit to use in-memory DB (default for local dev) |
+| `S3_FILES_BUCKET` | No | S3 bucket name for CV file storage. Omit to use local base64 DB storage |
+| `AWS_REGION` | No | AWS region for S3 client. Defaults to `eu-west-2` |
+
+#### AWS / EC2 (injected by deploy pipeline from SSM)
+
+| SSM Parameter | Value |
+|---|---|
+| `/coba/poc/anthropic-key` | Anthropic API key (SecureString) |
+| `/coba/poc/db-path` | `/data/coba.db` |
+| `/coba/poc/s3-files-bucket` | S3 bucket name for CV files |
+
+#### GitHub Actions repository variables and secrets (`poc` environment)
+
+| Type | Name | Description |
+|---|---|---|
+| Variable | `AWS_ACCOUNT_ID` | 12-digit AWS account ID |
+| Variable | `EC2_PUBLIC_IP` | Elastic IP of the EC2 instance |
+| Variable | `FRONTEND_BUCKET_NAME` | S3 bucket for frontend SPA (e.g. `coba-frontend-poc`) |
+| Variable | `CLOUDFRONT_DISTRIBUTION_ID` | CloudFront distribution ID (from Terraform output) |
+| Secret | `EC2_SSH_PRIVATE_KEY` | PEM private key for SSH access to EC2 |
+| Secret | `ANTHROPIC_API_KEY` | Used by CI E2E tests only |
+
+### Infrastructure (Terraform)
+
+Terraform configs live in `terraform/`. Before first deploy, manually create the state backend resources:
+
+```bash
+# One-time bootstrap — create state bucket and DynamoDB lock table
+aws s3 mb s3://coba-terraform-state --region eu-west-2
+aws dynamodb create-table \
+  --table-name coba-terraform-locks \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region eu-west-2
+
+# Deploy all infrastructure
+cd terraform/environments/poc
+export TF_VAR_anthropic_api_key="sk-ant-..."
+terraform init
+terraform apply \
+  -var="account_id=YOUR_ACCOUNT_ID" \
+  -var="ssh_key_name=YOUR_KEY_PAIR_NAME"
+
+# The app URL is shown in the outputs:
+# cloudfront_domain = "dXXXXXXXXX.cloudfront.net"
+```
+
+### Deploy pipeline
+
+Pushing to `main` runs `.github/workflows/deploy.yml`:
+1. Builds TypeScript backend → packages `dist/` + `node_modules/` as a zip
+2. scp-copies zip to EC2, extracts, fetches secrets from SSM, writes pm2 config, reloads pm2
+3. Verifies health at `http://localhost:3000/api/health`
+4. Builds Vite frontend → syncs to S3 (hashed assets long-cached, `index.html` no-cache)
+5. Invalidates CloudFront `/index.html`
+
+### Seed data on AWS
+
+On first boot the DB is empty so seeds run automatically. On subsequent `pm2 reload` calls the seed guard detects a non-empty DB and skips seeding — existing data is preserved.

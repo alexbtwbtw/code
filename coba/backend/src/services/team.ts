@@ -190,17 +190,33 @@ export function deleteHistory(id: number) {
   return { success: true }
 }
 
-export function getCvData(cvId: number) {
-  const row = db.prepare(`SELECT filename, file_data FROM member_cvs WHERE id = ?`).get(cvId) as { filename: string; file_data: string } | undefined
+export async function getCvData(cvId: number) {
+  const row = db.prepare(`SELECT filename, file_data, s3_key FROM member_cvs WHERE id = ?`).get(cvId) as
+    { filename: string; file_data: string | null; s3_key: string | null } | undefined
   if (!row) return null
+  if (row.s3_key) {
+    const { getPresignedDownloadUrl } = await import('../lib/s3')
+    const presignedUrl = await getPresignedDownloadUrl(row.s3_key)
+    return { filename: row.filename, presignedUrl }
+  }
   return { filename: row.filename, fileData: row.file_data }
 }
 
-export function attachCv(input: { teamMemberId: number; filename: string; fileSize: number; fileData: string }) {
+export async function attachCv(input: { teamMemberId: number; filename: string; fileSize: number; fileData?: string }) {
+  const { s3Enabled, getPresignedUploadUrl } = await import('../lib/s3')
+  if (s3Enabled()) {
+    const s3Key = `cvs/${input.teamMemberId}/${input.filename}`
+    const presignedUrl = await getPresignedUploadUrl(s3Key, 'application/pdf')
+    const result = db.prepare(`
+      INSERT INTO member_cvs (team_member_id, filename, file_size, s3_key)
+      VALUES (@team_member_id, @filename, @file_size, @s3_key)
+    `).run({ team_member_id: input.teamMemberId, filename: input.filename, file_size: input.fileSize, s3_key: s3Key })
+    return { id: Number(result.lastInsertRowid), filename: input.filename, fileSize: input.fileSize, presignedUrl, s3Key }
+  }
   const result = db.prepare(`
     INSERT INTO member_cvs (team_member_id, filename, file_size, file_data)
     VALUES (@team_member_id, @filename, @file_size, @file_data)
-  `).run({ team_member_id: input.teamMemberId, filename: input.filename, file_size: input.fileSize, file_data: input.fileData })
+  `).run({ team_member_id: input.teamMemberId, filename: input.filename, file_size: input.fileSize, file_data: input.fileData ?? '' })
   return { id: Number(result.lastInsertRowid), filename: input.filename, fileSize: input.fileSize }
 }
 

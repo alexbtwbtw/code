@@ -1,0 +1,12 @@
+# Copy this file to terraform.tfvars and fill in the values
+# terraform.tfvars is gitignored — never commit it
+
+account_id        = "123456789012"
+anthropic_api_key = "sk-ant-..."
+github_repo       = "alexbtwbtw/code"
+
+# Optional overrides (defaults are fine for POC)
+# region               = "eu-west-2"
+# deploy_ssh_cidr      = "0.0.0.0/0"   # restrict to your IP for better security
+# files_bucket_name    = "coba-files-poc"
+# frontend_bucket_name = "coba-frontend-poc"

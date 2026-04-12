@@ -228,3 +228,19 @@ export function generateCvPdf(member: CvMember): Promise<Buffer> {
     doc.end()
   })
 }
+
+/**
+ * Generate a CV PDF and optionally upload it to S3.
+ * If S3_FILES_BUCKET is set and memberId is provided, uploads to S3 and returns a presigned URL.
+ * Otherwise returns the raw Buffer (caller should base64-encode for local storage).
+ */
+export async function generateCvPdfOrUpload(member: CvMember, memberId?: number): Promise<Buffer | string> {
+  const buffer = await generateCvPdf(member)
+  if (memberId != null && process.env.S3_FILES_BUCKET) {
+    const { uploadBuffer, getPresignedDownloadUrl } = await import('./s3')
+    const key = `cvs/generated/${memberId}/cv_generated.pdf`
+    await uploadBuffer(key, buffer, 'application/pdf')
+    return getPresignedDownloadUrl(key)
+  }
+  return buffer
+}

@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n/context'
 import type { TranslationKey } from '../i18n/en'
 import type { Page } from '../App'
 import { useTeamList, useCreateMember, useCreateMemberWithHistory } from '../api/team'
+import { useAiEnabled } from '../api/system'
 
 interface Props {
   onNavigate: (page: Page) => void
@@ -50,6 +51,7 @@ export default function TeamMembers({ onNavigate }: Props) {
   // Separate ref for manual CV upload (within manual form)
   const manualCvRef = useRef<HTMLInputElement>(null)
 
+  const aiEnabled = useAiEnabled()
   const { data: members, isLoading } = useTeamList()
   const createMember = useCreateMember()
   const createWithHistory = useCreateMemberWithHistory()
@@ -224,7 +226,7 @@ export default function TeamMembers({ onNavigate }: Props) {
               style={{ display: 'none' }}
               onChange={handleCvFile}
             />
-            <button className="btn-secondary" onClick={() => fileRef.current?.click()}>
+            <button className="btn-secondary" onClick={() => fileRef.current?.click()} disabled={!aiEnabled} title={!aiEnabled ? t('aiDisabled') : undefined}>
               {t('btnUploadCv')}
             </button>
             <button className="btn-primary" onClick={openManual}>

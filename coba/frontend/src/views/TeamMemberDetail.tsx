@@ -62,6 +62,12 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
   async function downloadCv(cvId: number, filename: string) {
     const data = await trpcClient.team.getCvData.query({ cvId })
     if (!data) return
+    if ('presignedUrl' in data) {
+      const a = document.createElement('a')
+      a.href = data.presignedUrl; a.download = filename; a.click()
+      return
+    }
+    if (!data.fileData) return
     const bytes = Uint8Array.from(atob(data.fileData), c => c.charCodeAt(0))
     const blob = new Blob([bytes], { type: 'application/pdf' })
     const url = URL.createObjectURL(blob)
