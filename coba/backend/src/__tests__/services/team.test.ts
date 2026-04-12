@@ -244,24 +244,24 @@ describe('deleteHistory', () => {
 // ── getCvData / attachCv ──────────────────────────────────────────────────────
 
 describe('getCvData', () => {
-  it('returns null for missing cv', () => {
-    expect(getCvData(9999)).toBeNull()
+  it('returns null for missing cv', async () => {
+    expect(await getCvData(9999)).toBeNull()
   })
 
-  it('returns filename and fileData for existing cv', () => {
+  it('returns filename and fileData for existing cv', async () => {
     const m = createMember(baseMember())
-    const cv = attachCv({ teamMemberId: m.id, filename: 'test.pdf', fileSize: 512, fileData: 'abc123==' })
-    const data = getCvData(cv.id)
+    const cv = await attachCv({ teamMemberId: m.id, filename: 'test.pdf', fileSize: 512, fileData: 'abc123==' })
+    const data = await getCvData(cv.id)
     expect(data).not.toBeNull()
     expect(data!.filename).toBe('test.pdf')
-    expect(data!.fileData).toBe('abc123==')
+    expect((data as { fileData: string }).fileData).toBe('abc123==')
   })
 })
 
 describe('attachCv', () => {
-  it('returns id, filename, fileSize', () => {
+  it('returns id, filename, fileSize', async () => {
     const m = createMember(baseMember())
-    const cv = attachCv({ teamMemberId: m.id, filename: 'cv.pdf', fileSize: 2048, fileData: 'data' })
+    const cv = await attachCv({ teamMemberId: m.id, filename: 'cv.pdf', fileSize: 2048, fileData: 'data' })
     expect(cv.id).toBeTypeOf('number')
     expect(cv.filename).toBe('cv.pdf')
     expect(cv.fileSize).toBe(2048)
