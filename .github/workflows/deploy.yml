@@ -1,8 +1,10 @@
 name: Deploy to AWS
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
     branches: [main]
+    types: [completed]
 
 permissions:
   id-token: write
@@ -12,7 +14,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: poc
-    if: vars.AWS_ACCOUNT_ID != ''
+    if: github.event.workflow_run.conclusion == 'success' && vars.AWS_ACCOUNT_ID != ''
 
     steps:
       - uses: actions/checkout@v4
