@@ -1,13 +1,15 @@
 # COBA Testing Strategy
 
-**Date:** 2026-04-11
-**Status:** Draft — no tests exist yet in the codebase
+**Date:** 2026-04-12
+**Status:** Implemented — 16 test files, 184 tests, all passing
 
 ---
 
 ## 0. Current State
 
-Zero test files exist anywhere in the monorepo. Neither `backend/package.json` nor `frontend/package.json` declares any test framework dependency. The backend has no Vitest/Jest config; the frontend has Vite (which bundles Vitest-compatible test infrastructure) but no `vitest` or `@testing-library` package. All testing tooling must be installed.
+All tests are now implemented and passing. The backend has Vitest installed with 15 test files (165 tests); the frontend has Vitest + jsdom + React Testing Library with 1 test file (19 tests). Both `tsc --noEmit` checks are clean.
+
+**Backend tsconfig note:** The main `tsconfig.json` excludes `src/__tests__/` (Vitest 4.x requires `moduleResolution: bundler` which conflicts with the production `node10` setting). A `tsconfig.test.json` extends the main config with bundler resolution for test type-checking. The production build is unaffected.
 
 ### Architecture After Refactor
 
