@@ -4,6 +4,8 @@ import { seedProjects } from '../seed/projects'
 import { seedTeam } from '../seed/team'
 import { seedRequirements } from '../seed/requirements'
 import { seedTasks } from '../seed/tasks'
+import { seedCompanyTeams } from '../seed/companyTeams'
+import { seedTimeEntries } from '../seed/timeEntries'
 
 export const adminRouter = router({
   reseed: publicProcedure
@@ -38,6 +40,8 @@ export const adminRouter = router({
       await seedTeam()
       seedRequirements()
       seedTasks()
+      seedCompanyTeams()
+      seedTimeEntries()
 
       return { ok: true, message: 'Database re-seeded successfully' }
     }),
