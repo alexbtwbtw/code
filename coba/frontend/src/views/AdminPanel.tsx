@@ -7,13 +7,12 @@ import { trpcClient } from '../trpc'
 export default function AdminPanel() {
   const { t } = useTranslation()
   const { user } = useCurrentUser()
-  const [adminKey, setAdminKey] = useState('dev-admin')
   const [confirmed, setConfirmed] = useState(false)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const reseedMutation = useMutation({
-    mutationFn: () => trpcClient.admin.reseed.mutate({ adminKey }),
+    mutationFn: () => trpcClient.admin.reseed.mutate(),
     onSuccess: () => {
       setSuccessMsg(t('adminReseedSuccess'))
       setErrorMsg(null)
@@ -45,17 +44,6 @@ export default function AdminPanel() {
       <h1 className="page-title">{t('adminTitle')}</h1>
 
       <div className="card" style={{ padding: '2rem', marginTop: '1.5rem' }}>
-        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-          <label className="form-label" htmlFor="admin-key">{t('adminKey')}</label>
-          <input
-            id="admin-key"
-            type="password"
-            className="form-input"
-            value={adminKey}
-            onChange={e => setAdminKey(e.target.value)}
-          />
-        </div>
-
         {confirmed && (
           <p style={{ color: 'var(--color-warning, #f59e0b)', marginBottom: '1rem', fontWeight: 500 }}>
             {t('adminReseedConfirm')}
