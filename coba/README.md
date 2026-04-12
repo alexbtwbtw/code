@@ -302,7 +302,7 @@ All narrative text (descriptions, notes, bios) is in **Portuguese**.
 
 ## AWS Deployment
 
-COBA can be deployed to AWS at ~$13/month (eu-west-1) using EC2 + SQLite on EBS + S3 + CloudFront. Pushing to `main` triggers an automatic deploy via GitHub Actions.
+COBA can be deployed to AWS at ~$13/month (eu-west-2) using EC2 + SQLite on EBS + S3 + CloudFront. Pushing to `main` triggers an automatic deploy via GitHub Actions.
 
 No custom domain is required — the app is served over the free `*.cloudfront.net` HTTPS URL that CloudFront assigns automatically (e.g. `https://d1abc23def.cloudfront.net`).
 
@@ -329,7 +329,7 @@ Secrets → SSM Parameter Store (free tier)
 | `ANTHROPIC_API_KEY` | Yes | Anthropic API key for CV parsing, requirements extraction, and member matching |
 | `DB_PATH` | No | SQLite file path. Omit to use in-memory DB (default for local dev) |
 | `S3_FILES_BUCKET` | No | S3 bucket name for CV file storage. Omit to use local base64 DB storage |
-| `AWS_REGION` | No | AWS region for S3 client. Defaults to `eu-west-1` |
+| `AWS_REGION` | No | AWS region for S3 client. Defaults to `eu-west-2` |
 
 #### AWS / EC2 (injected by deploy pipeline from SSM)
 
@@ -356,13 +356,13 @@ Terraform configs live in `terraform/`. Before first deploy, manually create the
 
 ```bash
 # One-time bootstrap — create state bucket and DynamoDB lock table
-aws s3 mb s3://coba-terraform-state --region eu-west-1
+aws s3 mb s3://coba-terraform-state --region eu-west-2
 aws dynamodb create-table \
   --table-name coba-terraform-locks \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
   --key-schema AttributeName=LockID,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST \
-  --region eu-west-1
+  --region eu-west-2
 
 # Deploy all infrastructure
 cd terraform/environments/poc
