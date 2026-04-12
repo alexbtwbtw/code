@@ -246,4 +246,27 @@ db.exec(`
     content         TEXT    NOT NULL,
     created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS time_entries (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id   INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    member_id    INTEGER NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
+    date         TEXT    NOT NULL,
+    hours        REAL    NOT NULL CHECK(hours > 0),
+    description  TEXT    NOT NULL DEFAULT '',
+    created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS company_teams (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL UNIQUE,
+    description TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS company_team_members (
+    team_id   INTEGER NOT NULL REFERENCES company_teams(id) ON DELETE CASCADE,
+    member_id INTEGER NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
+    PRIMARY KEY (team_id, member_id)
+  );
 `)

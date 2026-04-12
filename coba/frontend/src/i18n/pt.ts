@@ -473,6 +473,15 @@ export const pt: Record<TranslationKey, string> = {
   companyTeamAddMember: 'Adicionar Membro',
   memberTeams: 'Equipas Internas',
 
+  // Admin panel
+  adminNav: 'Admin',
+  adminTitle: 'Painel de Administração',
+  adminReseed: 'Re-inicializar Base de Dados',
+  adminReseedConfirm: 'Isto irá apagar TODOS os dados e re-inicializar. Tem a certeza?',
+  adminReseedSuccess: 'Base de dados re-inicializada com sucesso.',
+  adminReseedError: 'Falha ao re-inicializar.',
+  adminKey: 'Chave de Admin',
+
   // Misc
   optional: '(opcional)',
   na: 'N/D',

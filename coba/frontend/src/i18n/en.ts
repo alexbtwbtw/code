@@ -471,6 +471,15 @@ export const en = {
   companyTeamAddMember: 'Add Member',
   memberTeams: 'Internal Teams',
 
+  // Admin panel
+  adminNav: 'Admin',
+  adminTitle: 'Admin Panel',
+  adminReseed: 'Re-seed Database',
+  adminReseedConfirm: 'This will delete ALL data and re-seed. Are you sure?',
+  adminReseedSuccess: 'Database re-seeded successfully.',
+  adminReseedError: 'Re-seed failed.',
+  adminKey: 'Admin Key',
+
   // Misc
   optional: '(optional)',
   na: 'N/A',

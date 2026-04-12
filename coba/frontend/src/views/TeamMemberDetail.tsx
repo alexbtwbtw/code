@@ -11,6 +11,8 @@ import { initials, fmtDate } from '../utils/format'
 import { useMemberById, useUpdateMember, useAddHistory, useUpdateHistory, useDeleteHistory, useAttachCv } from '../api/team'
 import { useProjectsList } from '../api/projects'
 import { useTasksByMember } from '../api/tasks'
+import { useTimeByMember } from '../api/timeEntries'
+import { useCompanyTeamsByMember } from '../api/companyTeams'
 
 interface Props {
   id: number
@@ -52,6 +54,8 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
   const { data: member, isLoading } = useMemberById(id)
   const { data: allProjects } = useProjectsList({})
   const { data: memberTasks } = useTasksByMember(id)
+  const { data: memberTime } = useTimeByMember(id)
+  const { data: memberTeams } = useCompanyTeamsByMember(id)
 
   const updateMember  = useUpdateMember()
   const addHistory    = useAddHistory()
@@ -271,6 +275,14 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
             {member.phone && <span>✆ {member.phone}</span>}
           </div>
           {member.bio && <p className="member-hero-bio">{member.bio}</p>}
+          {memberTeams && memberTeams.length > 0 && (
+            <div className="member-hero-teams">
+              <span className="member-hero-teams-label">{t('memberTeams')}:</span>
+              {memberTeams.map(team => (
+                <span key={team.id} className="pill pill--sm">{team.name}</span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -495,6 +507,47 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Time Logged */}
+      <section className="detail-section">
+        {(() => {
+          const totalHours = memberTime?.reduce((sum, e) => sum + e.hours, 0) ?? 0
+          return (
+            <>
+              <h2 className="detail-section-title">
+                {t('timeTitle')}
+                {totalHours > 0 && (
+                  <span className="time-total-badge"> — {t('timeTotal')}: {totalHours.toFixed(1)} h</span>
+                )}
+              </h2>
+              {!memberTime?.length ? (
+                <p className="muted">{t('timeEmpty')}</p>
+              ) : (
+                <table className="time-table">
+                  <thead>
+                    <tr>
+                      <th>{t('timeDate')}</th>
+                      <th>{t('timeProject')}</th>
+                      <th>{t('timeHours')}</th>
+                      <th>{t('timeDesc')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {memberTime.map(entry => (
+                      <tr key={entry.id}>
+                        <td>{entry.date.slice(0, 10)}</td>
+                        <td>{entry.projectName}</td>
+                        <td>{entry.hours.toFixed(1)}</td>
+                        <td>{entry.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
+          )
+        })()}
       </section>
 
       <div className="detail-back">
