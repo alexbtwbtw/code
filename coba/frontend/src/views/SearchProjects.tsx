@@ -8,10 +8,6 @@ import { useProjectsList } from '../api/projects'
 const STATUS_OPTIONS = STATUSES as readonly string[]
 const CATEGORY_OPTIONS = CATEGORIES as readonly string[]
 
-function fmt(n: number | null, currency: string) {
-  if (n == null) return null
-  return new Intl.NumberFormat('pt-PT', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n)
-}
 
 function fmtDate(d: string | null) {
   if (!d) return null
@@ -89,7 +85,6 @@ export default function SearchProjects({ onNavigate }: Props) {
       ) : (
         <div className="project-list">
           {projects.map((p) => {
-            const budget = fmt(p.budget, p.currency)
             const start = fmtDate(p.startDate)
             const end = fmtDate(p.endDate)
 
@@ -128,7 +123,7 @@ export default function SearchProjects({ onNavigate }: Props) {
                 <div className="pc-bottom">
                   <span className={`pc-cat pc-cat--${p.category}`}>{t(CAT_KEY[p.category] ?? 'catOther')}</span>
                   <div className="pc-financials">
-                    {budget && <span className="pc-budget">{budget}</span>}
+                    {p.totalHours > 0 && <span className="pc-budget">{p.totalHours}h</span>}
                     {start && <span className="pc-dates">{start} — {end ?? '…'}</span>}
                   </div>
                 </div>

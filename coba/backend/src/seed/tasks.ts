@@ -1,21 +1,7 @@
 import { db } from '../db'
-import { insertTask, insertTaskAssignment, insertTaskComment } from '../db/statements/tasks'
+import { insertTask, insertTaskComment } from '../db/statements/tasks'
 
 export const seedTasks = db.transaction(() => {
-  // Helper to look up member id by name — returns null if not found
-  function mid(name: string): number | null {
-    const row = db.prepare(`SELECT id FROM team_members WHERE name = ?`).get(name) as { id: number } | undefined
-    return row?.id ?? null
-  }
-
-  // Only assign when the member actually exists (avoids FK violations)
-  function assign(taskId: bigint | number, memberName: string) {
-    const memberId = mid(memberName)
-    if (memberId !== null) {
-      insertTaskAssignment.run({ task_id: taskId, team_member_id: memberId })
-    }
-  }
-
   // ── Project 1 — 4ème Rocade d'Alger (id=1) ───────────────────────────────
 
   insertTask.run({

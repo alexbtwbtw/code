@@ -11,6 +11,10 @@ export function useTimeByMember(memberId: number) {
   return useQuery(trpc.timeEntries.byMember.queryOptions({ memberId }))
 }
 
+export function useTimeReport() {
+  return useQuery(trpc.timeEntries.report.queryOptions())
+}
+
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
 export function useCreateTimeEntry() {

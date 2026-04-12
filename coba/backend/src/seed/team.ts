@@ -2135,7 +2135,7 @@ export async function seedTeam() {
   })
   insertProjectTeam.run({ project_id: 7, team_member_id: m15.lastInsertRowid, role_on_project: 'Consultor de Planeamento' })
 
-  const h15a = insertHistory.run({
+  insertHistory.run({
     team_member_id: m15.lastInsertRowid,
     project_id: null,
     project_name: 'Plano Diretor Municipal de Matola',
@@ -2222,7 +2222,7 @@ export async function seedTeam() {
   })
   insertProjectTeam.run({ project_id: 4, team_member_id: m17.lastInsertRowid, role_on_project: 'Modelação Hidráulica' })
 
-  const h17a = insertHistory.run({
+  insertHistory.run({
     team_member_id: m17.lastInsertRowid,
     project_id: null,
     project_name: 'Plano de Gestão de Cheias do Rio Douro',
@@ -2327,7 +2327,7 @@ export async function seedTeam() {
   })
   insertProjectTeam.run({ project_id: 5, team_member_id: m20.lastInsertRowid, role_on_project: 'Gestora de Projeto Adjunta' })
 
-  const h20a = insertHistory.run({
+  insertHistory.run({
     team_member_id: m20.lastInsertRowid,
     project_id: null,
     project_name: 'Reabilitação da Rede Viária Urbana de Luanda',
@@ -2529,7 +2529,7 @@ export async function seedTeam() {
   })
   insertProjectTeam.run({ project_id: 8, team_member_id: m25.lastInsertRowid, role_on_project: 'Especialista Elétrico' })
 
-  const h25a = insertHistory.run({
+  insertHistory.run({
     team_member_id: m25.lastInsertRowid,
     project_id: null,
     project_name: 'Linha de Alta Tensão 400 kV Douro — Valdigem',
@@ -2558,7 +2558,7 @@ export async function seedTeam() {
   })
   insertProjectTeam.run({ project_id: 6, team_member_id: m26.lastInsertRowid, role_on_project: 'Assistente Ambiental' })
 
-  const h26a = insertHistory.run({
+  insertHistory.run({
     team_member_id: m26.lastInsertRowid,
     project_id: null,
     project_name: 'Monitorização Ambiental da Autoestrada A22 (Via do Infante)',
@@ -2606,7 +2606,7 @@ export async function seedTeam() {
     notes: 'Pilone em H invertido com 150 m de altura. Verificação sísmica segundo EC8.',
   })
 
-  const h27b = insertHistory.run({
+  insertHistory.run({
     team_member_id: m27.lastInsertRowid,
     project_id: null,
     project_name: 'Ponte Internacional do Guadiana',
@@ -2655,7 +2655,7 @@ export async function seedTeam() {
     notes: 'Canal em betão com perfil trapezoidal. Caudal de projeto de 25 m³/s.',
   })
 
-  const h28b = insertHistory.run({
+  insertHistory.run({
     team_member_id: m28.lastInsertRowid,
     project_id: null,
     project_name: 'Estudo de Balanço Hídrico da Bacia do Rio Tana, Quénia',
@@ -2743,7 +2743,7 @@ export async function seedTeam() {
   })
   insertProjectTeam.run({ project_id: 7, team_member_id: m30.lastInsertRowid, role_on_project: 'Consultora de Ordenamento' })
 
-  const h30a = insertHistory.run({
+  insertHistory.run({
     team_member_id: m30.lastInsertRowid,
     project_id: null,
     project_name: 'Plano de Ordenamento da Orla Costeira — Alentejo',
@@ -2752,7 +2752,7 @@ export async function seedTeam() {
     notes: 'Coordenação do POOC do Alentejo Litoral, incluindo cartografia de risco costeiro, zonamento e regulamentação de atividades em faixa costeira.',
   })
 
-  const h30b = insertHistory.run({
+  insertHistory.run({
     team_member_id: m30.lastInsertRowid,
     project_id: null,
     project_name: 'Estudo de Impacte Territorial da Linha de Alta Velocidade Lisboa–Porto',
@@ -2772,7 +2772,7 @@ export async function seedTeam() {
   })
 
   // ── Membros de Supervisão (oversight) ────────────────────────────────────
-  const oversight1 = insertMember.run({
+  insertMember.run({
     name: 'Margarida Ferreira',
     title: 'Diretora de Portfolio',
     email: 'm.ferreira@example.pt',
@@ -2781,7 +2781,7 @@ export async function seedTeam() {
     role: 'oversight',
   })
 
-  const oversight2 = insertMember.run({
+  insertMember.run({
     name: 'Rui Monteiro',
     title: 'Gestor de Programa Sénior',
     email: 'r.monteiro@example.pt',

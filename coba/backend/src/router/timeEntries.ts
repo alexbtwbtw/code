@@ -101,4 +101,92 @@ export const timeEntriesRouter = router({
       db.prepare(`DELETE FROM time_entries WHERE id = ?`).run(input.id)
       return { success: true }
     }),
+
+  report: publicProcedure
+    .query(() => {
+      interface ByProjectRow {
+        project_id: number
+        project_name: string
+        total_hours: number
+        entry_count: number
+        member_count: number
+      }
+      interface ByMemberRow {
+        member_id: number
+        member_name: string
+        total_hours: number
+        project_count: number
+        entry_count: number
+      }
+      interface UnderreportingRow {
+        member_id: number
+        member_name: string
+        project_count: number
+      }
+
+      const byProjectRows = db.prepare(`
+        SELECT
+          p.id        AS project_id,
+          p.name      AS project_name,
+          COALESCE(SUM(te.hours), 0)          AS total_hours,
+          COALESCE(COUNT(te.id), 0)           AS entry_count,
+          COALESCE(COUNT(DISTINCT te.member_id), 0) AS member_count
+        FROM projects p
+        LEFT JOIN time_entries te ON te.project_id = p.id
+        GROUP BY p.id, p.name
+        HAVING total_hours > 0
+        ORDER BY total_hours DESC
+      `).all() as ByProjectRow[]
+
+      const byMemberRows = db.prepare(`
+        SELECT
+          tm.id       AS member_id,
+          tm.name     AS member_name,
+          COALESCE(SUM(te.hours), 0)           AS total_hours,
+          COALESCE(COUNT(DISTINCT te.project_id), 0) AS project_count,
+          COALESCE(COUNT(te.id), 0)            AS entry_count
+        FROM team_members tm
+        LEFT JOIN time_entries te ON te.member_id = tm.id
+        GROUP BY tm.id, tm.name
+        HAVING total_hours > 0
+        ORDER BY total_hours DESC
+      `).all() as ByMemberRow[]
+
+      const underreportingRows = db.prepare(`
+        SELECT
+          tm.id   AS member_id,
+          tm.name AS member_name,
+          COUNT(DISTINCT pt.project_id) AS project_count
+        FROM team_members tm
+        JOIN project_team pt ON pt.member_id = tm.id
+        WHERE NOT EXISTS (
+          SELECT 1 FROM time_entries te
+          WHERE te.member_id = tm.id
+        )
+        GROUP BY tm.id, tm.name
+        ORDER BY project_count DESC
+      `).all() as UnderreportingRow[]
+
+      return {
+        byProject: byProjectRows.map(r => ({
+          projectId:   r.project_id,
+          projectName: r.project_name,
+          totalHours:  r.total_hours,
+          entryCount:  r.entry_count,
+          memberCount: r.member_count,
+        })),
+        byMember: byMemberRows.map(r => ({
+          memberId:     r.member_id,
+          memberName:   r.member_name,
+          totalHours:   r.total_hours,
+          projectCount: r.project_count,
+          entryCount:   r.entry_count,
+        })),
+        underreporting: underreportingRows.map(r => ({
+          memberId:     r.member_id,
+          memberName:   r.member_name,
+          projectCount: r.project_count,
+        })),
+      }
+    }),
 })
