@@ -43,7 +43,7 @@ jobs:
       - name: Package backend artifact
         run: |
           cd coba/backend
-          zip -r ../../backend-artifact.zip dist/ node_modules/ package.json
+          zip -r ../../backend-artifact.zip dist/ node_modules/ package.json ecosystem.config.cjs
           cd ../..
           echo "Artifact size: $(du -sh backend-artifact.zip | cut -f1)"
 
@@ -88,34 +88,13 @@ jobs:
             unzip -o /tmp/backend-artifact.zip
             rm /tmp/backend-artifact.zip
 
-            # Write pm2 ecosystem file
-            cat > /app/ecosystem.config.cjs << 'EOF'
-            module.exports = {
-              apps: [{
-                name: 'coba-backend',
-                script: '/app/dist/server.js',
-                cwd: '/app',
-                env: {
-                  NODE_ENV: 'production',
-                  PORT: '3000',
-                  USE_REAL_AI: 'false',
-                  AWS_REGION: 'eu-west-2',
-                },
-                log_date_format: 'YYYY-MM-DD HH:mm:ss',
-                error_file: '/var/log/coba/err.log',
-                out_file: '/var/log/coba/out.log',
-                max_memory_restart: '800M',
-              }]
-            }
-            EOF
-
-            # Inject secrets and restart
+            # Inject secrets into environment and restart
             export ANTHROPIC_API_KEY="$ANTHROPIC_KEY"
             export DB_PATH="$DB_PATH"
             export S3_FILES_BUCKET="$S3_BUCKET"
 
-            pm2 reload ecosystem.config.cjs --update-env \
-              || pm2 start ecosystem.config.cjs
+            pm2 reload /app/ecosystem.config.cjs --update-env \
+              || pm2 start /app/ecosystem.config.cjs
 
             pm2 save
 
