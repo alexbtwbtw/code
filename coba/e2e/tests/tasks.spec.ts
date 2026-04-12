@@ -102,10 +102,10 @@ test.describe('Tasks', () => {
     await page.locator('.task-comment-form button[type="submit"]').click()
 
     // Wait for comment to appear in the list
-    await expect(page.locator('text=This is an E2E test comment')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('.task-comment-body', { hasText: 'This is an E2E test comment' }).first()).toBeVisible({ timeout: 10_000 })
 
     // Author name should also be visible
-    await expect(page.locator('text=E2E Test User')).toBeVisible()
+    await expect(page.locator('.task-comment-author', { hasText: 'E2E Test User' }).first()).toBeVisible()
   })
 
   test('task comments section is visible on task detail', async ({ page }) => {

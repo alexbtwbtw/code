@@ -72,8 +72,7 @@ test.describe('Team Members', () => {
     // The mock CV parser runs and returns data — wait for the cv-preview form
     // The parsing banner should appear briefly, then the preview form
     await expect(
-      page.locator('.cv-preview-header, .cv-parsing-banner, text=Extraído do CV')
-        .first()
+      page.locator('.cv-preview-header').or(page.locator('.cv-parsing-banner')).first()
     ).toBeVisible({ timeout: 15_000 })
 
     // After parsing completes, the review panel (cv-preview-header or the extracted data) should be shown

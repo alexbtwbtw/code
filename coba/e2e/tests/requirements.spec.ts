@@ -22,7 +22,7 @@ test.describe('Requirements', () => {
     await page.goto('/')
     await page.locator('.nav-btn', { hasText: 'Livros de Encargos' }).click()
 
-    await expect(page.locator('text=Ponte Vasco da Gama')).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('.req-book-title').filter({ hasText: 'Ponte Vasco da Gama' }).first()).toBeVisible({ timeout: 15_000 })
   })
 
   test('clicking a book navigates to its detail page with requirements', async ({ page }) => {
@@ -63,7 +63,7 @@ test.describe('Requirements', () => {
     await page.locator('.req-form-card button[type="submit"]').click()
 
     // Wait for the new requirement to appear in the list
-    await expect(page.locator(`.req-item-title:text-is("${reqTitle}"), .req-item-card:has-text("${reqTitle}")`)).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator(`.req-item-title:text-is("${reqTitle}")`)).toBeVisible({ timeout: 10_000 })
   })
 
   test('Find Matches button opens the match panel', async ({ page }) => {
