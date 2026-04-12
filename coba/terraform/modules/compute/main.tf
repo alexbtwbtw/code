@@ -72,8 +72,8 @@ resource "aws_instance" "backend" {
     #!/bin/bash
     set -e
 
-    # Install Node.js 22
-    curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+    # Install Node.js 25
+    curl -fsSL https://rpm.nodesource.com/setup_25.x | bash -
     dnf install -y nodejs
 
     # Install pm2
