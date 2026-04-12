@@ -111,9 +111,21 @@ Regras:
 - O campo "notes" de cada projeto deve resumir o papel do profissional em português.
 - Responda APENAS com o JSON, sem markdown, sem texto adicional.`
 
-// ── Main function ─────────────────────────────────────────────────────────────
+// ── Mock / real dispatcher ────────────────────────────────────────────────────
+
+const USE_REAL = process.env.USE_REAL_AI === 'true'
 
 export async function parseCv(pdfBase64: string): Promise<CvOutput> {
+  if (!USE_REAL) {
+    const { mockParseCv } = await import('./mocks/parseCv.mock')
+    return mockParseCv()
+  }
+  return realParseCv(pdfBase64)
+}
+
+// ── Real implementation ───────────────────────────────────────────────────────
+
+async function realParseCv(pdfBase64: string): Promise<CvOutput> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey || apiKey === 'your_api_key_here') {
     throw new TRPCError({

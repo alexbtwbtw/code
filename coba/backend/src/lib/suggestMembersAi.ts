@@ -32,7 +32,25 @@ export type AiSuggestion = {
   evidence: string
 }
 
+// ── Mock / real dispatcher ────────────────────────────────────────────────────
+
+const USE_REAL = process.env.USE_REAL_AI === 'true'
+
 export async function suggestMembersAi(
+  project: ProjectSnapshot,
+  members: MemberSnapshot[],
+  topN: number,
+): Promise<AiSuggestion[]> {
+  if (!USE_REAL) {
+    const { mockSuggestMembersAi } = await import('./mocks/suggestMembersAi.mock')
+    return mockSuggestMembersAi(members, topN)
+  }
+  return realSuggestMembersAi(project, members, topN)
+}
+
+// ── Real implementation ───────────────────────────────────────────────────────
+
+async function realSuggestMembersAi(
   project: ProjectSnapshot,
   members: MemberSnapshot[],
   topN: number,

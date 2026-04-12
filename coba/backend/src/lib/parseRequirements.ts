@@ -58,9 +58,29 @@ Regras:
 - O campo "bookCategory" deve refletir o setor principal do projeto descrito.
 - Responda APENAS com o JSON, sem markdown, sem texto adicional.`
 
-// ── Main function ─────────────────────────────────────────────────────────────
+// ── Mock / real dispatcher ────────────────────────────────────────────────────
+
+const USE_REAL = process.env.USE_REAL_AI === 'true'
 
 export async function parseRequirementsFromPdf(fileBase64: string): Promise<RequirementsOutput> {
+  if (!USE_REAL) {
+    const { mockParseRequirements } = await import('./mocks/parseRequirements.mock')
+    return mockParseRequirements()
+  }
+  return realParseRequirementsFromPdf(fileBase64)
+}
+
+export async function parseRequirementsFromDocx(docxBase64: string): Promise<RequirementsOutput> {
+  if (!USE_REAL) {
+    const { mockParseRequirements } = await import('./mocks/parseRequirements.mock')
+    return mockParseRequirements()
+  }
+  return realParseRequirementsFromDocx(docxBase64)
+}
+
+// ── Real implementations ──────────────────────────────────────────────────────
+
+async function realParseRequirementsFromPdf(fileBase64: string): Promise<RequirementsOutput> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey || apiKey === 'your_api_key_here') {
     throw new TRPCError({
@@ -102,9 +122,9 @@ export async function parseRequirementsFromPdf(fileBase64: string): Promise<Requ
   return RequirementsOutputSchema.parse(parsed)
 }
 
-// ── Word doc handler — converts DOCX to plain text then sends inline ──────────
+// ── Word doc handler (real) — converts DOCX to plain text then sends inline ───
 
-export async function parseRequirementsFromDocx(docxBase64: string): Promise<RequirementsOutput> {
+async function realParseRequirementsFromDocx(docxBase64: string): Promise<RequirementsOutput> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey || apiKey === 'your_api_key_here') {
     throw new TRPCError({
