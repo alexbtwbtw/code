@@ -7,6 +7,8 @@
 [![Node](https://img.shields.io/badge/Node-%E2%89%A525-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Tests](https://img.shields.io/badge/tests-184%20passing-brightgreen)](https://github.com/alexbtwbtw/code/actions/workflows/ci.yml)
 
+> **Disclaimer:** This is not a real product. It's a personal sandbox project built loosely around a real civil engineering company to experiment with different technologies and AI APIs (tRPC, Electron, Anthropic Claude, etc.). The data, seed records, and company references are fictional or anonymised.
+
 A bilingual (PT/EN) project management web app for civil engineering and geotechnical work. Tracks projects, geological investigation data, built structures, team members, staffing requirements, and tasks — with AI-powered CV parsing and requirements extraction.
 
 ---
