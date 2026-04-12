@@ -1,5 +1,12 @@
 # COBA Internal Portal
 
+[![CI](https://github.com/alexbtwbtw/code/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/alexbtwbtw/code/actions/workflows/ci.yml)
+[![Backend](https://github.com/alexbtwbtw/code/actions/workflows/ci.yml/badge.svg?branch=main&job=backend)](https://github.com/alexbtwbtw/code/actions/workflows/ci.yml)
+[![Frontend](https://github.com/alexbtwbtw/code/actions/workflows/ci.yml/badge.svg?branch=main&job=frontend)](https://github.com/alexbtwbtw/code/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node](https://img.shields.io/badge/Node-%E2%89%A525-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Tests](https://img.shields.io/badge/tests-184%20passing-brightgreen)](https://github.com/alexbtwbtw/code/actions/workflows/ci.yml)
+
 A bilingual (PT/EN) project management web app for civil engineering and geotechnical work. Tracks projects, geological investigation data, built structures, team members, staffing requirements, and tasks — with AI-powered CV parsing and requirements extraction.
 
 ---
