@@ -23,7 +23,7 @@ export async function seedTeam() {
   const m1 = insertMember.run({
     name: 'António Ressano Garcia',
     title: 'Engenheiro Geotécnico Sénior',
-    email: 'a.garcia@coba.pt',
+    email: 'a.garcia@example.pt',
     phone: '+351 21 000 1001',
     bio: 'Mais de 28 anos de experiência em prospeção geotécnica, fundações especiais e estabilidade de taludes em Portugal e África Austral. Liderou campanhas de reconhecimento em terrenos difíceis — de argilas moles do estuário do Tejo a maciços graníticos alterados de Angola e Moçambique. Especialista em análise de risco geotécnico para barragens e infraestruturas críticas.',
     role: 'user',
@@ -463,7 +463,7 @@ export async function seedTeam() {
 
   await attachCv(m1.lastInsertRowid, {
     name: 'António Ressano Garcia', title: 'Engenheiro Geotécnico Sénior',
-    email: 'a.garcia@coba.pt', phone: '+351 21 000 1001',
+    email: 'a.garcia@example.pt', phone: '+351 21 000 1001',
     bio: 'Mais de 28 anos de experiência em prospeção geotécnica, fundações especiais e estabilidade de taludes em Portugal e África Austral. Especialista em análise de risco geotécnico para barragens e infraestruturas críticas.',
     history: [
       { projectName: 'Ponte Vasco da Gama — Prospeção Geotécnica', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '1993-03-01', endDate: '1994-06-30', notes: 'Dirigiu o programa de prospeção com 42 sondagens para caracterizar os depósitos aluvionares do Tejo.' },
@@ -484,7 +484,7 @@ export async function seedTeam() {
   const m2 = insertMember.run({
     name: 'Maria Conceição Figueiredo',
     title: 'Engenheira Estrutural Sénior',
-    email: 'm.figueiredo@coba.pt',
+    email: 'm.figueiredo@example.pt',
     phone: '+351 21 000 1042',
     bio: 'Vinte e dois anos de experiência em projeto estrutural de pontes, viadutos e túneis em Portugal, Brasil e Reino Unido. Especialista em betão pré-esforçado, estruturas metálicas mistas e avaliação sísmica. Participou em alguns dos projetos de infraestrutura de transporte mais exigentes de Portugal, desde a Ponte Vasco da Gama até às novas linhas de Alta Velocidade.',
     role: 'user',
@@ -878,7 +878,7 @@ export async function seedTeam() {
 
   await attachCv(m2.lastInsertRowid, {
     name: 'Maria Conceição Figueiredo', title: 'Engenheira Estrutural Sénior',
-    email: 'm.figueiredo@coba.pt', phone: '+351 21 000 1042',
+    email: 'm.figueiredo@example.pt', phone: '+351 21 000 1042',
     bio: 'Vinte e dois anos de experiência em projeto estrutural de pontes, viadutos e túneis em Portugal, Brasil e Reino Unido. Especialista em betão pré-esforçado, estruturas metálicas mistas e avaliação sísmica.',
     history: [
       { projectName: 'Viaduto do Carregado — A10 Lezíria', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2002-01-01', endDate: '2004-08-31', notes: 'Projeto de viaduto de 1 200 m com tabuleiro de viga caixão por avanços sucessivos.' },
@@ -895,250 +895,689 @@ export async function seedTeam() {
     ],
   })
 
-  // ── Membro 3: Paulo Rodrigues ─────────────────────────────────────────────
+  // ── Membro 3: Paulo Rodrigues — Engenheiro Hidráulico/Recursos Hídricos ────
   const m3 = insertMember.run({
     name: 'Paulo Rodrigues',
-    title: 'Especialista em Infraestruturas Aeroportuárias',
-    email: 'p.rodrigues@coba.pt',
+    title: 'Engenheiro Hidráulico Sénior',
+    email: 'p.rodrigues@example.pt',
     phone: '+351 21 000 1078',
-    bio: 'Focado em projetos aeroportuários e centros de transporte na África Oriental. Especialista em engenharia de pavimentos e tratamento de solos expansivos.',
+    bio: 'Vinte e cinco anos de experiência em engenharia hidráulica e recursos hídricos em Moçambique, Angola e Cabo Verde. Especialista em projetos de barragens, sistemas de abastecimento de água, proteção contra cheias e aproveitamentos hidroelétricos. Fluente em modelação hidrológica (HEC-HMS) e hidráulica (HEC-RAS, MIKE FLOOD), com sólida experiência na gestão de financiamento do Banco Mundial e BEI.',
     role: 'user',
   })
-  insertProjectTeam.run({ project_id: 3, team_member_id: m3.lastInsertRowid, role_on_project: 'Gestor de Projeto' })
+  insertProjectTeam.run({ project_id: 28, team_member_id: m3.lastInsertRowid, role_on_project: 'Diretor Técnico' })
+  insertProjectTeam.run({ project_id: 29, team_member_id: m3.lastInsertRowid, role_on_project: 'Responsável Hidráulico' })
+  insertProjectTeam.run({ project_id: 26, team_member_id: m3.lastInsertRowid, role_on_project: 'Especialista Hidráulico' })
 
-  // Histórico 3A: Expansão do Aeroporto Internacional Julius Nyerere (ligado ao projeto 3)
+  // Histórico 3A: Barragem do Massingir — Moçambique (reabilitação)
   const h3a = insertHistory.run({
     team_member_id: m3.lastInsertRowid,
-    project_id: 3,
-    project_name: 'Expansão do Aeroporto Internacional Julius Nyerere',
-    macro_region: 'Sub-Saharan Africa',
-    country: 'Tanzania',
-    place: 'Dar es Salaam',
-    category: 'transport',
-    start_date: null,
-    end_date: null,
-    notes: 'Prospeção da fundação da pista e projeto do pavimento para operações de aeronaves de fuselagem larga.',
+    project_id: null,
+    project_name: 'Reabilitação da Barragem do Massingir',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Massingir',
+    category: 'water', start_date: '2000-06-01', end_date: '2003-12-31',
+    notes: 'Direção técnica da reabilitação da barragem do Massingir após o ciclone Eline de 2000. Reparação do descarregador de cheias, impermeabilização da barragem de terra e instalação de novos instrumentos de monitorização. Barragem serve 100 000 ha de regadio no Vale do Limpopo.',
   })
   insertHistoryGeo.run({
     history_id: h3a.lastInsertRowid,
-    point_label: 'BH-R01', type: 'borehole',
-    macro_region: 'Sub-Saharan Africa', country: 'Tanzania', place: 'Dar es Salaam',
-    depth: 25.0, soil_type: 'argila expansiva (black cotton)', rock_type: 'basalto',
-    groundwater_depth: 3.2, bearing_capacity: 120, spt_n_value: 8, seismic_class: 'C',
-    latitude: -6.8780, longitude: 39.2026, sampled_at: '2017-03-14',
-    notes: 'Solo expansivo. Requer estabilização.',
+    point_label: 'BH-MS01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Massingir',
+    depth: 25.0, soil_type: 'argila vermelha', rock_type: 'granito gnaíssico',
+    groundwater_depth: 8.0, bearing_capacity: 300, spt_n_value: 32, seismic_class: 'B',
+    latitude: -23.8700, longitude: 32.1600, sampled_at: '2001-03-12',
+    notes: 'Sondagem de inspeção junto às fissuras do descarregador. Granito gnaíssico são a 18 m.',
   })
   insertHistoryGeo.run({
     history_id: h3a.lastInsertRowid,
-    point_label: 'CS-01', type: 'core_sample',
-    macro_region: 'Sub-Saharan Africa', country: 'Tanzania', place: 'Dar es Salaam',
-    depth: 12.0, soil_type: '', rock_type: 'basalto',
-    groundwater_depth: null, bearing_capacity: 850, spt_n_value: null, seismic_class: 'C',
-    latitude: -6.8800, longitude: 39.2050, sampled_at: '2017-04-02',
-    notes: 'Recuperação de carote 95%. RQD 82%.',
+    point_label: 'BH-MS04', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Massingir',
+    depth: 18.0, soil_type: 'argila / saibro', rock_type: 'granito',
+    groundwater_depth: 5.5, bearing_capacity: 250, spt_n_value: 25, seismic_class: 'B',
+    latitude: -23.8750, longitude: 32.1650, sampled_at: '2001-04-08',
+    notes: 'Zona do ombro esquerdo. Saibro granítico muito friável. Requer recompactação.',
   })
   insertHistoryStructure.run({
     history_id: h3a.lastInsertRowid,
-    label: 'Extensão do Terminal 3', type: 'building',
-    macro_region: 'Sub-Saharan Africa', country: 'Tanzania', place: 'Dar es Salaam',
-    material: 'aço / betão armado',
-    length_m: 450, height_m: 22, span_m: 36,
-    foundation_type: 'estacas', design_load: 50,
-    latitude: -6.8720, longitude: 39.2010, built_at: null,
-    notes: 'Nova extensão do terminal para aeronaves de fuselagem larga.',
+    label: 'Barragem de Terra — Massingir', type: 'dam',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Massingir',
+    material: 'terra compactada',
+    length_m: 750, height_m: 46, span_m: null,
+    foundation_type: 'rocha granítica', design_load: null,
+    latitude: -23.8700, longitude: 32.1600, built_at: '1977-01-01',
+    notes: 'Barragem homogénea de 1971 reabilitada em 2003. Novo sistema de impermeabilização por injeção de calda.',
   })
   insertHistoryStructure.run({
     history_id: h3a.lastInsertRowid,
-    label: 'Pista 23/05', type: 'road',
-    macro_region: 'Sub-Saharan Africa', country: 'Tanzania', place: 'Dar es Salaam',
-    material: 'betão / betuminoso',
-    length_m: 3800, height_m: null, span_m: null,
-    foundation_type: 'leito estabilizado', design_load: null,
-    latitude: -6.8780, longitude: 39.2026, built_at: null,
-    notes: 'Reconstrução total do pavimento com leito de solo expansivo estabilizado.',
+    label: 'Descarregador Reabilitado — Massingir', type: 'dam',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Massingir',
+    material: 'betão armado',
+    length_m: 180, height_m: 10, span_m: null,
+    foundation_type: 'granito', design_load: null,
+    latitude: -23.8680, longitude: 32.1580, built_at: '2003-10-01',
+    notes: 'Descarregador lateral com 5 comportas de 12×8 m. Capacidade de descarga: 8 500 m³/s.',
   })
   insertHistoryFeature.run({
     history_id: h3a.lastInsertRowid,
-    label: 'Novo Tablier Sul',
-    description: 'Área de estacionamento expandida para aeronaves de fuselagem larga (código E e F).',
-    macro_region: 'Sub-Saharan Africa', country: 'Tanzania', place: 'Dar es Salaam',
-    latitude: -6.8760, longitude: 39.2040,
-    notes: 'Coordenação com o projeto de terminal para integração operacional.',
+    label: 'Sistema de Monitorização Piezométrica',
+    description: 'Rede de 24 piezómetros automáticos para monitorização de subpressões e filtração na barragem reabilitada.',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Massingir',
+    latitude: -23.8700, longitude: 32.1600,
+    notes: 'Sistema de telemetria instalado após reabilitação para envio de dados em tempo real.',
   })
 
-  // Histórico 3B: Reabilitação do Aeroporto Internacional de Entebbe (externo)
+  // Histórico 3B: Sistema de Abastecimento de Água de Luanda Norte (ligado ao projeto 2)
   const h3b = insertHistory.run({
     team_member_id: m3.lastInsertRowid,
-    project_id: null,
-    project_name: 'Reabilitação do Aeroporto Internacional de Entebbe',
-    macro_region: 'Sub-Saharan Africa',
-    country: 'Uganda',
-    place: 'Entebbe',
-    category: 'transport',
-    start_date: null,
-    end_date: null,
-    notes: 'Avaliação geotécnica da expansão de caminhos de circulação e tablier adjacente ao Lago Vitória.',
+    project_id: 2,
+    project_name: 'Sistema de Abastecimento de Água de Luanda Norte',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda',
+    category: 'water', start_date: '2010-01-01', end_date: '2014-09-30',
+    notes: 'Diretor técnico do estudo e projeto do sistema integrado de abastecimento de água de Luanda Norte, com captação no Rio Bengo, estação de tratamento de 120 000 m³/dia e adutora de 82 km. Coordenou os estudos de balanço hídrico e modelação hidráulica da rede de distribuição.',
   })
   insertHistoryGeo.run({
     history_id: h3b.lastInsertRowid,
-    point_label: 'BH-01', type: 'borehole',
-    macro_region: 'Sub-Saharan Africa', country: 'Uganda', place: 'Entebbe',
-    depth: 20.0, soil_type: 'laterite vermelha', rock_type: 'granito',
-    groundwater_depth: 9.0, bearing_capacity: 280, spt_n_value: 30, seismic_class: 'B',
-    latitude: 0.0424, longitude: 32.4432, sampled_at: '2015-02-10',
-    notes: 'Laterite vermelha sobre granito. Boa capacidade de carga.',
+    point_label: 'BH-LN01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda Norte',
+    depth: 18.0, soil_type: 'laterite', rock_type: 'granito',
+    groundwater_depth: 6.5, bearing_capacity: 300, spt_n_value: 35, seismic_class: 'B',
+    latitude: -8.7328, longitude: 13.2543, sampled_at: '2012-09-05',
+    notes: 'Crosta laterítica sobre granito decomposto. Boas condições de fundação para ETA.',
   })
   insertHistoryGeo.run({
     history_id: h3b.lastInsertRowid,
-    point_label: 'FS-01', type: 'field_survey',
-    macro_region: 'Sub-Saharan Africa', country: 'Uganda', place: 'Entebbe',
-    depth: 0, soil_type: 'argila lacustre', rock_type: '',
-    groundwater_depth: 0.5, bearing_capacity: 60, spt_n_value: 4, seismic_class: 'B',
-    latitude: 0.0420, longitude: 32.4440, sampled_at: '2015-02-18',
-    notes: 'Argila lacustre mole perto da margem do lago. Requer pré-carregamento.',
+    point_label: 'BH-LN05', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda Norte',
+    depth: 22.0, soil_type: 'areia argilosa', rock_type: 'xisto',
+    groundwater_depth: 8.0, bearing_capacity: 220, spt_n_value: 22, seismic_class: 'B',
+    latitude: -8.7102, longitude: 13.2701, sampled_at: '2012-10-18',
+    notes: 'Zona do traçado da adutora. Solo argiloso — atenção à compressibilidade diferencial na vala.',
   })
   insertHistoryStructure.run({
     history_id: h3b.lastInsertRowid,
-    label: 'Extensão do Taxiway Echo', type: 'road',
-    macro_region: 'Sub-Saharan Africa', country: 'Uganda', place: 'Entebbe',
-    material: 'betuminoso / betão',
-    length_m: 1200, height_m: null, span_m: null,
-    foundation_type: 'aterro de laterite compactada', design_load: null,
-    latitude: 0.0424, longitude: 32.4432, built_at: '2017-08-01',
-    notes: 'Nova extensão de caminho de circulação para aeronaves Code E.',
+    label: 'Estação de Tratamento — Luanda Norte', type: 'building',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda Norte',
+    material: 'betão armado',
+    length_m: 280, height_m: 14, span_m: null,
+    foundation_type: 'laje de fundação', design_load: 60,
+    latitude: -8.7328, longitude: 13.2543, built_at: '2014-06-01',
+    notes: 'ETA 120 000 m³/dia. Coagulação-floculação, sedimentação, filtração rápida, cloragem.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3b.lastInsertRowid,
+    label: 'Adutora DN1200 — 82 km', type: 'pipeline',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda Norte',
+    material: 'ferro dúctil',
+    length_m: 82000, height_m: null, span_m: null,
+    foundation_type: 'enterrada', design_load: 16,
+    latitude: -8.7200, longitude: 13.2600, built_at: '2014-09-01',
+    notes: '82 km de adutora DN1200 em ferro dúctil. 4 estações elevatórias ao longo do corredor.',
+  })
+  insertHistoryFeature.run({
+    history_id: h3b.lastInsertRowid,
+    label: 'Captação Rio Bengo',
+    description: 'Obra de captação de água bruta no Rio Bengo com estação elevatória de 1,4 m³/s e linha de bombagem de 3 km.',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Caxito',
+    latitude: -8.5800, longitude: 13.6600,
+    notes: 'Estudos hidrológicos do Rio Bengo para garantia do caudal de projeto em ano seco (Q95%).',
+  })
+
+  // Histórico 3C: PSP Ilha de Santiago — Cabo Verde (ligado ao projeto 26)
+  const h3c = insertHistory.run({
+    team_member_id: m3.lastInsertRowid,
+    project_id: 26,
+    project_name: 'PSP Ilha de Santiago — Abastecimento e Saneamento',
+    macro_region: 'Sub-Saharan Africa', country: 'Cape Verde', place: 'Ilha de Santiago',
+    category: 'water', start_date: '2024-01-01', end_date: null,
+    notes: 'Responsável técnico pelos estudos hidráulicos e documentos de concurso do sistema integrado de água e saneamento da Ilha de Santiago. Dimensionou a rede de distribuição para 130 000 habitantes, incluindo 3 reservatórios de distribuição e 8 estações elevatórias. Modelação hidráulica em EPANET 2.2.',
+  })
+  insertHistoryGeo.run({
+    history_id: h3c.lastInsertRowid,
+    point_label: 'BH-SG01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Cape Verde', place: 'Praia',
+    depth: 22.0, soil_type: 'solo vulcânico', rock_type: 'basalto',
+    groundwater_depth: 18.0, bearing_capacity: 450, spt_n_value: 40, seismic_class: 'B',
+    latitude: 14.9200, longitude: -23.5000, sampled_at: '2024-03-10',
+    notes: 'Solo vulcânico sobre basalto. NF muito profundo — abastecimento por dessalinização necessário.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3c.lastInsertRowid,
+    label: 'Reservatório de Distribuição — Achada São Filipe', type: 'reservoir',
+    macro_region: 'Sub-Saharan Africa', country: 'Cape Verde', place: 'Praia',
+    material: 'betão armado',
+    length_m: null, height_m: 5, span_m: null,
+    foundation_type: 'laje em basalto', design_load: 50,
+    latitude: 14.9400, longitude: -23.4900, built_at: null,
+    notes: 'Reservatório enterrado de 8 000 m³. Impermeabilização com tela de PVC.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3c.lastInsertRowid,
+    label: 'Central de Dessalinização — Praia', type: 'building',
+    macro_region: 'Sub-Saharan Africa', country: 'Cape Verde', place: 'Praia',
+    material: 'betão armado',
+    length_m: 80, height_m: 8, span_m: null,
+    foundation_type: 'laje em basalto', design_load: 40,
+    latitude: 14.9100, longitude: -23.5100, built_at: null,
+    notes: 'Central SWRO de 10 000 m³/dia. Energia de recuperação (DWEER). Conceptually designed para 2ª fase de 20 000 m³/dia.',
+  })
+
+  // Histórico 3D: Diques de Proteção contra Cheias — Moçambique (ligado ao projeto 28)
+  const h3d = insertHistory.run({
+    team_member_id: m3.lastInsertRowid,
+    project_id: 28,
+    project_name: 'Diques de Proteção contra Cheias — Chókwè e Búzi',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Chókwè / Búzi',
+    category: 'water', start_date: '2024-04-01', end_date: null,
+    notes: 'Direção técnica do projeto de execução dos 4 diques de proteção contra cheias (Chókwè Sul, Chókwè Norte, Búzi e Nante). Modelou a propagação de cheias do Limpopo e do Búzi em HEC-RAS 2D para definição das cotas de coroamento. Dimensionou as comportas de maré e os sistemas de drenagem internos dos polderes.',
+  })
+  insertHistoryGeo.run({
+    history_id: h3d.lastInsertRowid,
+    point_label: 'BH-DC01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Chókwè',
+    depth: 15.0, soil_type: 'aluvião arenosa', rock_type: null,
+    groundwater_depth: 1.5, bearing_capacity: 80, spt_n_value: 6, seismic_class: 'C',
+    latitude: -24.52, longitude: 33.00, sampled_at: '2024-06-10',
+    notes: 'Sondagem no traçado do dique. Aluvião muito solta (N=6). NF superficial a 1.5 m. Requer tratamento por jet-grouting.',
+  })
+  insertHistoryGeo.run({
+    history_id: h3d.lastInsertRowid,
+    point_label: 'BH-DC06', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Búzi',
+    depth: 12.0, soil_type: 'silte argiloso', rock_type: null,
+    groundwater_depth: 0.8, bearing_capacity: 60, spt_n_value: 4, seismic_class: 'C',
+    latitude: -19.85, longitude: 34.00, sampled_at: '2024-07-22',
+    notes: 'Silte mole na zona da planície de inundação do Búzi. Su<20 kPa. Estabilidade do dique requer análise de consolidação.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3d.lastInsertRowid,
+    label: 'Dique Chókwè Sul', type: 'embankment',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Chókwè',
+    material: 'terra compactada',
+    length_m: 12500, height_m: 4.5, span_m: null,
+    foundation_type: 'solo tratado / jet-grouting', design_load: null,
+    latitude: -24.55, longitude: 33.02, built_at: null,
+    notes: 'Dique de proteção T=100 anos. Coroamento na cota 34.5 m. Comportas de maré em 3 travessias de ribeiros.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3d.lastInsertRowid,
+    label: 'Dique Búzi', type: 'embankment',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Búzi',
+    material: 'terra compactada',
+    length_m: 8200, height_m: 3.8, span_m: null,
+    foundation_type: 'solo melhorado', design_load: null,
+    latitude: -19.87, longitude: 34.02, built_at: null,
+    notes: 'Dique de proteção T=50 anos. Melhoramento de fundação por colunas de brita.',
+  })
+
+  // Histórico 3E: Barragem da Corumana — Descarregador (ligado ao projeto 29)
+  const h3e = insertHistory.run({
+    team_member_id: m3.lastInsertRowid,
+    project_id: 29,
+    project_name: 'Barragem da Corumana — Descarregador Auxiliar e Tomada de Água',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Corumana',
+    category: 'water', start_date: '2024-05-01', end_date: null,
+    notes: 'Responsável pela hidráulica do descarregador auxiliar e da nova tomada de água da barragem da Corumana. Efetuou a modelação do escoamento no canal de descarga e bacia de dissipação por CFD (OpenFOAM). Dimensionou o dissipador de energia por enrocamento projetado para garantir ausência de erosão a jusante.',
+  })
+  insertHistoryGeo.run({
+    history_id: h3e.lastInsertRowid,
+    point_label: 'BH-CO01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Corumana',
+    depth: 30.0, soil_type: 'granito arenítico', rock_type: 'granito',
+    groundwater_depth: 10.0, bearing_capacity: 500, spt_n_value: 60, seismic_class: 'B',
+    latitude: -25.98, longitude: 32.57, sampled_at: '2024-07-15',
+    notes: 'Granito muito competente na ombreira. RQD=88%. Ótimas condições para fundação do descarregador.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3e.lastInsertRowid,
+    label: 'Descarregador Auxiliar — Corumana', type: 'dam',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Corumana',
+    material: 'betão armado',
+    length_m: 180, height_m: 35, span_m: null,
+    foundation_type: 'rocha granítica', design_load: null,
+    latitude: -25.98, longitude: 32.57, built_at: null,
+    notes: 'Canal de descarga escavado em granito com soleira duplo em salto de esqui. Qmax=4 600 m³/s.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3e.lastInsertRowid,
+    label: 'Nova Tomada de Água — Corumana', type: 'building',
+    macro_region: 'Sub-Saharan Africa', country: 'Mozambique', place: 'Corumana',
+    material: 'betão armado',
+    length_m: 40, height_m: 30, span_m: null,
+    foundation_type: 'rocha granítica', design_load: null,
+    latitude: -25.977, longitude: 32.572, built_at: null,
+    notes: 'Tomada de água de múltiplas cotas (3 níveis) para melhorar qualidade na ETAR de Xai-Xai.',
+  })
+
+  // Histórico 3F: Plano Diretor de Saneamento de Maputo
+  const h3f = insertHistory.run({
+    team_member_id: m3.lastInsertRowid,
+    project_id: null,
+    project_name: 'Plano Diretor de Drenagem e Saneamento de Maputo',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Maputo',
+    category: 'water', start_date: '2016-03-01', end_date: '2018-02-28',
+    notes: 'Coordenou a elaboração do Plano Diretor de Drenagem Urbana e Saneamento de Maputo para o horizonte 2040. Modelação hidrológica das 12 bacias hidrográficas urbanas por SWMM 5.1 e dimensionamento das medidas de controlo na fonte. Proposta de 4 lagoas de retenção e requalificação de 28 km de drenos principais.',
+  })
+  insertHistoryGeo.run({
+    history_id: h3f.lastInsertRowid,
+    point_label: 'FS-MAP01', type: 'field_survey',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Maputo',
+    depth: 0, soil_type: 'areia fina', rock_type: '',
+    groundwater_depth: 2.5, bearing_capacity: 80, spt_n_value: null, seismic_class: 'B',
+    latitude: -25.9700, longitude: 32.5800, sampled_at: '2016-06-15',
+    notes: 'Levantamento de campo das cheias históricas de 2015 e 2016. Estimativa de dano por inundação nas baixas da cidade.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3f.lastInsertRowid,
+    label: 'Lagoa de Retenção Maxaquene', type: 'reservoir',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Maputo',
+    material: 'terra / betão',
+    length_m: 800, height_m: 3, span_m: null,
+    foundation_type: 'solo aluvionar', design_load: null,
+    latitude: -25.9400, longitude: 32.5700, built_at: null,
+    notes: 'Lagoa de detenção de 180 000 m³ para controlo de pico de cheia T=10 anos. Área 22 ha.',
+  })
+
+  // Histórico 3G: Barragem de Rarai — Tunisía (projeto COBA p4)
+  const h3g = insertHistory.run({
+    team_member_id: m3.lastInsertRowid,
+    project_id: 4,
+    project_name: 'Barragem de Rarai — Hidrologia e Hidráulica',
+    macro_region: 'EMEA', country: 'Tunisia', place: 'Rarai',
+    category: 'water', start_date: '2021-01-01', end_date: null,
+    notes: 'Responsável pelos estudos hidrológicos e hidráulicos da barragem de Rarai na Tunísia. Elaborou o estudo de cheia de projeto (T=1000 anos) por método hidrológico regional, dimensionou o descarregador de cheias e verificou a regulação do reservatório para garantia do caudal de abastecimento a 35 000 ha de regadio.',
+  })
+  insertHistoryGeo.run({
+    history_id: h3g.lastInsertRowid,
+    point_label: 'BH-RR01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Tunisia', place: 'Rarai',
+    depth: 28.0, soil_type: 'argila calcária', rock_type: 'calcário margoso',
+    groundwater_depth: 6.0, bearing_capacity: 250, spt_n_value: 22, seismic_class: 'C',
+    latitude: 36.40, longitude: 9.80, sampled_at: '2021-04-15',
+    notes: 'Alternância de argila e calcário na fundação. Ensaios de permeabilidade Lefranc: k=5×10⁻⁷ m/s.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3g.lastInsertRowid,
+    label: 'Barragem de Rarai', type: 'dam',
+    macro_region: 'EMEA', country: 'Tunisia', place: 'Rarai',
+    material: 'terra/enrocamento',
+    length_m: 450, height_m: 32, span_m: null,
+    foundation_type: 'solo tratado', design_load: null,
+    latitude: 36.40, longitude: 9.80, built_at: null,
+    notes: 'Barragem de aterro zonal. Descarregador lateral com calha em betão de 160 m. Qd=485 m³/s.',
+  })
+
+  // Histórico 3H: Abastecimento de Água e Saneamento de Nacala
+  const h3h = insertHistory.run({
+    team_member_id: m3.lastInsertRowid,
+    project_id: null,
+    project_name: 'Abastecimento de Água e Saneamento de Nacala',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Nacala',
+    category: 'water', start_date: '2007-02-01', end_date: '2010-06-30',
+    notes: 'Projeto e supervisão do sistema de abastecimento de água e saneamento de Nacala, com financiamento do BEI. Dimensionou a adutora de 45 km, a ETA de 15 000 m³/dia e a rede de distribuição para 120 000 habitantes. Realizou estudos de qualidade da água e modelação de mistura de cloragem no EPANET.',
+  })
+  insertHistoryGeo.run({
+    history_id: h3h.lastInsertRowid,
+    point_label: 'BH-NA01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Nacala',
+    depth: 45.0, soil_type: 'argila arenosa', rock_type: 'gnaisse',
+    groundwater_depth: 12.0, bearing_capacity: 250, spt_n_value: 28, seismic_class: 'B',
+    latitude: -14.5420, longitude: 40.6730, sampled_at: '2007-06-18',
+    notes: 'Aquífero produtivo entre 35-45 m. Gnaisse alterado com fraturas horizontais. Captação de emergência possível.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3h.lastInsertRowid,
+    label: 'ETA de Nacala', type: 'building',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Nacala',
+    material: 'betão armado',
+    length_m: 120, height_m: 8, span_m: null,
+    foundation_type: 'laje de fundação', design_load: 40,
+    latitude: -14.5420, longitude: 40.6730, built_at: '2010-03-01',
+    notes: 'ETA 15 000 m³/dia. Coagulação, sedimentação, filtração lenta e desinfeção UV.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3h.lastInsertRowid,
+    label: 'Reservatório Elevado — Nacala', type: 'reservoir',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Nacala',
+    material: 'betão armado',
+    length_m: null, height_m: 25, span_m: null,
+    foundation_type: 'estacas', design_load: null,
+    latitude: -14.5300, longitude: 40.6800, built_at: '2009-11-01',
+    notes: 'Reservatório elevado de 500 m³ ao serviço de 40 000 habitantes. Rede PEAD de 35 km.',
+  })
+
+  // Histórico 3I: Dessalinização Algarve (ligado ao projeto 11)
+  const h3i = insertHistory.run({
+    team_member_id: m3.lastInsertRowid,
+    project_id: 11,
+    project_name: 'Dessalinização Algarve — Estudos Hidráulicos',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Algarve',
+    category: 'water', start_date: '2023-01-01', end_date: null,
+    notes: 'Responsável pelos estudos de processo e dimensionamento hidráulico da estação de dessalinização do Algarve. Analisou as alternativas de captação em mar aberto vs. poços de praia e elaborou o modelo de dispersão do concentrado de rejeito (CORMIX). Coordenou com a EPAL a integração no sistema de adução existente.',
+  })
+  insertHistoryGeo.run({
+    history_id: h3i.lastInsertRowid,
+    point_label: 'CPT-DS01', type: 'cpt',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Algarve',
+    depth: 15.0, soil_type: 'areia calcária', rock_type: 'calcário',
+    groundwater_depth: 2.5, bearing_capacity: 150, spt_n_value: null, seismic_class: 'C',
+    latitude: 37.00, longitude: -7.94, sampled_at: '2023-03-14',
+    notes: 'CPT na zona de implantação da estação. Areias calcárias até 8 m, calcário abaixo. qc=8 MPa nas areias.',
+  })
+  insertHistoryStructure.run({
+    history_id: h3i.lastInsertRowid,
+    label: 'Unidade de Osmose Inversa — Dessalinização Algarve', type: 'building',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Algarve',
+    material: 'betão armado / aço inox',
+    length_m: 180, height_m: 12, span_m: null,
+    foundation_type: 'laje em calcário', design_load: 50,
+    latitude: 37.00, longitude: -7.94, built_at: null,
+    notes: 'Capacidade 22 000 m³/dia (1ª fase). Pré-tratamento ultrafiltração + SWRO 45 bar. TRO=45%.',
   })
 
   await attachCv(m3.lastInsertRowid, {
-    name: 'Paulo Rodrigues', title: 'Especialista em Infraestruturas Aeroportuárias',
-    email: 'p.rodrigues@coba.pt', phone: '+351 21 000 1078',
-    bio: 'Focado em projetos aeroportuários e centros de transporte na África Oriental. Especialista em engenharia de pavimentos e tratamento de solos expansivos.',
+    name: 'Paulo Rodrigues', title: 'Engenheiro Hidráulico Sénior',
+    email: 'p.rodrigues@example.pt', phone: '+351 21 000 1078',
+    bio: 'Vinte e cinco anos de experiência em engenharia hidráulica e recursos hídricos em Moçambique, Angola e Cabo Verde. Especialista em barragens, sistemas de abastecimento de água e proteção contra cheias.',
     history: [
-      { projectName: 'Expansão do Aeroporto Internacional Julius Nyerere', country: 'Tanzania', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Prospeção da fundação da pista e projeto do pavimento para operações de aeronaves de fuselagem larga.' },
-      { projectName: 'Reabilitação do Aeroporto Internacional de Entebbe', country: 'Uganda', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Avaliação geotécnica da expansão de caminhos de circulação e tablier adjacente ao Lago Vitória.' },
+      { projectName: 'Reabilitação da Barragem do Massingir', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2000-06-01', endDate: '2003-12-31', notes: 'Direção técnica da reabilitação do descarregador e impermeabilização da barragem pós-ciclone Eline.' },
+      { projectName: 'Abastecimento de Água e Saneamento de Nacala', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2007-02-01', endDate: '2010-06-30', notes: 'Projeto de ETA, reservatório e rede de distribuição para 120 000 habitantes.' },
+      { projectName: 'Sistema de Abastecimento de Água de Luanda Norte', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2010-01-01', endDate: '2014-09-30', notes: 'Direção técnica do sistema integrado: captação, ETA de 120 000 m³/dia e adutora de 82 km.' },
+      { projectName: 'Plano Diretor de Drenagem e Saneamento de Maputo', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2016-03-01', endDate: '2018-02-28', notes: 'Modelação SWMM de 12 bacias e proposta de lagoas de retenção e requalificação de drenos.' },
+      { projectName: 'Barragem de Rarai — Hidrologia e Hidráulica', country: 'Tunisia', macroRegion: 'EMEA', category: 'water', startDate: '2021-01-01', notes: 'Estudo hidrológico de cheia T=1000 anos e dimensionamento do descarregador de cheias.' },
+      { projectName: 'PSP Ilha de Santiago — Abastecimento e Saneamento', country: 'Cape Verde', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2024-01-01', notes: 'Estudos hidráulicos e documentos de concurso para 130 000 habitantes.' },
+      { projectName: 'Diques de Proteção contra Cheias — Chókwè e Búzi', country: 'Mozambique', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2024-04-01', notes: 'Direção técnica de 4 diques de proteção com modelação HEC-RAS 2D do Limpopo e Búzi.' },
+      { projectName: 'Barragem da Corumana — Descarregador Auxiliar e Tomada de Água', country: 'Mozambique', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2024-05-01', notes: 'Hidráulica do descarregador e modelação CFD da bacia de dissipação.' },
+      { projectName: 'Dessalinização Algarve — Estudos Hidráulicos', country: 'Portugal', macroRegion: 'EMEA', category: 'water', startDate: '2023-01-01', notes: 'Dimensionamento do processo de dessalinização e modelo de dispersão de concentrado.' },
     ],
   })
 
-  // ── Membro 4: Sónia Lopes ─────────────────────────────────────────────────
+  // ── Membro 4: Sónia Lopes — Consultora Ambiental e de Planeamento ──────────
   const m4 = insertMember.run({
     name: 'Sónia Lopes',
-    title: 'Engenheira de Estradas e Pavimentos',
-    email: 's.lopes@coba.pt',
+    title: 'Consultora Ambiental e de Planeamento Sénior',
+    email: 's.lopes@example.pt',
     phone: '+351 21 000 1093',
-    bio: 'Especializada em reabilitação de estradas e projeto de pavimentos em climas tropicais e subtropicais. Experiente em projetos de corredor de longa extensão no sul de África.',
+    bio: 'Dezoito anos de experiência em avaliação de impacte ambiental, planeamento territorial e gestão costeira em Portugal e em países africanos de língua portuguesa. Especialista em EIA de grandes infraestruturas de energia, transportes e água. Coordenou estudos ambientais e sociais com financiamento do Banco Mundial, BEI e Fundo Europeu de Desenvolvimento. Fluente em português, francês e inglês.',
     role: 'user',
   })
-  insertProjectTeam.run({ project_id: 5, team_member_id: m4.lastInsertRowid, role_on_project: 'Gestora de Projeto' })
+  insertProjectTeam.run({ project_id: 7, team_member_id: m4.lastInsertRowid, role_on_project: 'Coordenadora de Ambiente' })
+  insertProjectTeam.run({ project_id: 14, team_member_id: m4.lastInsertRowid, role_on_project: 'Diretora de EIA' })
+  insertProjectTeam.run({ project_id: 34, team_member_id: m4.lastInsertRowid, role_on_project: 'Responsável Ambiental' })
 
-  // Histórico 4A: Reabilitação da EN1 — Maputo a Beira (ligado ao projeto 5)
+  // Histórico 4A: EIA Saltinho — Guiné-Bissau (ligado ao projeto 7)
   const h4a = insertHistory.run({
     team_member_id: m4.lastInsertRowid,
-    project_id: 5,
-    project_name: 'Reabilitação da EN1 — Maputo a Beira',
-    macro_region: 'Sub-Saharan Africa',
-    country: 'Moçambique',
-    place: 'Sofala / Inhambane',
-    category: 'transport',
-    start_date: null,
-    end_date: null,
-    notes: 'Prospeção da fundação em corredor de 620 km. Identificadas múltiplas zonas de tratamento necessárias.',
+    project_id: 7,
+    project_name: 'EIA Saltinho — Aproveitamento Hidroelétrico',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Rio Corubal',
+    category: 'environment', start_date: '2022-01-01', end_date: null,
+    notes: 'Coordenadora do Estudo de Impacte Ambiental e Social (EIAS) do aproveitamento hidroelétrico de Saltinho, no Rio Corubal. Coordenou as componentes de biodiversidade aquática, reassentamento de 1 200 pessoas, qualidade da água do reservatório e planos de monitorização ambiental. O estudo seguiu os Padrões de Desempenho da IFC e os requisitos nacionais de Guiné-Bissau.',
   })
   insertHistoryGeo.run({
     history_id: h4a.lastInsertRowid,
-    point_label: 'BH-101', type: 'borehole',
-    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Sofala',
-    depth: 6.0, soil_type: 'argila arenosa', rock_type: '',
-    groundwater_depth: 4.5, bearing_capacity: 100, spt_n_value: 9, seismic_class: 'C',
-    latitude: -19.8436, longitude: 34.8389, sampled_at: '2020-10-03',
-    notes: 'Fundação fraca — estabilização recomendada.',
-  })
-  insertHistoryGeo.run({
-    history_id: h4a.lastInsertRowid,
-    point_label: 'FS-01', type: 'field_survey',
-    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Inhambane',
-    depth: 0, soil_type: 'laterite', rock_type: '',
-    groundwater_depth: null, bearing_capacity: 200, spt_n_value: null, seismic_class: 'C',
-    latitude: -19.2100, longitude: 34.5600, sampled_at: '2020-11-15',
-    notes: '65% da faixa de rodagem requer reconstrução total.',
-  })
-  insertHistoryStructure.run({
-    history_id: h4a.lastInsertRowid,
-    label: 'Reabilitação da EN1', type: 'road',
-    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Sofala / Inhambane',
-    material: 'betuminoso / base granular',
-    length_m: 620000, height_m: null, span_m: null,
-    foundation_type: 'leito estabilizado', design_load: null,
-    latitude: -19.2100, longitude: 34.5600, built_at: null,
-    notes: 'Reabilitação de 620 km de estrada nacional primária.',
-  })
-  insertHistoryStructure.run({
-    history_id: h4a.lastInsertRowid,
-    label: 'Reforço de Pontes (24 un.)', type: 'bridge',
-    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Sofala / Inhambane',
-    material: 'betão armado',
-    length_m: 1240, height_m: null, span_m: null,
-    foundation_type: 'estacas existentes', design_load: 300,
-    latitude: -19.5000, longitude: 34.6000, built_at: null,
-    notes: '24 estruturas de pontes reforçadas e alargadas.',
+    point_label: 'FS-SAL01', type: 'field_survey',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Rio Corubal',
+    depth: 0, soil_type: 'solo laterítico', rock_type: '',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'B',
+    latitude: 11.82, longitude: -14.92, sampled_at: '2022-04-20',
+    notes: 'Levantamento florístico de 850 ha de área de reservatório. Identificadas 12 espécies endémicas a proteger na zona de compensação.',
   })
   insertHistoryFeature.run({
     history_id: h4a.lastInsertRowid,
-    label: 'Posto de Pesagem do Save',
-    description: 'Novo posto de controlo de peso com balança dinâmica integrada na reabilitação.',
-    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Rio Save',
-    latitude: -21.0000, longitude: 34.5500,
-    notes: 'Coordenação com entidades fiscalizadoras para operacionalização do posto.',
+    label: 'Zona de Compensação de Biodiversidade',
+    description: 'Área de 420 ha proposta para compensação de perda de habitats ribeirinhos e florestais.',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Rio Corubal',
+    latitude: 11.85, longitude: -14.88,
+    notes: 'Implementação coordenada com o Ministério do Ambiente da Guiné-Bissau e ONG locais.',
   })
 
-  // Histórico 4B: Requalificação da EN1 — Lusaka a Chirundu (externo)
+  // Histórico 4B: EIA Fábrica de Baterias CALB Sines (ligado ao projeto 14)
   const h4b = insertHistory.run({
     team_member_id: m4.lastInsertRowid,
-    project_id: null,
-    project_name: 'Requalificação da EN1 — Lusaka a Chirundu',
-    macro_region: 'Sub-Saharan Africa',
-    country: 'Zâmbia',
-    place: 'Lusaka',
-    category: 'transport',
-    start_date: null,
-    end_date: null,
-    notes: 'Projeto do pavimento e avaliação de materiais para requalificação de 200 km de estrada nacional.',
+    project_id: 14,
+    project_name: 'EIA Fábrica de Baterias CALB Sines — Gigafactory',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Sines',
+    category: 'environment', start_date: '2023-05-01', end_date: '2024-06-30',
+    notes: 'Diretora do Estudo de Impacte Ambiental para a gigafactory de baterias CALB em Sines (investimento de 4 700 M€). Coordenou 12 especialistas nas componentes de ruído, qualidade do ar, impactes sobre recursos hídricos, saúde pública e impactes socioeconómicos. Preparou a peça de consulta pública e acompanhou o processo de Avaliação de Impacte Ambiental junto da APA.',
   })
   insertHistoryGeo.run({
     history_id: h4b.lastInsertRowid,
-    point_label: 'BH-01', type: 'borehole',
-    macro_region: 'Sub-Saharan Africa', country: 'Zâmbia', place: 'Lusaka',
-    depth: 8.0, soil_type: 'cascalho arenoso', rock_type: 'quartzito',
-    groundwater_depth: 5.5, bearing_capacity: 350, spt_n_value: 40, seismic_class: 'B',
-    latitude: -15.4167, longitude: 28.2833, sampled_at: '2018-06-20',
-    notes: 'Cascalho arenoso denso com seixos de quartzito. Boa fundação.',
+    point_label: 'FS-SN01', type: 'field_survey',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Sines',
+    depth: 0, soil_type: 'areia fina / dunas', rock_type: '',
+    groundwater_depth: 3.5, bearing_capacity: null, spt_n_value: null, seismic_class: 'C',
+    latitude: 37.9400, longitude: -8.8800, sampled_at: '2023-07-10',
+    notes: 'Levantamento do coberto vegetal e fauna da área de implantação. Identificados habitats prioritários 2330 e 2120 (Diretiva Habitats).',
   })
-  insertHistoryStructure.run({
+  insertHistoryFeature.run({
     history_id: h4b.lastInsertRowid,
-    label: 'Requalificação da EN1 Zâmbia', type: 'road',
-    macro_region: 'Sub-Saharan Africa', country: 'Zâmbia', place: 'Lusaka',
-    material: 'betuminoso / brita',
-    length_m: 200000, height_m: null, span_m: null,
-    foundation_type: 'fundação natural', design_load: null,
-    latitude: -15.4167, longitude: 28.2833, built_at: null,
-    notes: 'Requalificação de 200 km com dupla faixa de rodagem.',
+    label: 'Plano de Gestão de Resíduos Perigosos',
+    description: 'Plano de gestão de resíduos de processo com classificação, armazenamento e destino final dos resíduos de produção de baterias de iões de lítio.',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Sines',
+    latitude: 37.9400, longitude: -8.8800,
+    notes: 'Coordenação com APA e IGAMAOT para licenciamento ambiental integrado.',
   })
-  insertHistoryStructure.run({
-    history_id: h4b.lastInsertRowid,
-    label: 'Ponte do Rio Kafue', type: 'bridge',
-    macro_region: 'Sub-Saharan Africa', country: 'Zâmbia', place: 'Rio Kafue',
-    material: 'betão pré-esforçado',
-    length_m: 280, height_m: 18, span_m: 60,
-    foundation_type: 'estacas', design_load: 400,
-    latitude: -15.8000, longitude: 27.8000, built_at: null,
-    notes: 'Nova travessia fluvial. 5 vãos de 56 m em betão pré-esforçado.',
+
+  // Histórico 4C: EIA Aeroporto Humberto Delgado — Expansão (ligado ao projeto 34)
+  const h4c = insertHistory.run({
+    team_member_id: m4.lastInsertRowid,
+    project_id: 34,
+    project_name: 'EIA Expansão Aeroporto Humberto Delgado',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    category: 'environment', start_date: '2025-10-01', end_date: null,
+    notes: 'Responsável pela coordenação e elaboração do EIA para a expansão do Aeroporto Humberto Delgado. Estudo inclui componentes de ruído aeronáutico (modelação INM), qualidade do ar, impactes sobre o estuário do Tejo, mobilidade e ordenamento do território. Prazo de 210 dias. Consulta pública integrada no processo.',
+  })
+  insertHistoryFeature.run({
+    history_id: h4c.lastInsertRowid,
+    label: 'Modelo de Ruído Aeronáutico',
+    description: 'Modelação das isossónicas Lden e Ln para o cenário de expansão, com avaliação de impacte em zonas habitadas adjacentes.',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    latitude: 38.7742, longitude: -9.1342,
+    notes: 'Software INM v7.0. Análise de 12 cenários operacionais. Comparação com limites do RGR e LNEC.',
+  })
+
+  // Histórico 4D: EIA do Corredor Ferroviário Maputo-Ressano Garcia
+  const h4d = insertHistory.run({
+    team_member_id: m4.lastInsertRowid,
+    project_id: null,
+    project_name: 'EIA do Corredor Ferroviário Maputo–Ressano Garcia',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Maputo',
+    category: 'environment', start_date: '2018-04-01', end_date: '2019-10-31',
+    notes: 'Coordenação do EIA para a reabilitação e capacitação do corredor ferroviário Maputo–Ressano Garcia (88 km). Estudo de alternativas de traçado, avaliação de impactes sobre comunidades rurais e ecossistemas do Parque Nacional de Limpopo. Elaboração do Plano de Reassentamento Involuntário para 340 famílias afetadas.',
+  })
+  insertHistoryGeo.run({
+    history_id: h4d.lastInsertRowid,
+    point_label: 'FS-MRG01', type: 'field_survey',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Moamba',
+    depth: 0, soil_type: 'solo argiloso', rock_type: '',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'B',
+    latitude: -25.6000, longitude: 32.2500, sampled_at: '2018-07-08',
+    notes: 'Levantamento socioeconómico de 340 famílias afetadas ao longo do corredor ferroviário. Inventário de ativos e benfeitorias.',
+  })
+  insertHistoryFeature.run({
+    history_id: h4d.lastInsertRowid,
+    label: 'Plano de Reassentamento Involuntário',
+    description: 'PRI para 340 famílias com opções de reassentamento local ou compensação monetária em conformidade com o OP 4.12 do Banco Mundial.',
+    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Maputo',
+    latitude: -25.6200, longitude: 32.2800,
+    notes: 'Processo de consulta participativa com líderes comunitários e autoridades distritais.',
+  })
+
+  // Histórico 4E: Plano de Gestão Costeira Comporta-Carvalhal (Portugal)
+  const h4e = insertHistory.run({
+    team_member_id: m4.lastInsertRowid,
+    project_id: null,
+    project_name: 'Plano de Gestão Integrada da Zona Costeira Comporta-Carvalhal',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Comporta / Carvalhal',
+    category: 'environment', start_date: '2012-02-01', end_date: '2014-03-31',
+    notes: 'Coordenação do Plano de Gestão Integrada da Zona Costeira da Comporta e Carvalhal, financiado pelo POAT-FEDER. Avaliação da dinâmica sedimentar, erosão costeira e habitats dunares. Proposta de faixa de salvaguarda e medidas de adaptação às alterações climáticas para um horizonte de 50 anos.',
+  })
+  insertHistoryGeo.run({
+    history_id: h4e.lastInsertRowid,
+    point_label: 'FS-CC01', type: 'field_survey',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Comporta',
+    depth: 0, soil_type: 'areia fina dunar', rock_type: '',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'C',
+    latitude: 38.3800, longitude: -8.7700, sampled_at: '2012-06-12',
+    notes: 'Levantamento topográfico de 22 km de linha de costa. Taxa de recuo médio 1.2 m/ano no troço norte.',
+  })
+  insertHistoryFeature.run({
+    history_id: h4e.lastInsertRowid,
+    label: 'Faixa de Salvaguarda Costeira',
+    description: 'Delimitação de faixa de salvaguarda de 200 m para o horizonte 2060 com cenário de subida do nível do mar de 0.8 m.',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Comporta',
+    latitude: 38.3800, longitude: -8.7700,
+    notes: 'Proposta integrada no PDM do Município de Alcácer do Sal.',
+  })
+
+  // Histórico 4F: EIA Barragem N'Dée — Angola (ligado ao projeto 18)
+  const h4f = insertHistory.run({
+    team_member_id: m4.lastInsertRowid,
+    project_id: 18,
+    project_name: "EIA Barragem N'Dée — Angola",
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: "Rio N'Dée",
+    category: 'environment', start_date: '2023-07-01', end_date: '2024-05-31',
+    notes: "Coordenação do Estudo de Impacte Ambiental e Social da barragem N'Dée em Angola. Avaliação de impactes sobre a fauna aquática, qualidade da água a jusante e populações ribeirinhas. Elaborou o Plano de Gestão Ambiental e Social em conformidade com os padrões do Banco Mundial e da legislação ambiental angolana.",
+  })
+  insertHistoryGeo.run({
+    history_id: h4f.lastInsertRowid,
+    point_label: 'FS-ND01', type: 'field_survey',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: "Rio N'Dée",
+    depth: 0, soil_type: 'aluvião', rock_type: '',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'B',
+    latitude: -10.50, longitude: 15.20, sampled_at: '2023-09-15',
+    notes: "Campanha de caracterização da qualidade da água do Rio N'Dée: pH, OD, condutividade, coliformes e metais pesados. 12 pontos de amostragem ao longo de 80 km.",
+  })
+  insertHistoryFeature.run({
+    history_id: h4f.lastInsertRowid,
+    label: 'Plano de Gestão Ambiental e Social',
+    description: "Documento de PGAS com 24 programas de gestão ambiental para as fases de construção e operação da barragem N'Dée.",
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: "Rio N'Dée",
+    latitude: -10.50, longitude: 15.20,
+    notes: 'Programas incluem: monitorização da qualidade da água, gestão de resíduos de construção, saúde e segurança e envolvimento das partes interessadas.',
+  })
+
+  // Histórico 4G: EIA da Linha de Alta Tensão 400 kV Mira-Vieira de Leiria
+  const h4g = insertHistory.run({
+    team_member_id: m4.lastInsertRowid,
+    project_id: null,
+    project_name: 'EIA Linha AT 400 kV Mira–Vieira de Leiria',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Mira / Leiria',
+    category: 'environment', start_date: '2009-09-01', end_date: '2011-12-31',
+    notes: 'Responsável pela coordenação do EIA da nova linha de muito alta tensão 400 kV entre Mira e Vieira de Leiria (75 km). Estudo de alternativas de corredor com avaliação multicritério, impactes sobre a paisagem, avifauna e áreas classificadas (Rede Natura 2000). Processo de consulta pública com 280 participantes.',
+  })
+  insertHistoryGeo.run({
+    history_id: h4g.lastInsertRowid,
+    point_label: 'FS-LAT01', type: 'field_survey',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Figueira da Foz',
+    depth: 0, soil_type: 'solo florestal', rock_type: '',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'C',
+    latitude: 40.1500, longitude: -8.7500, sampled_at: '2010-04-20',
+    notes: 'Levantamento de avifauna (rapinas e migratórias) ao longo do corredor. Identificados 3 ninhos de cegonha-preta em raio de 1 km.',
+  })
+  insertHistoryFeature.run({
+    history_id: h4g.lastInsertRowid,
+    label: 'Plano de Minimização de Impactes na Avifauna',
+    description: 'Plano com medidas de balizagem dos cabos de guarda, janelas de restrição à construção em época de nidificação e translocação de ninhos.',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Leiria',
+    latitude: 39.7500, longitude: -8.8100,
+    notes: 'Validado pela ICNB. Monitorização pós-obra anual durante 5 anos.',
+  })
+
+  // Histórico 4H: EIA do Aproveitamento Hidráulico de Caculo Cabaça (Angola)
+  const h4h = insertHistory.run({
+    team_member_id: m4.lastInsertRowid,
+    project_id: 3,
+    project_name: 'EIA AH Caculo Cabaça — Rio Kwanza',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Rio Kwanza',
+    category: 'environment', start_date: '2019-06-01', end_date: '2021-12-31',
+    notes: 'Coordenadora da componente ambiental e social dos serviços de assessoria do Aproveitamento Hidroelétrico Caculo Cabaça. Supervisionou a implementação do PGAS durante a construção e elaborou os relatórios semestrais de conformidade ambiental para o cliente GAMEK e financiadores internacionais. Gerenciou o processo de consulta pública e resolução de reclamações.',
+  })
+  insertHistoryGeo.run({
+    history_id: h4h.lastInsertRowid,
+    point_label: 'FS-KWZ01', type: 'field_survey',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Rio Kwanza',
+    depth: 0, soil_type: 'galeria ripária', rock_type: '',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'B',
+    latitude: -9.52, longitude: 14.48, sampled_at: '2020-03-10',
+    notes: 'Monitorização da qualidade da água a jusante. Análise de 18 parâmetros físico-químicos e biológicos.',
+  })
+  insertHistoryFeature.run({
+    history_id: h4h.lastInsertRowid,
+    label: 'Relatório de Conformidade Ambiental Semestral',
+    description: 'Relatório de conformidade com 24 indicadores de desempenho ambiental e social do projeto Caculo Cabaça.',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Rio Kwanza',
+    latitude: -9.52, longitude: 14.48,
+    notes: 'Relatórios entregues a GAMEK, Banco Industrial e Comercial da China (ICBC) e supervisores independentes.',
+  })
+
+  // Histórico 4I: Plano Diretor Municipal de Bissau
+  const h4i = insertHistory.run({
+    team_member_id: m4.lastInsertRowid,
+    project_id: null,
+    project_name: 'Plano Diretor Municipal de Bissau — Revisão',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Bissau',
+    category: 'planning', start_date: '2015-09-01', end_date: '2017-06-30',
+    notes: 'Consultora de planeamento e ambiente na revisão do PDM de Bissau, financiada pela CE. Elaborou a avaliação ambiental estratégica do plano, com análise de capacidade de carga do estuário do Rio Geba. Propôs corredores verdes urbanos e zonas de amortecimento costeira para 12 km de frente fluvial.',
+  })
+  insertHistoryGeo.run({
+    history_id: h4i.lastInsertRowid,
+    point_label: 'FS-BSS01', type: 'field_survey',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Bissau',
+    depth: 0, soil_type: 'mangal / solo aluvionar', rock_type: '',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'B',
+    latitude: 11.8636, longitude: -15.5977, sampled_at: '2016-02-18',
+    notes: 'Levantamento de 85 ha de mangal na frente fluvial. Identificação de zonas de expansão urbana compatíveis com conservação do ecossistema.',
+  })
+  insertHistoryFeature.run({
+    history_id: h4i.lastInsertRowid,
+    label: 'Corredor Verde Urbano Bissau',
+    description: 'Proposta de rede de corredores verdes de 8.4 km ligando parques urbanos e a frente fluvial, com zonas de amortecimento de inundação.',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Bissau',
+    latitude: 11.8600, longitude: -15.5900,
+    notes: 'Integração na cartografia PDM e no regulamento de uso do solo.',
+  })
+
+  // Histórico 4J: RECAPE da Autoestrada A11 — Guimarães-Braga
+  const h4j = insertHistory.run({
+    team_member_id: m4.lastInsertRowid,
+    project_id: null,
+    project_name: 'RECAPE da Autoestrada A11 Guimarães–Braga',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Guimarães / Braga',
+    category: 'environment', start_date: '2005-06-01', end_date: '2007-09-30',
+    notes: 'Coordenação do RECAPE (Relatório de Conformidade Ambiental do Projeto de Execução) da A11 entre Guimarães e Braga. Revisão de conformidade das soluções técnicas com a DIA emitida, gestão dos compromissos ambientais e elaboração dos planos de monitorização acústica e de qualidade das águas superficiais.',
+  })
+  insertHistoryGeo.run({
+    history_id: h4j.lastInsertRowid,
+    point_label: 'FS-A11-01', type: 'field_survey',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Guimarães',
+    depth: 0, soil_type: 'granito / solo residual', rock_type: '',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'A',
+    latitude: 41.4400, longitude: -8.2900, sampled_at: '2005-09-22',
+    notes: 'Levantamento de pontos de monitorização de ruído em 6 receptores sensíveis ao longo do traçado.',
+  })
+  insertHistoryFeature.run({
+    history_id: h4j.lastInsertRowid,
+    label: 'Plano de Monitorização Acústica',
+    description: 'Rede de 12 postos de medição de ruído com medições trimestrais durante a construção e anuais durante a operação.',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Guimarães',
+    latitude: 41.4500, longitude: -8.2800,
+    notes: 'Resultados reportados à APA e Entidade Concessionária.',
   })
 
   await attachCv(m4.lastInsertRowid, {
-    name: 'Sónia Lopes', title: 'Engenheira de Estradas e Pavimentos',
-    email: 's.lopes@coba.pt', phone: '+351 21 000 1093',
-    bio: 'Especializada em reabilitação de estradas e projeto de pavimentos em climas tropicais e subtropicais. Experiente em projetos de corredor de longa extensão no sul de África.',
+    name: 'Sónia Lopes', title: 'Consultora Ambiental e de Planeamento Sénior',
+    email: 's.lopes@example.pt', phone: '+351 21 000 1093',
+    bio: 'Dezoito anos de experiência em avaliação de impacte ambiental, planeamento territorial e gestão costeira em Portugal e nos PALOP. Especialista em EIA de grandes infraestruturas com financiamento multilateral.',
     history: [
-      { projectName: 'Reabilitação da EN1 — Maputo a Beira', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Prospeção da fundação em corredor de 620 km. Identificadas múltiplas zonas de tratamento necessárias.' },
-      { projectName: 'Requalificação da EN1 — Lusaka a Chirundu', country: 'Zâmbia', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Projeto do pavimento e avaliação de materiais para requalificação de 200 km de estrada nacional.' },
+      { projectName: 'RECAPE da Autoestrada A11 Guimarães–Braga', country: 'Portugal', macroRegion: 'EMEA', category: 'environment', startDate: '2005-06-01', endDate: '2007-09-30', notes: 'RECAPE e conformidade ambiental da autoestrada A11.' },
+      { projectName: 'EIA Linha AT 400 kV Mira–Vieira de Leiria', country: 'Portugal', macroRegion: 'EMEA', category: 'environment', startDate: '2009-09-01', endDate: '2011-12-31', notes: 'EIA de linha de alta tensão 400 kV com avaliação multicritério de alternativas.' },
+      { projectName: 'Plano de Gestão Integrada da Zona Costeira Comporta-Carvalhal', country: 'Portugal', macroRegion: 'EMEA', category: 'environment', startDate: '2012-02-01', endDate: '2014-03-31', notes: 'Gestão costeira e dinâmica sedimentar da Comporta-Carvalhal.' },
+      { projectName: 'Plano Diretor Municipal de Bissau — Revisão', country: 'Guinea-Bissau', macroRegion: 'Sub-Saharan Africa', category: 'planning', startDate: '2015-09-01', endDate: '2017-06-30', notes: 'Avaliação ambiental estratégica do PDM de Bissau e proposta de corredores verdes.' },
+      { projectName: 'EIA do Corredor Ferroviário Maputo–Ressano Garcia', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'environment', startDate: '2018-04-01', endDate: '2019-10-31', notes: 'EIA e Plano de Reassentamento Involuntário para 340 famílias.' },
+      { projectName: 'EIA AH Caculo Cabaça — Rio Kwanza', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'environment', startDate: '2019-06-01', endDate: '2021-12-31', notes: 'Coordenação ambiental e social durante a construção do AH Caculo Cabaça.' },
+      { projectName: 'EIA Saltinho — Aproveitamento Hidroelétrico', country: 'Guinea-Bissau', macroRegion: 'Sub-Saharan Africa', category: 'environment', startDate: '2022-01-01', notes: 'EIAS do aproveitamento de Saltinho com gestão de biodiversidade e reassentamento.' },
+      { projectName: 'EIA Fábrica de Baterias CALB Sines — Gigafactory', country: 'Portugal', macroRegion: 'EMEA', category: 'environment', startDate: '2023-05-01', endDate: '2024-06-30', notes: 'Direção do EIA da gigafactory CALB de 4 700 M€ em Sines.' },
+      { projectName: "EIA Barragem N'Dée — Angola", country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'environment', startDate: '2023-07-01', endDate: '2024-05-31', notes: "EIA e PGAS da barragem N'Dée segundo Padrões IFC." },
+      { projectName: 'EIA Expansão Aeroporto Humberto Delgado', country: 'Portugal', macroRegion: 'EMEA', category: 'environment', startDate: '2025-10-01', notes: 'EIA para expansão aeroportuária com modelação de ruído aeronáutico.' },
     ],
   })
 
@@ -1146,7 +1585,7 @@ export async function seedTeam() {
   const m5 = insertMember.run({
     name: 'Catarina Mendes',
     title: 'Engenheira Ambiental',
-    email: 'c.mendes@coba.pt',
+    email: 'c.mendes@example.pt',
     phone: '+351 21 000 1105',
     bio: 'Especialista em tratamento de águas residuais e gestão ambiental. 15 anos de experiência em projetos de ETAR e reutilização de água em Portugal e PALOP.',
     role: 'user',
@@ -1188,7 +1627,7 @@ export async function seedTeam() {
 
   await attachCv(m5.lastInsertRowid, {
     name: 'Catarina Mendes', title: 'Engenheira Ambiental',
-    email: 'c.mendes@coba.pt', phone: '+351 21 000 1105',
+    email: 'c.mendes@example.pt', phone: '+351 21 000 1105',
     bio: 'Especialista em tratamento de águas residuais e gestão ambiental. 15 anos de experiência em projetos de ETAR e reutilização de água em Portugal e PALOP.',
     history: [
       { projectName: 'ETAR do Funchal — Modernização', country: 'Portugal', macroRegion: 'EMEA', category: 'water', notes: 'Projeto de modernização do tratamento terciário e desidratação de lamas.' },
@@ -1199,7 +1638,7 @@ export async function seedTeam() {
   const m6 = insertMember.run({
     name: 'Ricardo Neves',
     title: 'Engenheiro de Transportes e Mobilidade',
-    email: 'r.neves@coba.pt',
+    email: 'r.neves@example.pt',
     phone: '+351 21 000 1120',
     bio: 'Especialista em projetos de transporte público e mobilidade urbana. Experiência em metros ligeiros e BRT em Maputo, Luanda e Lisboa.',
     role: 'user',
@@ -1230,7 +1669,7 @@ export async function seedTeam() {
 
   await attachCv(m6.lastInsertRowid, {
     name: 'Ricardo Neves', title: 'Engenheiro de Transportes e Mobilidade',
-    email: 'r.neves@coba.pt', phone: '+351 21 000 1120',
+    email: 'r.neves@example.pt', phone: '+351 21 000 1120',
     bio: 'Especialista em projetos de transporte público e mobilidade urbana. Experiência em metros ligeiros e BRT em Maputo, Luanda e Lisboa.',
     history: [
       { projectName: 'Estudo de Viabilidade do BRT de Luanda', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Coordenação do estudo de viabilidade técnica e financeira de 3 linhas de BRT em Luanda, totalizando 65 km.' },
@@ -1241,7 +1680,7 @@ export async function seedTeam() {
   const m7 = insertMember.run({
     name: 'Filipa Tavares',
     title: 'Engenheira Geotécnica Júnior',
-    email: 'f.tavares@coba.pt',
+    email: 'f.tavares@example.pt',
     phone: '+351 21 000 1135',
     bio: 'Recém-formada pelo IST com especialização em mecânica dos solos e fundações. Em formação nos projetos de África Subsaariana.',
     role: 'user',
@@ -1273,7 +1712,7 @@ export async function seedTeam() {
 
   await attachCv(m7.lastInsertRowid, {
     name: 'Filipa Tavares', title: 'Engenheira Geotécnica Júnior',
-    email: 'f.tavares@coba.pt', phone: '+351 21 000 1135',
+    email: 'f.tavares@example.pt', phone: '+351 21 000 1135',
     bio: 'Recém-formada pelo IST com especialização em mecânica dos solos e fundações. Em formação nos projetos de África Subsaariana.',
     history: [
       { projectName: 'Reabilitação da EN1 — Maputo a Beira', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Apoio à campanha geotécnica e ensaios de laboratório no corredor da EN1.' },
@@ -1284,7 +1723,7 @@ export async function seedTeam() {
   const m8 = insertMember.run({
     name: 'Manuel Fernandes',
     title: 'Engenheiro Hidráulico Sénior',
-    email: 'm.fernandes@coba.pt',
+    email: 'm.fernandes@example.pt',
     phone: '+351 21 000 1148',
     bio: 'Especialista em engenharia hidráulica com 25 anos de experiência em barragens, aproveitamentos hidroelétricos e gestão de cheias. Projetos em Portugal, Angola e Moçambique.',
     role: 'user',
@@ -1358,7 +1797,7 @@ export async function seedTeam() {
 
   await attachCv(m8.lastInsertRowid, {
     name: 'Manuel Fernandes', title: 'Engenheiro Hidráulico Sénior',
-    email: 'm.fernandes@coba.pt', phone: '+351 21 000 1148',
+    email: 'm.fernandes@example.pt', phone: '+351 21 000 1148',
     bio: 'Especialista em engenharia hidráulica com 25 anos de experiência em barragens, aproveitamentos hidroelétricos e gestão de cheias.',
     history: [
       { projectName: 'Aproveitamento Hidroelétrico do Baixo Tâmega', country: 'Portugal', macroRegion: 'EMEA', category: 'energy', notes: 'Responsável pela modelação hidráulica e dimensionamento dos órgãos de descarga.' },
@@ -1370,7 +1809,7 @@ export async function seedTeam() {
   const m9 = insertMember.run({
     name: 'João Soares Pinto',
     title: 'Diretor de Projetos de Energia',
-    email: 'joao.soares@coba.pt',
+    email: 'joao.soares@example.pt',
     phone: '+351 21 000 1161',
     bio: 'Diretor com 28 anos de experiência em grandes aproveitamentos hidroelétricos e parques eólicos offshore. Liderou projetos em Portugal, Angola e Moçambique com orçamentos superiores a 1 000 M€.',
     role: 'user',
@@ -1417,7 +1856,7 @@ export async function seedTeam() {
 
   await attachCv(m9.lastInsertRowid, {
     name: 'João Soares Pinto', title: 'Diretor de Projetos de Energia',
-    email: 'joao.soares@coba.pt', phone: '+351 21 000 1161',
+    email: 'joao.soares@example.pt', phone: '+351 21 000 1161',
     bio: 'Diretor com 28 anos de experiência em grandes aproveitamentos hidroelétricos e parques eólicos offshore.',
     history: [
       { projectName: 'Aproveitamento Hidroelétrico do Baixo Tâmega', country: 'Portugal', macroRegion: 'EMEA', category: 'energy', startDate: '2009-06-01', endDate: '2017-12-15', notes: 'Direção geral do projeto de três barragens em cascata com 1 158 MW.' },
@@ -1429,7 +1868,7 @@ export async function seedTeam() {
   const m10 = insertMember.run({
     name: 'Ana Luísa Cardoso',
     title: 'Engenheira Geotécnica Sénior',
-    email: 'ana.cardoso@coba.pt',
+    email: 'ana.cardoso@example.pt',
     phone: '+351 21 000 1174',
     bio: 'Especialista em caracterização geotécnica e estabilidade de taludes com 18 anos de experiência. Responsável por campanhas de prospeção em terrenos tropicais em Angola, Moçambique e Guiné-Bissau.',
     role: 'user',
@@ -1474,7 +1913,7 @@ export async function seedTeam() {
 
   await attachCv(m10.lastInsertRowid, {
     name: 'Ana Luísa Cardoso', title: 'Engenheira Geotécnica Sénior',
-    email: 'ana.cardoso@coba.pt', phone: '+351 21 000 1174',
+    email: 'ana.cardoso@example.pt', phone: '+351 21 000 1174',
     bio: 'Especialista em caracterização geotécnica e estabilidade de taludes com 18 anos de experiência.',
     history: [
       { projectName: 'Aproveitamento Hidroelétrico de Laúca', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'energy', startDate: '2012-01-15', endDate: '2022-06-30', notes: 'Responsável pela campanha de prospeção geotécnica das ombreiras e fundação.' },
@@ -1486,7 +1925,7 @@ export async function seedTeam() {
   const m11 = insertMember.run({
     name: 'Bernardo Correia',
     title: 'Engenheiro Estrutural Pleno',
-    email: 'bernardo.correia@coba.pt',
+    email: 'bernardo.correia@example.pt',
     phone: '+351 21 000 1187',
     bio: 'Engenheiro estrutural com 12 anos de experiência em pontes, viadutos e infraestruturas rodoviárias. Especialização em betão pré-esforçado e estruturas metálicas mistas.',
     role: 'user',
@@ -1533,7 +1972,7 @@ export async function seedTeam() {
 
   await attachCv(m11.lastInsertRowid, {
     name: 'Bernardo Correia', title: 'Engenheiro Estrutural Pleno',
-    email: 'bernardo.correia@coba.pt', phone: '+351 21 000 1187',
+    email: 'bernardo.correia@example.pt', phone: '+351 21 000 1187',
     bio: 'Engenheiro estrutural com 12 anos de experiência em pontes, viadutos e infraestruturas rodoviárias.',
     history: [
       { projectName: 'Variante Rodoviária de Pemba', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'transport', startDate: '2024-02-01', notes: 'Projeto estrutural das duas pontes da variante e do nó de acesso.' },
@@ -1545,7 +1984,7 @@ export async function seedTeam() {
   const m12 = insertMember.run({
     name: 'Inês Brito',
     title: 'Engenheira de Ambiente e Sustentabilidade',
-    email: 'ines.brito@coba.pt',
+    email: 'ines.brito@example.pt',
     phone: '+351 21 000 1200',
     bio: 'Especializada em avaliação de impacte ambiental e sustentabilidade de grandes infraestruturas. Dez anos de experiência em EIA, RECAPE e planos de monitorização ambiental em projetos de transporte e energia.',
     role: 'user',
@@ -1572,7 +2011,7 @@ export async function seedTeam() {
 
   await attachCv(m12.lastInsertRowid, {
     name: 'Inês Brito', title: 'Engenheira de Ambiente e Sustentabilidade',
-    email: 'ines.brito@coba.pt', phone: '+351 21 000 1200',
+    email: 'ines.brito@example.pt', phone: '+351 21 000 1200',
     bio: 'Especializada em avaliação de impacte ambiental e sustentabilidade de grandes infraestruturas.',
     history: [
       { projectName: 'EIA do Corredor de Alta Tensão Setúbal–Évora', country: 'Portugal', macroRegion: 'EMEA', category: 'energy', notes: 'Coordenação do EIA de corredor de alta tensão de 120 km, incluindo consulta pública.' },
@@ -1583,7 +2022,7 @@ export async function seedTeam() {
   const m13 = insertMember.run({
     name: 'Tiago Almeida',
     title: 'Engenheiro de Transportes Júnior',
-    email: 'tiago.almeida@coba.pt',
+    email: 'tiago.almeida@example.pt',
     phone: '+351 21 000 1213',
     bio: 'Recém-formado pelo FEUP com especialização em engenharia de tráfego e mobilidade urbana. A iniciar carreira em projetos de infraestrutura de transportes em África.',
     role: 'user',
@@ -1610,7 +2049,7 @@ export async function seedTeam() {
 
   await attachCv(m13.lastInsertRowid, {
     name: 'Tiago Almeida', title: 'Engenheiro de Transportes Júnior',
-    email: 'tiago.almeida@coba.pt', phone: '+351 21 000 1213',
+    email: 'tiago.almeida@example.pt', phone: '+351 21 000 1213',
     bio: 'Recém-formado pelo FEUP com especialização em engenharia de tráfego e mobilidade urbana.',
     history: [
       { projectName: 'Metro de Superfície de Maputo — Fase 1', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'transport', startDate: '2023-11-01', notes: 'Apoio à modelação de tráfego e análise da procura de passageiros.' },
@@ -1621,7 +2060,7 @@ export async function seedTeam() {
   const m14 = insertMember.run({
     name: 'Margarida Pires',
     title: 'Especialista em Sistemas de Abastecimento de Água',
-    email: 'margarida.pires@coba.pt',
+    email: 'margarida.pires@example.pt',
     phone: '+351 21 000 1226',
     bio: 'Engenheira hidráulica com 20 anos de experiência em sistemas de abastecimento e saneamento na África lusófona. Responsável por projetos em Angola, Moçambique e Cabo Verde com financiamento BEI e Banco Mundial.',
     role: 'user',
@@ -1677,7 +2116,7 @@ export async function seedTeam() {
 
   await attachCv(m14.lastInsertRowid, {
     name: 'Margarida Pires', title: 'Especialista em Sistemas de Abastecimento de Água',
-    email: 'margarida.pires@coba.pt', phone: '+351 21 000 1226',
+    email: 'margarida.pires@example.pt', phone: '+351 21 000 1226',
     bio: 'Engenheira hidráulica com 20 anos de experiência em sistemas de abastecimento e saneamento na África lusófona.',
     history: [
       { projectName: 'Abastecimento de Água de Praia, Cabo Verde', country: 'Cabo Verde', macroRegion: 'Sub-Saharan Africa', category: 'water', notes: 'Reforço do abastecimento da capital com dessalinização e nova rede de distribuição.' },
@@ -1689,7 +2128,7 @@ export async function seedTeam() {
   const m15 = insertMember.run({
     name: 'Carlos Monteiro',
     title: 'Engenheiro de Planeamento Urbano',
-    email: 'carlos.monteiro@coba.pt',
+    email: 'carlos.monteiro@example.pt',
     phone: '+351 21 000 1239',
     bio: 'Especialista em planeamento urbano e ordenamento do território com 16 anos de experiência. Coordenou planos diretores municipais e estudos de expansão urbana em Portugal e nos PALOP.',
     role: 'user',
@@ -1707,7 +2146,7 @@ export async function seedTeam() {
 
   await attachCv(m15.lastInsertRowid, {
     name: 'Carlos Monteiro', title: 'Engenheiro de Planeamento Urbano',
-    email: 'carlos.monteiro@coba.pt', phone: '+351 21 000 1239',
+    email: 'carlos.monteiro@example.pt', phone: '+351 21 000 1239',
     bio: 'Especialista em planeamento urbano e ordenamento do território com 16 anos de experiência.',
     history: [
       { projectName: 'Plano Diretor Municipal de Matola', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'planning', notes: 'Elaboração do PDM da maior cidade industrial de Moçambique.' },
@@ -1718,7 +2157,7 @@ export async function seedTeam() {
   const m16 = insertMember.run({
     name: 'Vera Simões',
     title: 'Engenheira Geotécnica Plena',
-    email: 'vera.simoes@coba.pt',
+    email: 'vera.simoes@example.pt',
     phone: '+351 21 000 1252',
     bio: 'Engenheira geotécnica com 10 anos de experiência em fundações especiais, muros de suporte e contenção periférica. Familiaridade com solos tropicais lateríticos e argilas expansivas.',
     role: 'user',
@@ -1764,7 +2203,7 @@ export async function seedTeam() {
 
   await attachCv(m16.lastInsertRowid, {
     name: 'Vera Simões', title: 'Engenheira Geotécnica Plena',
-    email: 'vera.simoes@coba.pt', phone: '+351 21 000 1252',
+    email: 'vera.simoes@example.pt', phone: '+351 21 000 1252',
     bio: 'Engenheira geotécnica com 10 anos de experiência em fundações especiais, muros de suporte e contenção periférica.',
     history: [
       { projectName: 'Expansão do Aeroporto Internacional Julius Nyerere', country: 'Tanzania', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Campanha geotécnica do terminal e ensaios de estabilização de solos.' },
@@ -1776,7 +2215,7 @@ export async function seedTeam() {
   const m17 = insertMember.run({
     name: 'Nuno Azevedo',
     title: 'Engenheiro Hidráulico Pleno',
-    email: 'nuno.azevedo@coba.pt',
+    email: 'nuno.azevedo@example.pt',
     phone: '+351 21 000 1265',
     bio: 'Engenheiro com 11 anos de experiência em modelação hidráulica, gestão de cheias e infraestrutura de drenagem urbana. Utiliza ferramentas HEC-RAS, SWMM e MIKE Flood em projetos de Portugal e África.',
     role: 'user',
@@ -1794,7 +2233,7 @@ export async function seedTeam() {
 
   await attachCv(m17.lastInsertRowid, {
     name: 'Nuno Azevedo', title: 'Engenheiro Hidráulico Pleno',
-    email: 'nuno.azevedo@coba.pt', phone: '+351 21 000 1265',
+    email: 'nuno.azevedo@example.pt', phone: '+351 21 000 1265',
     bio: 'Engenheiro com 11 anos de experiência em modelação hidráulica, gestão de cheias e infraestrutura de drenagem urbana.',
     history: [
       { projectName: 'Plano de Gestão de Cheias do Rio Douro', country: 'Portugal', macroRegion: 'EMEA', category: 'water', notes: 'Elaboração do plano de gestão do risco de cheias com modelação 2D e mapeamento.' },
@@ -1805,7 +2244,7 @@ export async function seedTeam() {
   const m18 = insertMember.run({
     name: 'Leonor Baptista',
     title: 'Engenheira de Energia Renovável',
-    email: 'leonor.baptista@coba.pt',
+    email: 'leonor.baptista@example.pt',
     phone: '+351 21 000 1278',
     bio: 'Especialista em projetos de energia solar e eólica com 9 anos de experiência. Experiência em estudos de recurso, projeto de centrais fotovoltaicas e parques eólicos em Portugal, Moçambique e São Tomé e Príncipe.',
     role: 'user',
@@ -1832,7 +2271,7 @@ export async function seedTeam() {
 
   await attachCv(m18.lastInsertRowid, {
     name: 'Leonor Baptista', title: 'Engenheira de Energia Renovável',
-    email: 'leonor.baptista@coba.pt', phone: '+351 21 000 1278',
+    email: 'leonor.baptista@example.pt', phone: '+351 21 000 1278',
     bio: 'Especialista em projetos de energia solar e eólica com 9 anos de experiência.',
     history: [
       { projectName: 'Central Solar de Mocuba', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'energy', notes: 'Projeto de central fotovoltaica de 40 MW incluindo subestação e linha de evacuação.' },
@@ -1843,7 +2282,7 @@ export async function seedTeam() {
   const m19 = insertMember.run({
     name: 'Rui Sequeira',
     title: 'Engenheiro Geotécnico Júnior',
-    email: 'rui.sequeira@coba.pt',
+    email: 'rui.sequeira@example.pt',
     phone: '+351 21 000 1291',
     bio: 'Engenheiro geotécnico júnior com 3 anos de experiência em prospeção geotécnica e ensaios de campo. A desenvolver competências em projetos de fundações em solo tropical.',
     role: 'user',
@@ -1870,7 +2309,7 @@ export async function seedTeam() {
 
   await attachCv(m19.lastInsertRowid, {
     name: 'Rui Sequeira', title: 'Engenheiro Geotécnico Júnior',
-    email: 'rui.sequeira@coba.pt', phone: '+351 21 000 1291',
+    email: 'rui.sequeira@example.pt', phone: '+351 21 000 1291',
     bio: 'Engenheiro geotécnico júnior com 3 anos de experiência em prospeção geotécnica e ensaios de campo.',
     history: [
       { projectName: 'Prospeção Geotécnica — Parque Industrial de Viana, Angola', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'planning', notes: 'Campanha de 35 sondagens rotativas e ensaios SPT/CPTu para parque industrial.' },
@@ -1881,7 +2320,7 @@ export async function seedTeam() {
   const m20 = insertMember.run({
     name: 'Dora Vasconcellos',
     title: 'Especialista em Gestão de Projetos',
-    email: 'dora.vasconcellos@coba.pt',
+    email: 'dora.vasconcellos@example.pt',
     phone: '+351 21 000 1304',
     bio: 'Especialista em gestão de projetos de engenharia com certificação PMP e 15 anos de experiência. Competências em planeamento, controlo de custos, risco e interface com clientes em projetos de grande dimensão em África e Europa.',
     role: 'user',
@@ -1899,7 +2338,7 @@ export async function seedTeam() {
 
   await attachCv(m20.lastInsertRowid, {
     name: 'Dora Vasconcellos', title: 'Especialista em Gestão de Projetos',
-    email: 'dora.vasconcellos@coba.pt', phone: '+351 21 000 1304',
+    email: 'dora.vasconcellos@example.pt', phone: '+351 21 000 1304',
     bio: 'Especialista em gestão de projetos de engenharia com certificação PMP e 15 anos de experiência.',
     history: [
       { projectName: 'Reabilitação da Rede Viária Urbana de Luanda', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Gestão de reabilitação de 185 km de arruamentos urbanos com drenagem e iluminação.' },
@@ -1910,7 +2349,7 @@ export async function seedTeam() {
   const m21 = insertMember.run({
     name: 'Fernando Mota',
     title: 'Engenheiro de Estruturas Metálicas Sénior',
-    email: 'fernando.mota@coba.pt',
+    email: 'fernando.mota@example.pt',
     phone: '+351 21 000 1317',
     bio: 'Especialista em projeto e cálculo de estruturas metálicas e mistas com 22 anos de experiência. Participou no projeto de coberturas de grandes terminais aeroportuários, passarelas e torres de telecomunicações em Portugal e em África.',
     role: 'user',
@@ -1938,7 +2377,7 @@ export async function seedTeam() {
 
   await attachCv(m21.lastInsertRowid, {
     name: 'Fernando Mota', title: 'Engenheiro de Estruturas Metálicas Sénior',
-    email: 'fernando.mota@coba.pt', phone: '+351 21 000 1317',
+    email: 'fernando.mota@example.pt', phone: '+351 21 000 1317',
     bio: 'Especialista em projeto e cálculo de estruturas metálicas e mistas com 22 anos de experiência.',
     history: [
       { projectName: 'Expansão do Aeroporto Internacional Julius Nyerere', country: 'Tanzania', macroRegion: 'Sub-Saharan Africa', category: 'transport', notes: 'Projeto da estrutura metálica da cobertura do Terminal 3 com vãos de 36 m.' },
@@ -1949,7 +2388,7 @@ export async function seedTeam() {
   const m22 = insertMember.run({
     name: 'Susana Quintela',
     title: 'Engenheira de Saneamento Plena',
-    email: 'susana.quintela@coba.pt',
+    email: 'susana.quintela@example.pt',
     phone: '+351 21 000 1330',
     bio: 'Engenheira de saneamento com 13 anos de experiência em redes de águas residuais, ETAR e saneamento rural. Projetos em Portugal, São Tomé e Príncipe e Guiné-Bissau com financiamento FIDA.',
     role: 'user',
@@ -1976,7 +2415,7 @@ export async function seedTeam() {
 
   await attachCv(m22.lastInsertRowid, {
     name: 'Susana Quintela', title: 'Engenheira de Saneamento Plena',
-    email: 'susana.quintela@coba.pt', phone: '+351 21 000 1330',
+    email: 'susana.quintela@example.pt', phone: '+351 21 000 1330',
     bio: 'Engenheira de saneamento com 13 anos de experiência em redes de águas residuais, ETAR e saneamento rural.',
     history: [
       { projectName: 'Saneamento Rural de São Tomé — Fase II', country: 'São Tomé e Príncipe', macroRegion: 'Sub-Saharan Africa', category: 'water', notes: 'Projeto de saneamento básico para 12 aldeias com fossas séticas e redes de coleta.' },
@@ -1987,7 +2426,7 @@ export async function seedTeam() {
   const m23 = insertMember.run({
     name: 'Afonso Guerreiro',
     title: 'Engenheiro de Infraestruturas Ferroviárias',
-    email: 'afonso.guerreiro@coba.pt',
+    email: 'afonso.guerreiro@example.pt',
     phone: '+351 21 000 1343',
     bio: 'Especialista em infraestruturas ferroviárias e metro com 17 anos de experiência em geometria de via, sistemas de drenagem ferroviária e projeto de estações. Projetos em Portugal, Moçambique e Angola.',
     role: 'user',
@@ -2033,7 +2472,7 @@ export async function seedTeam() {
 
   await attachCv(m23.lastInsertRowid, {
     name: 'Afonso Guerreiro', title: 'Engenheiro de Infraestruturas Ferroviárias',
-    email: 'afonso.guerreiro@coba.pt', phone: '+351 21 000 1343',
+    email: 'afonso.guerreiro@example.pt', phone: '+351 21 000 1343',
     bio: 'Especialista em infraestruturas ferroviárias e metro com 17 anos de experiência em geometria de via e projeto de estações.',
     history: [
       { projectName: 'Metro de Superfície de Maputo — Fase 1', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'transport', startDate: '2023-11-01', notes: 'Projeto de geometria de via e infraestrutura ferroviária do metro de superfície.' },
@@ -2045,7 +2484,7 @@ export async function seedTeam() {
   const m24 = insertMember.run({
     name: 'Helena Fonseca',
     title: 'Engenheira Civil Júnior',
-    email: 'helena.fonseca@coba.pt',
+    email: 'helena.fonseca@example.pt',
     phone: '+351 21 000 1356',
     bio: 'Engenheira civil júnior recém-integrada na equipa COBA após mestrado no IST em Geotecnia e Estruturas. Colabora na elaboração de projetos de fundações e prospeção geotécnica.',
     role: 'user',
@@ -2072,7 +2511,7 @@ export async function seedTeam() {
 
   await attachCv(m24.lastInsertRowid, {
     name: 'Helena Fonseca', title: 'Engenheira Civil Júnior',
-    email: 'helena.fonseca@coba.pt', phone: '+351 21 000 1356',
+    email: 'helena.fonseca@example.pt', phone: '+351 21 000 1356',
     bio: 'Engenheira civil júnior recém-integrada na equipa COBA após mestrado no IST em Geotecnia e Estruturas.',
     history: [
       { projectName: 'Estudo Geotécnico — Bairro do Restelo (Lisboa)', country: 'Portugal', macroRegion: 'EMEA', category: 'planning', notes: 'Campanha geotécnica para fundações de edifícios de habitação em argila vermelha.' },
@@ -2083,7 +2522,7 @@ export async function seedTeam() {
   const m25 = insertMember.run({
     name: 'Miguel Valente',
     title: 'Especialista em Infraestruturas de Energia Sénior',
-    email: 'miguel.valente@coba.pt',
+    email: 'miguel.valente@example.pt',
     phone: '+351 21 000 1369',
     bio: 'Engenheiro eletrotécnico com 20 anos de especialização em subestações de alta tensão, linhas de transmissão e integração de energias renováveis na rede. Projetos em Portugal, Angola e Moçambique.',
     role: 'user',
@@ -2101,7 +2540,7 @@ export async function seedTeam() {
 
   await attachCv(m25.lastInsertRowid, {
     name: 'Miguel Valente', title: 'Especialista em Infraestruturas de Energia Sénior',
-    email: 'miguel.valente@coba.pt', phone: '+351 21 000 1369',
+    email: 'miguel.valente@example.pt', phone: '+351 21 000 1369',
     bio: 'Engenheiro eletrotécnico com 20 anos de especialização em subestações de alta tensão e integração de renováveis.',
     history: [
       { projectName: 'Linha de Alta Tensão 400 kV Douro — Valdigem', country: 'Portugal', macroRegion: 'EMEA', category: 'energy', notes: 'Projeto de linha aérea de 400 kV com 85 km para reforço da rede de transporte.' },
@@ -2112,7 +2551,7 @@ export async function seedTeam() {
   const m26 = insertMember.run({
     name: 'Teresa Oliveira',
     title: 'Engenheira Ambiental Júnior',
-    email: 'teresa.oliveira@coba.pt',
+    email: 'teresa.oliveira@example.pt',
     phone: '+351 21 000 1382',
     bio: 'Engenheira ambiental com 4 anos de experiência em monitorização ambiental, qualidade do ar e gestão de resíduos de construção. Apoia equipas de EIA e RECAPE em grandes projetos de infraestrutura.',
     role: 'user',
@@ -2130,7 +2569,7 @@ export async function seedTeam() {
 
   await attachCv(m26.lastInsertRowid, {
     name: 'Teresa Oliveira', title: 'Engenheira Ambiental Júnior',
-    email: 'teresa.oliveira@coba.pt', phone: '+351 21 000 1382',
+    email: 'teresa.oliveira@example.pt', phone: '+351 21 000 1382',
     bio: 'Engenheira ambiental com 4 anos de experiência em monitorização ambiental, qualidade do ar e gestão de resíduos.',
     history: [
       { projectName: 'Monitorização Ambiental da Autoestrada A22', country: 'Portugal', macroRegion: 'EMEA', category: 'environment', notes: 'Campanha de monitorização de ruído, qualidade da água e fauna durante construção.' },
@@ -2141,7 +2580,7 @@ export async function seedTeam() {
   const m27 = insertMember.run({
     name: 'Hugo Pinheiro',
     title: 'Engenheiro de Pontes e Viadutos Especialista',
-    email: 'hugo.pinheiro@coba.pt',
+    email: 'hugo.pinheiro@example.pt',
     phone: '+351 21 000 1395',
     bio: 'Especialista sénior em estruturas de pontes com 24 anos de experiência, focado em pontes de grande vão, pontes estaiadas e tabuleiros de viga caixão. Participou em mais de 40 projetos de pontes em 12 países.',
     role: 'user',
@@ -2178,7 +2617,7 @@ export async function seedTeam() {
 
   await attachCv(m27.lastInsertRowid, {
     name: 'Hugo Pinheiro', title: 'Engenheiro de Pontes e Viadutos Especialista',
-    email: 'hugo.pinheiro@coba.pt', phone: '+351 21 000 1395',
+    email: 'hugo.pinheiro@example.pt', phone: '+351 21 000 1395',
     bio: 'Especialista sénior em estruturas de pontes com 24 anos de experiência. Participou em mais de 40 projetos de pontes em 12 países.',
     history: [
       { projectName: 'Ponte Vasco da Gama', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', notes: 'Projeto de pormenor do tabuleiro estaiado e verificação sísmica dos pilones.' },
@@ -2190,7 +2629,7 @@ export async function seedTeam() {
   const m28 = insertMember.run({
     name: 'Graça Esteves',
     title: 'Engenheira de Recursos Hídricos Sénior',
-    email: 'graca.esteves@coba.pt',
+    email: 'graca.esteves@example.pt',
     phone: '+351 21 000 1408',
     bio: 'Especialista em recursos hídricos, hidrogeologia e irrigação com 19 anos de experiência. Responsável por estudos de balanço hídrico, planos de bacia hidrográfica e sistemas de irrigação em Moçambique, Angola e Quénia.',
     role: 'user',
@@ -2227,7 +2666,7 @@ export async function seedTeam() {
 
   await attachCv(m28.lastInsertRowid, {
     name: 'Graça Esteves', title: 'Engenheira de Recursos Hídricos Sénior',
-    email: 'graca.esteves@coba.pt', phone: '+351 21 000 1408',
+    email: 'graca.esteves@example.pt', phone: '+351 21 000 1408',
     bio: 'Especialista em recursos hídricos, hidrogeologia e irrigação com 19 anos de experiência.',
     history: [
       { projectName: 'Sistema de Irrigação do Vale do Limpopo', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'water', notes: 'Reabilitação do sistema de irrigação para 30 000 ha com canais e redes de distribuição.' },
@@ -2239,7 +2678,7 @@ export async function seedTeam() {
   const m29 = insertMember.run({
     name: 'Pedro Noronha',
     title: 'Engenheiro de Pavimentos Pleno',
-    email: 'pedro.noronha@coba.pt',
+    email: 'pedro.noronha@example.pt',
     phone: '+351 21 000 1421',
     bio: 'Engenheiro de pavimentos com 14 anos de experiência em projeto e reabilitação de estradas em climas tropicais. Especializado em pavimentos betuminosos de alto módulo e estabilização de solos com cimento e cal.',
     role: 'user',
@@ -2285,7 +2724,7 @@ export async function seedTeam() {
 
   await attachCv(m29.lastInsertRowid, {
     name: 'Pedro Noronha', title: 'Engenheiro de Pavimentos Pleno',
-    email: 'pedro.noronha@coba.pt', phone: '+351 21 000 1421',
+    email: 'pedro.noronha@example.pt', phone: '+351 21 000 1421',
     bio: 'Engenheiro de pavimentos com 14 anos de experiência em projeto e reabilitação de estradas em climas tropicais.',
     history: [
       { projectName: 'Reabilitação da EN1 — Maputo a Beira', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'transport', startDate: '2021-03-15', notes: 'Dimensionamento do reforço do pavimento betuminoso ao longo dos 620 km.' },
@@ -2297,7 +2736,7 @@ export async function seedTeam() {
   const m30 = insertMember.run({
     name: 'Beatriz Cunha',
     title: 'Engenheira de Planeamento e Ordenamento do Território Sénior',
-    email: 'beatriz.cunha@coba.pt',
+    email: 'beatriz.cunha@example.pt',
     phone: '+351 21 000 1434',
     bio: 'Especialista em planeamento territorial com 16 anos de experiência em estudos de ordenamento, impacte territorial e gestão costeira. Coordenou planos estratégicos em Portugal e nas ilhas do Atlântico.',
     role: 'user',
@@ -2324,7 +2763,7 @@ export async function seedTeam() {
 
   await attachCv(m30.lastInsertRowid, {
     name: 'Beatriz Cunha', title: 'Engenheira de Planeamento e Ordenamento do Território Sénior',
-    email: 'beatriz.cunha@coba.pt', phone: '+351 21 000 1434',
+    email: 'beatriz.cunha@example.pt', phone: '+351 21 000 1434',
     bio: 'Especialista em planeamento territorial com 16 anos de experiência em ordenamento, impacte territorial e gestão costeira.',
     history: [
       { projectName: 'Plano de Ordenamento da Orla Costeira — Alentejo', country: 'Portugal', macroRegion: 'EMEA', category: 'environment', notes: 'Coordenação do POOC do Alentejo Litoral com cartografia de risco e zonamento costeiro.' },
@@ -2336,7 +2775,7 @@ export async function seedTeam() {
   const oversight1 = insertMember.run({
     name: 'Margarida Ferreira',
     title: 'Diretora de Portfolio',
-    email: 'm.ferreira@coba.pt',
+    email: 'm.ferreira@example.pt',
     phone: '+351 21 000 9001',
     bio: 'Responsável pela supervisão estratégica de todos os projetos de infraestrutura. 20 anos de experiência em gestão de portfolios na Europa e África.',
     role: 'oversight',
@@ -2345,7 +2784,7 @@ export async function seedTeam() {
   const oversight2 = insertMember.run({
     name: 'Rui Monteiro',
     title: 'Gestor de Programa Sénior',
-    email: 'r.monteiro@coba.pt',
+    email: 'r.monteiro@example.pt',
     phone: '+351 21 000 9002',
     bio: 'Especialista em gestão de risco e reporting executivo. Supervisiona projetos de transporte e energia em múltiplas regiões.',
     role: 'oversight',
