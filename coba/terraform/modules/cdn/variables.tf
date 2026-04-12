@@ -1,6 +1,6 @@
-variable "ec2_public_ip" {
+variable "ec2_origin_domain" {
   type        = string
-  description = "Elastic IP of the EC2 instance — used as CloudFront backend origin"
+  description = "DNS hostname of the EC2 Elastic IP — used as CloudFront backend origin"
 }
 
 variable "frontend_bucket_regional_domain" {
