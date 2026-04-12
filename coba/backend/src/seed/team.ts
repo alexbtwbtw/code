@@ -19,252 +19,879 @@ async function attachCv(memberId: bigint | number, cvMember: CvMember) {
 // seedTeam is async because PDF generation is async
 export async function seedTeam() {
 
-  // ── Membro 1: António Ressano Garcia ─────────────────────────────────────
+  // ── Membro 1: António Ressano Garcia — Especialista Geotécnico ──────────────
   const m1 = insertMember.run({
     name: 'António Ressano Garcia',
-    title: 'Engenheiro Estrutural Sénior',
+    title: 'Engenheiro Geotécnico Sénior',
     email: 'a.garcia@coba.pt',
     phone: '+351 21 000 1001',
-    bio: 'Mais de 30 anos de experiência em grandes projetos de infraestrutura na Europa e África. Especialista em pontes de grande vão e avaliação de risco geotécnico.',
+    bio: 'Mais de 28 anos de experiência em prospeção geotécnica, fundações especiais e estabilidade de taludes em Portugal e África Austral. Liderou campanhas de reconhecimento em terrenos difíceis — de argilas moles do estuário do Tejo a maciços graníticos alterados de Angola e Moçambique. Especialista em análise de risco geotécnico para barragens e infraestruturas críticas.',
     role: 'user',
   })
-  insertProjectTeam.run({ project_id: 1, team_member_id: m1.lastInsertRowid, role_on_project: 'Gestor de Projeto' })
-  insertProjectTeam.run({ project_id: 4, team_member_id: m1.lastInsertRowid, role_on_project: 'Consultor Técnico' })
+  insertProjectTeam.run({ project_id: 1, team_member_id: m1.lastInsertRowid, role_on_project: 'Responsável Geotécnico' })
+  insertProjectTeam.run({ project_id: 13, team_member_id: m1.lastInsertRowid, role_on_project: 'Consultor Geotécnico' })
+  insertProjectTeam.run({ project_id: 19, team_member_id: m1.lastInsertRowid, role_on_project: 'Especialista Geotécnico' })
 
-  // Histórico 1A: Reforço da Ponte 25 de Abril (externo)
+  // Histórico 1A: Estudo Geotécnico para a Ponte Vasco da Gama
   const h1a = insertHistory.run({
     team_member_id: m1.lastInsertRowid,
-    project_id: null,
-    project_name: 'Reforço da Ponte 25 de Abril',
-    macro_region: 'EMEA',
-    country: 'Portugal',
-    place: 'Lisboa',
-    category: 'transport',
-    start_date: null,
-    end_date: null,
-    notes: 'Avaliação estrutural e projeto de reabilitação sísmica da ponte suspensa existente.',
-  })
-  insertHistoryGeo.run({
-    history_id: h1a.lastInsertRowid,
-    point_label: 'BH-01', type: 'borehole',
-    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
-    depth: 38.0, soil_type: 'argila aluvionar', rock_type: 'calcário',
-    groundwater_depth: 1.5, bearing_capacity: 160, spt_n_value: 10, seismic_class: 'D',
-    latitude: 38.6890, longitude: -9.1770, sampled_at: '1990-04-12',
-    notes: 'Argila aluvionar mole sobre calcário aos 32 m.',
-  })
-  insertHistoryGeo.run({
-    history_id: h1a.lastInsertRowid,
-    point_label: 'CS-01', type: 'core_sample',
-    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
-    depth: 15.0, soil_type: '', rock_type: 'calcário',
-    groundwater_depth: null, bearing_capacity: 900, spt_n_value: null, seismic_class: 'D',
-    latitude: 38.6892, longitude: -9.1775, sampled_at: '1990-05-03',
-    notes: 'Carote da base do pilone. RQD 75%.',
-  })
-  insertHistoryStructure.run({
-    history_id: h1a.lastInsertRowid,
-    label: 'Vão Principal (reforçado)', type: 'bridge',
-    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
-    material: 'aço (suspensão)',
-    length_m: 1013, height_m: 70, span_m: 1013,
-    foundation_type: 'caixão', design_load: 320,
-    latitude: 38.6890, longitude: -9.1770, built_at: null,
-    notes: 'Reabilitação sísmica do tabuleiro e torres da ponte suspensa existente.',
-  })
-  insertHistoryFeature.run({
-    history_id: h1a.lastInsertRowid,
-    label: 'Sistema de Monitorização Estrutural',
-    description: 'Instalação de rede de sensores sísmicos e acelerómetros para monitorização contínua da ponte.',
-    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
-    latitude: 38.6890, longitude: -9.1770,
-    notes: 'Sistema implementado após a conclusão dos trabalhos de reforço.',
-  })
-
-  // Histórico 1B: Ponte Vasco da Gama (ligado ao projeto 1)
-  const h1b = insertHistory.run({
-    team_member_id: m1.lastInsertRowid,
     project_id: 1,
-    project_name: 'Ponte Vasco da Gama',
-    macro_region: 'EMEA',
-    country: 'Portugal',
-    place: 'Lisboa',
-    category: 'transport',
-    start_date: null,
-    end_date: null,
-    notes: 'Dirigiu a prospeção geotécnica para fundações dos pilones no estuário do Tejo.',
-  })
-  insertHistoryGeo.run({
-    history_id: h1b.lastInsertRowid,
-    point_label: 'BH-01', type: 'borehole',
+    project_name: 'Ponte Vasco da Gama — Prospeção Geotécnica',
     macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
-    depth: 42.5, soil_type: 'argila aluvionar', rock_type: 'calcário',
-    groundwater_depth: 1.2, bearing_capacity: 180, spt_n_value: 12, seismic_class: 'D',
-    latitude: 38.6916, longitude: -9.0965, sampled_at: '1993-06-10',
-    notes: 'Depósitos aluvionares moles nas camadas superiores; substrato calcário a ~35 m.',
+    category: 'transport', start_date: '1993-03-01', end_date: '1994-06-30',
+    notes: 'Dirigiu o programa de prospeção com 42 sondagens rotativas e ensaios de carga in situ para caracterizar os depósitos aluvionares do estuário do Tejo. Coordenou os ensaios de carga em estacas de grande diâmetro e a interpretação geológica do substrato calcário a 35–40 m de profundidade.',
   })
   insertHistoryGeo.run({
-    history_id: h1b.lastInsertRowid,
-    point_label: 'TP-02', type: 'trial_pit',
+    history_id: h1a.lastInsertRowid,
+    point_label: 'BH-P01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa — Estuário do Tejo',
+    depth: 42.5, soil_type: 'argila aluvionar mole', rock_type: 'calcário cretácico',
+    groundwater_depth: 1.2, bearing_capacity: 180, spt_n_value: 8, seismic_class: 'D',
+    latitude: 38.6916, longitude: -9.0965, sampled_at: '1993-06-10',
+    notes: 'Perfil típico: 0-5 m aterro, 5-32 m argila aluvionar mole (N≤10), 32-42 m calcário com fragmentação. Parâmetros de consolidação (Cc=0.35, Cv=0.8 cm²/min) determinados em laboratório.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1a.lastInsertRowid,
+    point_label: 'BH-P07', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa — Estuário do Tejo',
+    depth: 50.0, soil_type: 'silte arenoso / argila', rock_type: 'calcário',
+    groundwater_depth: 0.8, bearing_capacity: 200, spt_n_value: 12, seismic_class: 'D',
+    latitude: 38.6930, longitude: -9.0940, sampled_at: '1993-07-22',
+    notes: 'Sondagem na zona dos pilones P7 e P8. Variação lateral de siltes e argilas. Substrato calcário a 38 m.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1a.lastInsertRowid,
+    point_label: 'TP-T01', type: 'trial_pit',
     macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
     depth: 3.5, soil_type: 'aterro antrópico', rock_type: '',
     groundwater_depth: 2.1, bearing_capacity: 80, spt_n_value: 5, seismic_class: 'D',
     latitude: 38.6970, longitude: -9.1020, sampled_at: '1993-05-20',
-    notes: 'Zona do aterro de acesso rodoviário.',
+    notes: 'Zona dos acessos rodoviários norte. Aterro heterogéneo com entulho e solo remexido.',
   })
   insertHistoryStructure.run({
-    history_id: h1b.lastInsertRowid,
-    label: 'Tabuleiro Principal', type: 'bridge',
+    history_id: h1a.lastInsertRowid,
+    label: 'Fundações dos Pilones (P1–P10)', type: 'bridge',
     macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
-    material: 'betão pré-esforçado / aço',
-    length_m: 12300, height_m: null, span_m: 420,
-    foundation_type: 'estacas', design_load: 425,
-    latitude: 38.6916, longitude: -9.0965, built_at: '1998-03-29',
-    notes: 'Vão central estaiado. Pilones com 150 m de altura em fundações por estacas.',
+    material: 'estacas moldadas Ø1500',
+    length_m: null, height_m: null, span_m: null,
+    foundation_type: 'estacas moldadas em calcário', design_load: 18000,
+    latitude: 38.6916, longitude: -9.0965, built_at: null,
+    notes: 'Grupo de estacas Ø1.5 m com capacidade unitária de 18 MN. Ensaios de carga estática em 3 estacas de prova.',
   })
   insertHistoryStructure.run({
-    history_id: h1b.lastInsertRowid,
-    label: 'Viaduto Norte', type: 'bridge',
+    history_id: h1a.lastInsertRowid,
+    label: 'Viaduto Norte — Fundações Correntes', type: 'bridge',
     macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
     material: 'betão pré-esforçado',
     length_m: 4900, height_m: 48, span_m: 77,
-    foundation_type: 'estacas', design_load: 300,
+    foundation_type: 'estacas CFA Ø600', design_load: 3500,
     latitude: 38.6975, longitude: -9.1025, built_at: '1997-11-15',
-    notes: 'Viaduto de viga caixão contínuo a norte do estuário.',
+    notes: 'Viaduto de viga caixão contínuo a norte. Fundações em estacas CFA de 600 mm.',
+  })
+
+  // Histórico 1B: Reforço da Encosta do Convento de Cristo, Tomar
+  const h1b = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: null,
+    project_name: 'Estabilização da Encosta do Convento de Cristo',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Tomar',
+    category: 'planning', start_date: '1997-01-01', end_date: '1998-06-30',
+    notes: 'Projeto de estabilização de encosta xistosa em risco de deslizamento sobre o claustro do Convento de Cristo. Instalação de rede de monitorização inclinométrica e pregagens passivas em rocha fraturada. Relatório geotécnico entregue à UNESCO como suporte à candidatura a Património Mundial.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1b.lastInsertRowid,
+    point_label: 'INC-01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Tomar',
+    depth: 22.0, soil_type: 'coluvião', rock_type: 'xisto',
+    groundwater_depth: 8.5, bearing_capacity: 180, spt_n_value: 18, seismic_class: 'B',
+    latitude: 39.6030, longitude: -8.4120, sampled_at: '1997-04-10',
+    notes: 'Sondagem inclinométrica. Superfície de deslizamento identificada a 14 m de profundidade em plano de xistosidade.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1b.lastInsertRowid,
+    point_label: 'TP-C01', type: 'trial_pit',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Tomar',
+    depth: 3.0, soil_type: 'coluvião', rock_type: '',
+    groundwater_depth: 2.0, bearing_capacity: 90, spt_n_value: 7, seismic_class: 'B',
+    latitude: 39.6028, longitude: -8.4115, sampled_at: '1997-03-25',
+    notes: 'Coluvião heterogéneo com blocos de xisto. Humidade elevada.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1b.lastInsertRowid,
+    label: 'Sistema de Pregagens Passivas', type: 'other',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Tomar',
+    material: 'aço nervurado / calda de cimento',
+    length_m: null, height_m: null, span_m: null,
+    foundation_type: 'pregagens em xisto', design_load: null,
+    latitude: 39.6030, longitude: -8.4120, built_at: '1998-05-01',
+    notes: '65 pregagens Ø32 mm de 8 m em rocha fraturada. Sistema de drenagem de subsuperfície associado.',
+  })
+
+  // Histórico 1C: Barragem de Calucuve — Geotecnia (ligado ao projeto 13)
+  const h1c = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: 13,
+    project_name: 'Barragem Calucuve — Prospeção e Caracterização Geotécnica',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Calucuve',
+    category: 'water', start_date: '2023-03-01', end_date: '2024-02-28',
+    notes: 'Responsável pela campanha de prospeção geotécnica da fundação da barragem de Calucuve. Executou 18 sondagens rotativas com ensaios de absorção de água (Lugeon) para avaliar a permeabilidade do maciço basáltico. Elaborou o relatório geotécnico de fundação e a proposta de tratamento por injeção de cortina impermeabilizante.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1c.lastInsertRowid,
+    point_label: 'BH-C01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Calucuve',
+    depth: 35.0, soil_type: 'argila laterítica', rock_type: 'basalto',
+    groundwater_depth: 4.5, bearing_capacity: 320, spt_n_value: 35, seismic_class: 'B',
+    latitude: -11.20, longitude: 14.60, sampled_at: '2023-06-05',
+    notes: 'Sondagem no eixo da barragem. Laterite argilosa (0-6 m), basalto alterado (6-18 m), basalto são (18-35 m). Ensaio Lugeon: 5-12 UL a 20 m.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1c.lastInsertRowid,
+    point_label: 'BH-C04', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Calucuve',
+    depth: 28.0, soil_type: 'areia laterítica', rock_type: 'basalto',
+    groundwater_depth: 6.0, bearing_capacity: 280, spt_n_value: 30, seismic_class: 'B',
+    latitude: -11.22, longitude: 14.62, sampled_at: '2023-07-12',
+    notes: 'Sondagem na ombreira esquerda. Perfil menos alterado, basalto são a 14 m. RQD médio 68%.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1c.lastInsertRowid,
+    point_label: 'BH-C09', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Calucuve',
+    depth: 40.0, soil_type: 'saibro basáltico', rock_type: 'basalto',
+    groundwater_depth: 3.5, bearing_capacity: 350, spt_n_value: 42, seismic_class: 'B',
+    latitude: -11.18, longitude: 14.58, sampled_at: '2023-08-03',
+    notes: 'Sondagem na ombreira direita. Falha de orientação N45E identificada a 22 m. Requer tratamento por injeção.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1c.lastInsertRowid,
+    label: 'Cortina de Injeção — Barragem Calucuve', type: 'dam',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Calucuve',
+    material: 'calda de cimento / bentonite',
+    length_m: 180, height_m: 35, span_m: null,
+    foundation_type: 'rocha basáltica tratada', design_load: null,
+    latitude: -11.20, longitude: 14.60, built_at: null,
+    notes: 'Cortina de impermeabilização em dois alinhamentos, profundidade média 28 m. Ensaios de absorção a cada 5 m.',
+  })
+
+  // Histórico 1D: Aterro da Lezíria Norte — Controlo de Qualidade
+  const h1d = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: null,
+    project_name: 'Lezíria Norte A10 — Prospeção e Controlo de Qualidade de Aterros',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Benavente',
+    category: 'transport', start_date: '2001-05-01', end_date: '2003-12-31',
+    notes: 'Coordenação da prospeção geotécnica e controlo de qualidade durante a construção de 12 km de aterros sobre solos moles aluvionares do Vale do Tejo. Monitorização de recalques e pressões intersticiais com 48 transdutores e inclinómetros. Validou eficácia do pré-carregamento com drenos verticais.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1d.lastInsertRowid,
+    point_label: 'CPT-L01', type: 'cpt',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Benavente',
+    depth: 22.0, soil_type: 'vasa / argila orgânica', rock_type: '',
+    groundwater_depth: 0.3, bearing_capacity: 40, spt_n_value: 2, seismic_class: 'D',
+    latitude: 38.9700, longitude: -8.8200, sampled_at: '2001-07-15',
+    notes: 'CPT em vasa orgânica de elevada compressibilidade. qc<0.3 MPa nos primeiros 10 m. Parâmetros Su=15-25 kPa. Requer pré-carregamento com drenos verticais.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1d.lastInsertRowid,
+    point_label: 'CPT-L08', type: 'cpt',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Benavente',
+    depth: 18.0, soil_type: 'argila siltosa', rock_type: '',
+    groundwater_depth: 0.5, bearing_capacity: 60, spt_n_value: 4, seismic_class: 'D',
+    latitude: 39.0100, longitude: -8.7900, sampled_at: '2002-03-22',
+    notes: 'CPT 8 meses após instalação de drenos. Aumento de resistência de 40% face ao CPT inicial.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1d.lastInsertRowid,
+    label: 'Aterro Lezíria Norte (km 22–34)', type: 'embankment',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Benavente',
+    material: 'solo argiloso compactado',
+    length_m: 12000, height_m: 6.5, span_m: null,
+    foundation_type: 'solo tratado / drenos verticais', design_load: null,
+    latitude: 38.9900, longitude: -8.8000, built_at: '2004-03-01',
+    notes: 'Aterro sobre solos moles com pré-carregamento e drenos verticais de PVC (malha 1.8×1.8 m).',
+  })
+
+  // Histórico 1E: Fundações do Hospital de São José (Lisboa)
+  const h1e = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: null,
+    project_name: 'Ampliação do Hospital de São José — Fundações Especiais',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    category: 'planning', start_date: '2005-09-01', end_date: '2007-03-31',
+    notes: 'Estudo geotécnico e projeto de fundações para novo bloco hospitalar em terreno urbano com interferências arqueológicas. Solução de microestacas em calcário para minimizar perturbação das estruturas vizinhas. Acompanhou os trabalhos de escavação com registo arqueológico.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1e.lastInsertRowid,
+    point_label: 'BH-SJ01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    depth: 28.0, soil_type: 'aterro histórico', rock_type: 'calcário',
+    groundwater_depth: 5.5, bearing_capacity: 250, spt_n_value: 22, seismic_class: 'D',
+    latitude: 38.7162, longitude: -9.1335, sampled_at: '2005-11-08',
+    notes: 'Aterro histórico com vestígios arqueológicos até 4 m. Calcário com cavidades cársticas aos 18-22 m.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1e.lastInsertRowid,
+    label: 'Microestacas Bloco C', type: 'building',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    material: 'microestacas Ø180 mm',
+    length_m: null, height_m: null, span_m: null,
+    foundation_type: 'microestacas em calcário', design_load: 600,
+    latitude: 38.7162, longitude: -9.1335, built_at: '2007-01-01',
+    notes: '96 microestacas de 12 m com calda de injeção em calcário cárstico. Carga admissível 600 kN/estaca.',
+  })
+
+  // Histórico 1F: Barragem Cova do Leão (ligado ao projeto 19)
+  const h1f = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: 19,
+    project_name: 'Barragem Cova do Leão — Estudos Geotécnicos',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Cova do Leão',
+    category: 'water', start_date: '2023-08-01', end_date: '2024-06-30',
+    notes: 'Realização da campanha geotécnica de fase de projeto para a barragem de terra de Cova do Leão. Programa de 12 sondagens com ensaios de permeabilidade e corte direto. Caracterizou a aptidão do material de empréstimo para o núcleo argiloso e os filtros. Participou na revisão do traçado de desvio do curso de água.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1f.lastInsertRowid,
+    point_label: 'BH-CL01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Cova do Leão',
+    depth: 25.0, soil_type: 'argila siltosa', rock_type: 'basalto',
+    groundwater_depth: 6.0, bearing_capacity: 200, spt_n_value: 18, seismic_class: 'B',
+    latitude: -12.30, longitude: 14.80, sampled_at: '2023-11-10',
+    notes: 'Sondagem no eixo da barragem. Argila siltosa de baixa plasticidade (LL=38%, IP=12). Basalto são a 18 m. Ensaios Lugeon: 3-8 UL.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1f.lastInsertRowid,
+    point_label: 'TP-CL03', type: 'trial_pit',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Cova do Leão',
+    depth: 4.5, soil_type: 'argila laterítica', rock_type: '',
+    groundwater_depth: null, bearing_capacity: 120, spt_n_value: 10, seismic_class: 'B',
+    latitude: -12.28, longitude: 14.78, sampled_at: '2023-12-01',
+    notes: 'Vala de empréstimo para material do núcleo. Argila de plasticidade adequada (IP=15-18). Volume estimado 250 000 m³.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1f.lastInsertRowid,
+    label: 'Barragem de Terra Cova do Leão', type: 'dam',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Cova do Leão',
+    material: 'terra compactada',
+    length_m: 280, height_m: 22, span_m: null,
+    foundation_type: 'solo compactado sobre basalto', design_load: null,
+    latitude: -12.30, longitude: 14.80, built_at: null,
+    notes: 'Barragem homogénea com núcleo argiloso, filtro de areia e enrocamento. Descarga de fundo em betão armado.',
+  })
+
+  // Histórico 1G: Estudo de Deslizamentos de Faro (Algarve)
+  const h1g = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: null,
+    project_name: 'Inventário e Mitigação de Movimentos de Massa — Algarve Central',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Faro / Silves',
+    category: 'planning', start_date: '2008-06-01', end_date: '2010-03-31',
+    notes: 'Cartografia de inventário de 340 movimentos de massa nas formações calcárias e margas do Algarve Central. Avaliação de suscetibilidade por SIG e proposta de medidas corretivas para 28 taludes críticos em vias municipais. Relatório final adotado como instrumento de ordenamento do território por 4 municípios.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1g.lastInsertRowid,
+    point_label: 'FS-ALG01', type: 'field_survey',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Silves',
+    depth: 0, soil_type: 'coluvião / marga', rock_type: 'marga calcária',
+    groundwater_depth: null, bearing_capacity: null, spt_n_value: null, seismic_class: 'C',
+    latitude: 37.1910, longitude: -8.4400, sampled_at: '2008-09-14',
+    notes: 'Levantamento de campo de talude em marga calcária com inclinação 38°. Evidências de reptação e quedas de blocos. Área afetada: 1.2 ha.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1g.lastInsertRowid,
+    label: 'Muro de Suporte — EN125 km 48', type: 'retaining_wall',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Faro',
+    material: 'betão armado',
+    length_m: 120, height_m: 4.5, span_m: null,
+    foundation_type: 'sapata em marga compacta', design_load: null,
+    latitude: 37.0200, longitude: -7.9300, built_at: '2010-02-01',
+    notes: 'Muro de gravidade em betão armado para estabilização de talude marginal da EN125.',
+  })
+
+  // Histórico 1H: Prospeção Geotécnica — Aproveitamento de Saltinho
+  const h1h = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: null,
+    project_name: 'AH Saltinho — Prospeção Geotécnica de Fase de Concurso',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Rio Corubal',
+    category: 'energy', start_date: '2015-04-01', end_date: '2016-08-31',
+    notes: 'Coordenou a prospeção geotécnica para o projeto de concurso do aproveitamento hidroelétrico de Saltinho. Executou 10 sondagens no leito e ombreiras do Rio Corubal, com ensaios de permeabilidade Lugeon e pressiómetros. Preparou o relatório de zonamento geotécnico para apoio ao projeto do corpo da barragem.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1h.lastInsertRowid,
+    point_label: 'BH-S01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Rio Corubal',
+    depth: 30.0, soil_type: 'laterite', rock_type: 'xisto',
+    groundwater_depth: 3.0, bearing_capacity: 220, spt_n_value: 22, seismic_class: 'B',
+    latitude: 11.82, longitude: -14.92, sampled_at: '2015-09-08',
+    notes: 'Sondagem na crista da barragem. Xisto são a partir dos 12 m. RQD=72%. Lugeon: 2-5 UL entre 15-30 m.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1h.lastInsertRowid,
+    point_label: 'BH-S05', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Rio Corubal',
+    depth: 22.0, soil_type: 'aluvião arenosa', rock_type: 'xisto',
+    groundwater_depth: 0.5, bearing_capacity: 150, spt_n_value: 14, seismic_class: 'B',
+    latitude: 11.83, longitude: -14.91, sampled_at: '2015-10-15',
+    notes: 'Sondagem no leito do rio. Aluvião de 8 m a remover. Xisto muito alterado na interface.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1h.lastInsertRowid,
+    label: 'Barragem de Saltinho — Conceção Geotécnica', type: 'dam',
+    macro_region: 'Sub-Saharan Africa', country: 'Guinea-Bissau', place: 'Rio Corubal',
+    material: 'betão ciclópico',
+    length_m: 160, height_m: 18, span_m: null,
+    foundation_type: 'rocha xistosa', design_load: null,
+    latitude: 11.82, longitude: -14.92, built_at: null,
+    notes: 'Barragem de gravidade no xisto do Rio Corubal. Recomendação de limpeza da superfície de fundação e injeção de consolidação.',
+  })
+
+  // Histórico 1I: Estabilização de Taludes na Serra da Estrela (A23)
+  const h1i = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: null,
+    project_name: 'Reabilitação e Estabilização de Taludes da A23 — Serra da Estrela',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Covilhã / Guarda',
+    category: 'transport', start_date: '2011-02-01', end_date: '2012-11-30',
+    notes: 'Projeto de estabilização de 14 taludes de corte em granito e xisto ao longo da A23, após evento de instabilidade em 2010. Solução combinada de pregagens, betão projetado e redes de proteção. Instalação de sistema de monitorização extensométrica em 5 taludes críticos.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1i.lastInsertRowid,
+    point_label: 'BH-A23-01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Covilhã',
+    depth: 20.0, soil_type: 'coluvião granítico', rock_type: 'granito',
+    groundwater_depth: 7.0, bearing_capacity: 350, spt_n_value: 28, seismic_class: 'B',
+    latitude: 40.2600, longitude: -7.5000, sampled_at: '2011-04-05',
+    notes: 'Granito arenítico com foliação. Planos de descontinuidade desfavoráveis para estabilidade de talude. Ângulo de atrito residual φr=28°.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1i.lastInsertRowid,
+    label: 'Reforço Talude T7 (km 23+400)', type: 'other',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Covilhã',
+    material: 'betão projetado / pregagens',
+    length_m: 85, height_m: 22, span_m: null,
+    foundation_type: 'rocha granítica', design_load: null,
+    latitude: 40.2600, longitude: -7.5000, built_at: '2012-09-01',
+    notes: 'Talude de corte em granito estabilizado com 40 pregagens Ø32 de 10 m e betão projetado de 150 mm.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1i.lastInsertRowid,
+    label: 'Muro de Suporte T12 (km 29+800)', type: 'retaining_wall',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Guarda',
+    material: 'betão armado / gabiões',
+    length_m: 60, height_m: 6, span_m: null,
+    foundation_type: 'sapata em rocha', design_load: null,
+    latitude: 40.3100, longitude: -7.4200, built_at: '2012-10-15',
+    notes: 'Muro misto com gabiões na base e betão armado na crista. Dreno francês na retaguarda.',
+  })
+
+  // Histórico 1J: Fundações da Ponte Kwanza — Angola
+  const h1j = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: null,
+    project_name: 'Ponte sobre o Rio Kwanza — Estudos Geotécnicos',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Dondo',
+    category: 'transport', start_date: '2019-10-01', end_date: '2020-09-30',
+    notes: 'Programa de prospeção geotécnica para a nova travessia do Rio Kwanza em Dondo, na EN120. Executou 8 sondagens na margem e leito do rio com identificação de depósitos fluviais e granito subjacente. Dimensionou as fundações por estacas de grande diâmetro para os pilares centrais em zona fluvial.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1j.lastInsertRowid,
+    point_label: 'BH-KW01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Dondo',
+    depth: 32.0, soil_type: 'areia fluvial', rock_type: 'granito',
+    groundwater_depth: 0.8, bearing_capacity: 300, spt_n_value: 28, seismic_class: 'B',
+    latitude: -9.6900, longitude: 14.4200, sampled_at: '2019-12-10',
+    notes: 'Areia fluvial de 0-12 m (N=20-35), granito muito alterado 12-22 m, granito são a partir de 22 m. Ensaio de carga em estaca de prova Ø1000 mm.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1j.lastInsertRowid,
+    point_label: 'BH-KW04', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Dondo',
+    depth: 28.0, soil_type: 'silte fluvial', rock_type: 'granito',
+    groundwater_depth: 0.5, bearing_capacity: 180, spt_n_value: 12, seismic_class: 'B',
+    latitude: -9.6850, longitude: 14.4250, sampled_at: '2020-01-08',
+    notes: 'Silte fluvial mole nos 8 m superiores — pilar central requer estacas de 24 m para atingir granito são.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1j.lastInsertRowid,
+    label: 'Fundações Pilares Centrais P3 e P4', type: 'bridge',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Dondo',
+    material: 'estacas moldadas Ø1200',
+    length_m: null, height_m: null, span_m: null,
+    foundation_type: 'estacas moldadas em granito', design_load: 12000,
+    latitude: -9.6900, longitude: 14.4200, built_at: null,
+    notes: 'Grupo de 6 estacas Ø1.2 m por pilar, comprimento 26 m, encastradas 2 m em granito são.',
+  })
+
+  // Histórico 1K: Contenção Periférica — Metro Lisboa Lote 2 (ligado ao projeto 9)
+  const h1k = insertHistory.run({
+    team_member_id: m1.lastInsertRowid,
+    project_id: 9,
+    project_name: 'Metro Lisboa Lote 2 — Geotecnia e Contenção Periférica',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    category: 'transport', start_date: '2022-07-01', end_date: null,
+    notes: 'Responsável pela geotecnia do Lote 2 da extensão do Metro de Lisboa. Dirigiu a campanha de prospeção em ambiente urbano com 20 sondagens e ensaios CPTu. Projetou a contenção periférica das estações por paredes moldadas com ancoragens provisórias em calcário, incluindo análise de interação com estruturas vizinhas por método observacional.',
+  })
+  insertHistoryGeo.run({
+    history_id: h1k.lastInsertRowid,
+    point_label: 'BH-ML01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    depth: 35.0, soil_type: 'argila', rock_type: 'calcário',
+    groundwater_depth: 4.5, bearing_capacity: 180, spt_n_value: 14, seismic_class: 'D',
+    latitude: 38.72, longitude: -9.14, sampled_at: '2022-09-20',
+    notes: 'Perfil tipo da área do túnel: aterro (0-2 m), argila de Lisboa (2-12 m), areias calcárias (12-20 m), calcário são (>20 m).',
+  })
+  insertHistoryGeo.run({
+    history_id: h1k.lastInsertRowid,
+    point_label: 'CPT-ML03', type: 'cpt',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    depth: 22.0, soil_type: 'argila / areia calcária', rock_type: 'calcário',
+    groundwater_depth: 4.0, bearing_capacity: 160, spt_n_value: null, seismic_class: 'D',
+    latitude: 38.7205, longitude: -9.1395, sampled_at: '2022-10-11',
+    notes: 'CPTu com medição de pressão intersticial. Su médio = 55 kPa nas argilas. Razão de fricção > 4% confirma argila.',
+  })
+  insertHistoryStructure.run({
+    history_id: h1k.lastInsertRowid,
+    label: 'Parede Moldada Estação — Metro Lote 2', type: 'tunnel',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    material: 'betão armado / ancoragens',
+    length_m: 320, height_m: 22, span_m: null,
+    foundation_type: 'parede moldada em calcário', design_load: null,
+    latitude: 38.72, longitude: -9.14, built_at: null,
+    notes: 'Parede moldada de espessura 0.8 m com 3 níveis de ancoragens provisórias. Cálculo de assentamentos de superfície por método observacional.',
   })
 
   await attachCv(m1.lastInsertRowid, {
-    name: 'António Ressano Garcia', title: 'Engenheiro Estrutural Sénior',
+    name: 'António Ressano Garcia', title: 'Engenheiro Geotécnico Sénior',
     email: 'a.garcia@coba.pt', phone: '+351 21 000 1001',
-    bio: 'Mais de 30 anos de experiência em grandes projetos de infraestrutura na Europa e África. Especialista em pontes de grande vão e avaliação de risco geotécnico.',
+    bio: 'Mais de 28 anos de experiência em prospeção geotécnica, fundações especiais e estabilidade de taludes em Portugal e África Austral. Especialista em análise de risco geotécnico para barragens e infraestruturas críticas.',
     history: [
-      { projectName: 'Reforço da Ponte 25 de Abril', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', notes: 'Avaliação estrutural e projeto de reabilitação sísmica da ponte suspensa existente.' },
-      { projectName: 'Ponte Vasco da Gama', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', notes: 'Dirigiu a prospeção geotécnica para fundações dos pilones no estuário do Tejo.' },
+      { projectName: 'Ponte Vasco da Gama — Prospeção Geotécnica', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '1993-03-01', endDate: '1994-06-30', notes: 'Dirigiu o programa de prospeção com 42 sondagens para caracterizar os depósitos aluvionares do Tejo.' },
+      { projectName: 'Estabilização da Encosta do Convento de Cristo', country: 'Portugal', macroRegion: 'EMEA', category: 'planning', startDate: '1997-01-01', endDate: '1998-06-30', notes: 'Projeto de estabilização de encosta xistosa sobre claustro histórico com pregagens e monitorização.' },
+      { projectName: 'Lezíria Norte A10 — Prospeção e Controlo de Qualidade de Aterros', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2001-05-01', endDate: '2003-12-31', notes: 'Controlo geotécnico de 12 km de aterros sobre solos moles com monitorização de recalques.' },
+      { projectName: 'Ampliação do Hospital de São José — Fundações Especiais', country: 'Portugal', macroRegion: 'EMEA', category: 'planning', startDate: '2005-09-01', endDate: '2007-03-31', notes: 'Microestacas em calcário cárstico para novo bloco hospitalar em terreno urbano.' },
+      { projectName: 'Inventário e Mitigação de Movimentos de Massa — Algarve Central', country: 'Portugal', macroRegion: 'EMEA', category: 'planning', startDate: '2008-06-01', endDate: '2010-03-31', notes: 'Cartografia de 340 movimentos de massa e proposta de medidas corretivas para 28 taludes.' },
+      { projectName: 'Reabilitação e Estabilização de Taludes da A23 — Serra da Estrela', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2011-02-01', endDate: '2012-11-30', notes: 'Estabilização de 14 taludes de corte em granito e xisto com pregagens e betão projetado.' },
+      { projectName: 'AH Saltinho — Prospeção Geotécnica de Fase de Concurso', country: 'Guinea-Bissau', macroRegion: 'Sub-Saharan Africa', category: 'energy', startDate: '2015-04-01', endDate: '2016-08-31', notes: 'Prospeção geotécnica com 10 sondagens e ensaios Lugeon para a barragem de Saltinho.' },
+      { projectName: 'Ponte sobre o Rio Kwanza — Estudos Geotécnicos', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'transport', startDate: '2019-10-01', endDate: '2020-09-30', notes: 'Prospeção geotécnica para nova travessia do Rio Kwanza. Fundações por estacas em granito.' },
+      { projectName: 'Metro Lisboa Lote 2 — Geotecnia e Contenção Periférica', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2022-07-01', notes: 'Geotecnia e paredes moldadas para extensão do Metro de Lisboa. Método observacional.' },
+      { projectName: 'Barragem Calucuve — Prospeção e Caracterização Geotécnica', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2023-03-01', endDate: '2024-02-28', notes: '18 sondagens com ensaios Lugeon para cortina de impermeabilização da barragem.' },
+      { projectName: 'Barragem Cova do Leão — Estudos Geotécnicos', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'water', startDate: '2023-08-01', endDate: '2024-06-30', notes: 'Campanha geotécnica e caracterização do material de empréstimo para barragem de terra.' },
     ],
   })
 
-  // ── Membro 2: Maria Conceição Figueiredo ──────────────────────────────────
+  // ── Membro 2: Maria Conceição Figueiredo — Engenheira Estrutural ─────────────
   const m2 = insertMember.run({
     name: 'Maria Conceição Figueiredo',
-    title: 'Engenheira Geotécnica',
+    title: 'Engenheira Estrutural Sénior',
     email: 'm.figueiredo@coba.pt',
     phone: '+351 21 000 1042',
-    bio: 'Especialista em infraestruturas hídricas e hidrogeologia na África Subsaariana e Sudeste Asiático. Experiente em programas de prospeção geotécnica de grande escala.',
+    bio: 'Vinte e dois anos de experiência em projeto estrutural de pontes, viadutos e túneis em Portugal, Brasil e Reino Unido. Especialista em betão pré-esforçado, estruturas metálicas mistas e avaliação sísmica. Participou em alguns dos projetos de infraestrutura de transporte mais exigentes de Portugal, desde a Ponte Vasco da Gama até às novas linhas de Alta Velocidade.',
     role: 'user',
   })
-  insertProjectTeam.run({ project_id: 2, team_member_id: m2.lastInsertRowid, role_on_project: 'Gestora de Projeto' })
-  insertProjectTeam.run({ project_id: 5, team_member_id: m2.lastInsertRowid, role_on_project: 'Responsável Geotécnico' })
+  insertProjectTeam.run({ project_id: 21, team_member_id: m2.lastInsertRowid, role_on_project: 'Responsável Estrutural' })
+  insertProjectTeam.run({ project_id: 24, team_member_id: m2.lastInsertRowid, role_on_project: 'Projetista Estrutural' })
+  insertProjectTeam.run({ project_id: 9, team_member_id: m2.lastInsertRowid, role_on_project: 'Especialista Estrutural' })
 
-  // Histórico 2A: Sistema de Abastecimento de Água de Luanda Norte (ligado ao projeto 2)
+  // Histórico 2A: Viaduto Lezíria (A10)
   const h2a = insertHistory.run({
     team_member_id: m2.lastInsertRowid,
-    project_id: 2,
-    project_name: 'Sistema de Abastecimento de Água de Luanda Norte',
-    macro_region: 'Sub-Saharan Africa',
-    country: 'Angola',
-    place: 'Luanda',
-    category: 'water',
-    start_date: null,
-    end_date: null,
-    notes: 'Coordenou o programa geotécnico completo para a estação de tratamento e corredor de 80 km de conduta.',
+    project_id: null,
+    project_name: 'Viaduto do Carregado — A10 Lezíria',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Benavente / Carregado',
+    category: 'transport', start_date: '2002-01-01', end_date: '2004-08-31',
+    notes: 'Projeto de execução do viaduto do Carregado sobre o Vale do Tejo, com tabuleiro de viga caixão de betão pré-esforçado de 1 200 m. Dimensionou os pilares de grande altura (até 28 m) em zona sísmica D e efetuou o controlo de pós-tensão durante a execução por avanços sucessivos.',
   })
   insertHistoryGeo.run({
     history_id: h2a.lastInsertRowid,
-    point_label: 'BH-01', type: 'borehole',
-    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda Norte',
-    depth: 18.0, soil_type: 'laterite', rock_type: 'granito',
-    groundwater_depth: 6.5, bearing_capacity: 300, spt_n_value: 35, seismic_class: 'B',
-    latitude: -8.7328, longitude: 13.2543, sampled_at: '2012-09-05',
-    notes: 'Crosta laterítica sobre granito decomposto. Boas condições de fundação.',
-  })
-  insertHistoryGeo.run({
-    history_id: h2a.lastInsertRowid,
-    point_label: 'BH-03', type: 'borehole',
-    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda Norte',
-    depth: 22.0, soil_type: 'areia argilosa', rock_type: 'xisto',
-    groundwater_depth: 8.0, bearing_capacity: 220, spt_n_value: 22, seismic_class: 'B',
-    latitude: -8.7102, longitude: 13.2701, sampled_at: '2012-09-12',
-    notes: 'Zona de vala da conduta.',
+    point_label: 'BH-VC01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Benavente',
+    depth: 20.0, soil_type: 'argila aluvionar', rock_type: '',
+    groundwater_depth: 1.0, bearing_capacity: 80, spt_n_value: 5, seismic_class: 'D',
+    latitude: 38.9800, longitude: -8.8100, sampled_at: '2002-03-15',
+    notes: 'Argila aluvionar mole no vale inundável. Estacas necessárias para atingir material competente a 18 m.',
   })
   insertHistoryStructure.run({
     history_id: h2a.lastInsertRowid,
-    label: 'Estação de Tratamento', type: 'building',
-    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda Norte',
+    label: 'Viaduto do Carregado — Tabuleiro Principal', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Benavente',
+    material: 'betão pré-esforçado',
+    length_m: 1200, height_m: 28, span_m: 60,
+    foundation_type: 'estacas moldadas Ø1200', design_load: 450,
+    latitude: 38.9750, longitude: -8.8050, built_at: '2004-07-01',
+    notes: 'Viga caixão contínua de 20 vãos. Construção por avanços sucessivos. Pós-tensão interna e externa.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2a.lastInsertRowid,
+    label: 'Pilares P8 a P12 — Grande Altura', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Benavente',
     material: 'betão armado',
-    length_m: 280, height_m: 14, span_m: null,
-    foundation_type: 'laje de fundação', design_load: 60,
-    latitude: -8.7328, longitude: 13.2543, built_at: '2019-06-01',
-    notes: 'Capacidade de 120 000 m³/dia. Coagulação, sedimentação, filtração e cloragem.',
-  })
-  insertHistoryStructure.run({
-    history_id: h2a.lastInsertRowid,
-    label: 'Adutora DN1200', type: 'pipeline',
-    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda Norte',
-    material: 'ferro dúctil',
-    length_m: 82000, height_m: null, span_m: null,
-    foundation_type: 'enterrada', design_load: 16,
-    latitude: -8.7200, longitude: 13.2600, built_at: '2019-09-15',
-    notes: '82 km de adutora DN1200 em ferro dúctil.',
-  })
-  insertHistoryFeature.run({
-    history_id: h2a.lastInsertRowid,
-    label: 'Captação do Rio Bengo',
-    description: 'Obra de captação de água bruta com estação elevatória de 1,4 m³/s.',
-    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Caxito',
-    latitude: -8.5800, longitude: 13.6600,
-    notes: 'Responsável pela prospeção hidrogeológica do local de captação.',
+    length_m: null, height_m: 28, span_m: null,
+    foundation_type: 'estacas moldadas Ø1200', design_load: 450,
+    latitude: 38.9780, longitude: -8.8070, built_at: '2004-06-01',
+    notes: 'Pilares ocos de secção variável. Análise de interação sísmica pilar-tabuleiro (método N2).',
   })
 
-  // Histórico 2B: Abastecimento de Água e Saneamento de Nacala (externo)
+  // Histórico 2B: Reabilitação da Ponte Marechal Carmona — Luanda
   const h2b = insertHistory.run({
     team_member_id: m2.lastInsertRowid,
     project_id: null,
-    project_name: 'Abastecimento de Água e Saneamento de Nacala',
-    macro_region: 'Sub-Saharan Africa',
-    country: 'Moçambique',
-    place: 'Nacala',
-    category: 'water',
-    start_date: null,
-    end_date: null,
-    notes: 'Avaliação hidrogeológica e projeto de furos de captação para sistema de abastecimento de água rural.',
+    project_name: 'Reabilitação da Ponte Marechal Carmona — Luanda',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda',
+    category: 'transport', start_date: '2007-03-01', end_date: '2008-11-30',
+    notes: 'Avaliação estrutural e projeto de reabilitação da histórica ponte metálica de Luanda. Inspeção detalhada da estrutura, modelação numérica e proposta de reforço por adição de tabuleiro de betão colaborante. Coordenou os ensaios de carga estática e dinâmica antes e após a intervenção.',
   })
   insertHistoryGeo.run({
     history_id: h2b.lastInsertRowid,
-    point_label: 'BH-01', type: 'borehole',
-    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Nacala',
-    depth: 45.0, soil_type: 'argila arenosa', rock_type: 'gnaisse',
-    groundwater_depth: 12.0, bearing_capacity: 250, spt_n_value: 28, seismic_class: 'B',
-    latitude: -14.5420, longitude: 40.6730, sampled_at: '2010-07-18',
-    notes: 'Aquífero produtivo entre 35–45 m em gnaisse alterado.',
+    point_label: 'BH-LA01', type: 'borehole',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda',
+    depth: 18.0, soil_type: 'areia vermelha', rock_type: 'arenito',
+    groundwater_depth: 4.0, bearing_capacity: 200, spt_n_value: 22, seismic_class: 'B',
+    latitude: -8.8200, longitude: 13.2300, sampled_at: '2007-05-10',
+    notes: 'Sondagem para verificação das fundações existentes. Arenito a 14 m.',
   })
   insertHistoryStructure.run({
     history_id: h2b.lastInsertRowid,
-    label: 'Torre de Água', type: 'building',
-    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Nacala',
-    material: 'betão armado',
-    length_m: null, height_m: 25, span_m: null,
-    foundation_type: 'estacas', design_load: null,
-    latitude: -14.5420, longitude: 40.6730, built_at: '2013-03-01',
-    notes: 'Reservatório elevado de 500 m³ ao serviço de 40 000 habitantes.',
+    label: 'Ponte Marechal Carmona — Tabuleiro Reforçado', type: 'bridge',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda',
+    material: 'aço / betão colaborante',
+    length_m: 380, height_m: null, span_m: 45,
+    foundation_type: 'caixão existente', design_load: 300,
+    latitude: -8.8200, longitude: 13.2300, built_at: '2008-10-01',
+    notes: 'Reabilitação com laje colaborante de 200 mm e reforço das vigas metálicas por soldadura de chapas.',
   })
   insertHistoryStructure.run({
     history_id: h2b.lastInsertRowid,
-    label: 'Ramais de Distribuição', type: 'pipeline',
-    macro_region: 'Sub-Saharan Africa', country: 'Moçambique', place: 'Nacala',
-    material: 'PEAD',
-    length_m: 35000, height_m: null, span_m: null,
-    foundation_type: 'enterrada', design_load: 10,
-    latitude: -14.5420, longitude: 40.6730, built_at: '2013-06-01',
-    notes: '35 km de rede de distribuição em PEAD.',
+    label: 'Guardas e Passeios — Nova Geometria', type: 'bridge',
+    macro_region: 'Sub-Saharan Africa', country: 'Angola', place: 'Luanda',
+    material: 'aço galvanizado / betão',
+    length_m: 380, height_m: null, span_m: null,
+    foundation_type: null, design_load: null,
+    latitude: -8.8200, longitude: 13.2300, built_at: '2008-11-01',
+    notes: 'Novas guardas de segurança e passeios bilaterais de 1.5 m.',
+  })
+
+  // Histórico 2C: Pontes sobre o Rio Douro — IP4 (Portugal)
+  const h2c = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: null,
+    project_name: 'IP4 — Pontes Variante de Amarante',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Amarante',
+    category: 'transport', start_date: '2010-06-01', end_date: '2012-09-30',
+    notes: 'Projeto de execução de duas pontes sobre o Rio Tâmega na variante de Amarante. Tabuleiro de viga mista aço-betão com vigas principais em I. Análise dinâmica de vento e verificação de fadiga das soldaduras em meio fluvial com exposição ambiental classe XS.',
+  })
+  insertHistoryGeo.run({
+    history_id: h2c.lastInsertRowid,
+    point_label: 'BH-AM01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Amarante',
+    depth: 28.0, soil_type: 'solo residual', rock_type: 'granito',
+    groundwater_depth: 5.0, bearing_capacity: 800, spt_n_value: 45, seismic_class: 'A',
+    latitude: 41.2660, longitude: -8.0760, sampled_at: '2010-08-12',
+    notes: 'Granito são a 12 m. Boas condições para fundações diretas nos pilares de margem.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2c.lastInsertRowid,
+    label: 'Ponte Norte — Rio Tâmega', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Amarante',
+    material: 'aço / betão (misto)',
+    length_m: 220, height_m: 18, span_m: 55,
+    foundation_type: 'sapata em granito', design_load: 400,
+    latitude: 41.2660, longitude: -8.0760, built_at: '2012-08-01',
+    notes: 'Ponte mista de 4 vãos (2×55 + 2×55 m). Vigas metálicas em I de altura variável.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2c.lastInsertRowid,
+    label: 'Ponte Sul — Rio Tâmega', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Amarante',
+    material: 'aço / betão (misto)',
+    length_m: 180, height_m: 14, span_m: 45,
+    foundation_type: 'estacas em granito', design_load: 380,
+    latitude: 41.2640, longitude: -8.0740, built_at: '2012-09-01',
+    notes: 'Ponte mista de 4 vãos (45 m). Fundações em estacas Ø900 mm no granito.',
+  })
+
+  // Histórico 2D: Túnel Lote 2 Metro Lisboa (ligado ao projeto 9)
+  const h2d = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: 9,
+    project_name: 'Metro Lisboa Lote 2 — Estruturas do Túnel',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    category: 'transport', start_date: '2022-07-01', end_date: null,
+    notes: 'Projetista responsável pelas estruturas do túnel TBM do Lote 2 da extensão do Metro de Lisboa. Dimensionou os anéis de aduelas pré-fabricadas e os acessos especiais em secção aberta. Verificou os estados limites de fissuraçção em meio agressivo subterrâneo (classe de exposição XC4, XA2).',
+  })
+  insertHistoryGeo.run({
+    history_id: h2d.lastInsertRowid,
+    point_label: 'BH-T01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    depth: 30.0, soil_type: 'argila', rock_type: 'calcário',
+    groundwater_depth: 5.0, bearing_capacity: 180, spt_n_value: 14, seismic_class: 'D',
+    latitude: 38.72, longitude: -9.14, sampled_at: '2022-09-20',
+    notes: 'Perfil: argila 0-12 m (N=14), areia calcária 12-20 m, calcário 20-30 m. Nível freático a 5 m.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2d.lastInsertRowid,
+    label: 'Túnel TBM — Lote 2 Metro Lisboa', type: 'tunnel',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    material: 'betão reforçado — aduelas pré-fabricadas',
+    length_m: 1800, height_m: null, span_m: 9.2,
+    foundation_type: null, design_load: null,
+    latitude: 38.72, longitude: -9.14, built_at: null,
+    notes: 'Túnel TBM Ø9.2 m. Aduelas de betão C40/50 com fibras metálicas. Cálculo pelo método dos elementos finitos (Plaxis 2D).',
+  })
+  insertHistoryStructure.run({
+    history_id: h2d.lastInsertRowid,
+    label: 'Caixão de Acesso Estação — Lote 2', type: 'tunnel',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    material: 'betão armado (NATM)',
+    length_m: 120, height_m: 12, span_m: 18,
+    foundation_type: 'calcário', design_load: null,
+    latitude: 38.7205, longitude: -9.1395, built_at: null,
+    notes: 'Estação subterrânea escavada por NATM. Cobertura de 8 m em calcário. Suporte de pregagens e betão projetado.',
+  })
+
+  // Histórico 2E: Viaduto Crossrail — Londres (UK)
+  const h2e = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: null,
+    project_name: 'Crossrail — Viadutos de Acesso Eastern Section',
+    macro_region: 'EMEA', country: 'UK', place: 'Londres',
+    category: 'transport', start_date: '2015-01-01', end_date: '2017-06-30',
+    notes: 'Colaboração como especialista em betão pré-esforçado no consórcio de projeto do Eastern Section do Crossrail (Elizabeth Line). Responsável pelo dimensionamento de 3 viadutos de acesso com estrutura mista aço-betão em área urbana densa. Trabalhou integrada numa equipa britânica em conformidade com BS EN 1992 e BS EN 1993.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2e.lastInsertRowid,
+    label: 'Viaduto Acesso A — Crossrail East', type: 'bridge',
+    macro_region: 'EMEA', country: 'UK', place: 'Londres',
+    material: 'aço / betão colaborante',
+    length_m: 160, height_m: 10, span_m: 40,
+    foundation_type: 'estacas micropilotes', design_load: 350,
+    latitude: 51.5200, longitude: 0.0800, built_at: '2017-05-01',
+    notes: 'Viaduto misto de 4 vãos. Projetos em conformidade BS EN 1990-1993. BIM Level 2.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2e.lastInsertRowid,
+    label: 'Viaduto Acesso B — Crossrail East', type: 'bridge',
+    macro_region: 'EMEA', country: 'UK', place: 'Londres',
+    material: 'aço / betão colaborante',
+    length_m: 120, height_m: 8, span_m: 35,
+    foundation_type: 'estacas moldadas', design_load: 320,
+    latitude: 51.5180, longitude: 0.0820, built_at: '2017-04-01',
+    notes: 'Estrutura mista. Análise de fadiga (EN 1993-1-9) para carga de tráfego ferroviário.',
+  })
+
+  // Histórico 2F: Pontes da Linha de Alta Velocidade — Lote A (ligado ao projeto 21)
+  const h2f = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: 21,
+    project_name: 'LAV Lote A — Viadutos e Pontes Aveiro-Porto',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Aveiro / Porto',
+    category: 'transport', start_date: '2024-01-01', end_date: null,
+    notes: 'Projetista sénior responsável pelas 7 pontes e 12 viadutos do Lote A da Alta Velocidade Ferroviária entre Aveiro e Porto. Dimensionou os viadutos de betão pré-esforçado sobre a planície de Aveiro e as pontes metálicas mistas na zona montanhosa. Garante conformidade com EN 1991-2 (cargas ferroviárias) e EN 1998-2 (sismo em pontes).',
+  })
+  insertHistoryGeo.run({
+    history_id: h2f.lastInsertRowid,
+    point_label: 'BH-LAV01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Aveiro',
+    depth: 20.0, soil_type: 'areia fina siltosa', rock_type: 'granito',
+    groundwater_depth: 1.5, bearing_capacity: 120, spt_n_value: 8, seismic_class: 'C',
+    latitude: 40.64, longitude: -8.65, sampled_at: '2024-02-15',
+    notes: 'Solo mole da planície costeira. Estacas CFA de 18 m para fundações dos viadutos.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2f.lastInsertRowid,
+    label: 'Viaduto LAV Aveiro — V1 (2 200 m)', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Aveiro',
+    material: 'betão pré-esforçado',
+    length_m: 2200, height_m: 12, span_m: 50,
+    foundation_type: 'estacas CFA Ø600', design_load: 350,
+    latitude: 40.65, longitude: -8.64, built_at: null,
+    notes: 'Viaduto sobre terrenos moles da planície de Aveiro. Tabuleiro de viga caixão bi-celular. L/H=17.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2f.lastInsertRowid,
+    label: 'Ponte Mista LAV — Zona Serrana', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Entre Aveiro e Porto',
+    material: 'aço / betão (misto)',
+    length_m: 350, height_m: 45, span_m: 85,
+    foundation_type: 'sapata em granito', design_load: 480,
+    latitude: 40.80, longitude: -8.58, built_at: null,
+    notes: 'Viaduto misto de grande altura. Verificação da instabilidade lateral-torsional dos troços metálicos. Análise não linear geométrica.',
+  })
+
+  // Histórico 2G: Ponte Ferroviária sobre o Rio Mondego (Coimbra)
+  const h2g = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: null,
+    project_name: 'Nova Ponte Ferroviária do Mondego — Coimbra',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Coimbra',
+    category: 'transport', start_date: '2018-09-01', end_date: '2020-12-31',
+    notes: 'Projeto de execução de nova ponte ferroviária sobre o Rio Mondego para duplicação de via da Linha do Norte. Estrutura mista com dois tabuleiros independentes de 280 m. Análise de interação solo-estrutura para os pilares em aluvião fluvial e verificação de fadiga de soldaduras para tráfego de 300 comboios/dia.',
+  })
+  insertHistoryGeo.run({
+    history_id: h2g.lastInsertRowid,
+    point_label: 'BH-MO01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Coimbra',
+    depth: 24.0, soil_type: 'aluvião arenosa', rock_type: 'calcário',
+    groundwater_depth: 1.5, bearing_capacity: 160, spt_n_value: 14, seismic_class: 'C',
+    latitude: 40.2050, longitude: -8.4230, sampled_at: '2018-11-20',
+    notes: 'Aluvião arenosa com seixos (0-14 m), calcário a partir de 14 m. Estacas de 16 m previstas.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2g.lastInsertRowid,
+    label: 'Ponte Ferroviária Mondego — Tabuleiro Norte', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Coimbra',
+    material: 'aço / betão (misto)',
+    length_m: 280, height_m: 14, span_m: 70,
+    foundation_type: 'estacas Ø1000 em calcário', design_load: 550,
+    latitude: 40.2050, longitude: -8.4230, built_at: '2020-10-01',
+    notes: 'Tabuleiro ferroviário com 4 vãos de 70 m. Aço S460 nos banzos comprimidos.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2g.lastInsertRowid,
+    label: 'Ponte Ferroviária Mondego — Tabuleiro Sul', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Coimbra',
+    material: 'aço / betão (misto)',
+    length_m: 280, height_m: 14, span_m: 70,
+    foundation_type: 'estacas Ø1000 em calcário', design_load: 550,
+    latitude: 40.2045, longitude: -8.4225, built_at: '2020-11-01',
+    notes: 'Tabuleiro ferroviário paralelo. Análise de vibração de rail para passagem a 220 km/h.',
+  })
+
+  // Histórico 2H: Linha Vermelha Metro Lisboa (ligado ao projeto 24)
+  const h2h = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: 24,
+    project_name: 'Linha Vermelha Lisboa Metro — Estruturas da Extensão',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    category: 'transport', start_date: '2024-02-01', end_date: null,
+    notes: 'Responsável pelo projeto estrutural das estruturas enterradas e à superfície da extensão da Linha Vermelha. Dimensionou o caixão de betão armado da nova estação e as travessias em viaduto elevado sobre rodovias existentes. Análise de resposta sísmica e verificação do isolamento de vibrações para edifícios adjacentes.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2h.lastInsertRowid,
+    label: 'Estação Linha Vermelha — Estrutura NATM', type: 'tunnel',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    material: 'betão armado / NATM',
+    length_m: 850, height_m: null, span_m: 10.5,
+    foundation_type: null, design_load: null,
+    latitude: 38.75, longitude: -9.10, built_at: null,
+    notes: 'Estação subterrânea NATM. Suporte por jet-grouting para contenção em argila. Secção cavada de 10.5×8 m.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2h.lastInsertRowid,
+    label: 'Viaduto de Acesso — Linha Vermelha', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    material: 'betão pré-esforçado',
+    length_m: 280, height_m: 8, span_m: 35,
+    foundation_type: 'estacas em calcário', design_load: 350,
+    latitude: 38.752, longitude: -9.098, built_at: null,
+    notes: 'Viaduto de ligação em betão pré-esforçado sobre a CRIL. Análise dinâmica para controlo de acelerações.',
+  })
+
+  // Histórico 2I: Ponte Pedonal Museu dos Coches — Lisboa
+  const h2i = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: null,
+    project_name: 'Passarela Pedonal Museu Nacional dos Coches',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa — Belém',
+    category: 'planning', start_date: '2013-04-01', end_date: '2014-07-31',
+    notes: 'Projeto da passarela pedonal de ligação entre o novo edifício do Museu Nacional dos Coches e o Picadeiro Real. Estrutura em aço corten com secção variável e comprimento de 62 m. Verificação de vibração para pedestres (EN 1990 Anexo A2) e análise estética integrada com o contexto patrimonial.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2i.lastInsertRowid,
+    label: 'Passarela Museu Coches — Belém', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lisboa',
+    material: 'aço corten S355',
+    length_m: 62, height_m: 4, span_m: 62,
+    foundation_type: 'sapatas em calcário', design_load: 5,
+    latitude: 38.6978, longitude: -9.1986, built_at: '2014-06-01',
+    notes: 'Passarela monolítica em corten. Carga viva 5 kN/m². Frequência natural de 2.1 Hz (zona segura de vibração pedonal).',
+  })
+
+  // Histórico 2J: Viadutos A22 — Algarve
+  const h2j = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: null,
+    project_name: 'A22 Via do Infante — Viadutos do Troço Portimão-Lagos',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Portimão / Lagos',
+    category: 'transport', start_date: '2006-04-01', end_date: '2008-07-31',
+    notes: 'Projeto de 6 viadutos de betão pré-esforçado do troço Portimão-Lagos da A22. Tipologia de viga caixão mono-celular em betão pré-esforçado por avanços sucessivos. Verificação de fendilhação em ambiente marítimo (classe XS1) e modelação das perdas de pré-esforço a longo prazo.',
+  })
+  insertHistoryGeo.run({
+    history_id: h2j.lastInsertRowid,
+    point_label: 'BH-A22-01', type: 'borehole',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Portimão',
+    depth: 22.0, soil_type: 'areia calcária', rock_type: 'calcário',
+    groundwater_depth: 3.5, bearing_capacity: 250, spt_n_value: 28, seismic_class: 'C',
+    latitude: 37.1400, longitude: -8.5400, sampled_at: '2006-06-14',
+    notes: 'Areia calcária sobre calcário. Fundações diretas possíveis nos pilares altos.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2j.lastInsertRowid,
+    label: 'Viaduto Odiáxere V1 (A22)', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Lagos',
+    material: 'betão pré-esforçado',
+    length_m: 420, height_m: 22, span_m: 60,
+    foundation_type: 'sapata em calcário', design_load: 420,
+    latitude: 37.1050, longitude: -8.6200, built_at: '2008-06-01',
+    notes: 'Maior viaduto do troço. Viga caixão de 7 vãos com 5 avanços sucessivos simétricos.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2j.lastInsertRowid,
+    label: 'Viaduto Odelouca V2 (A22)', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Portimão',
+    material: 'betão pré-esforçado',
+    length_m: 280, height_m: 18, span_m: 55,
+    foundation_type: 'estacas Ø900', design_load: 400,
+    latitude: 37.1600, longitude: -8.5000, built_at: '2007-11-01',
+    notes: 'Viga caixão sobre o Rio Odelouca. 5 vãos de 55 m.',
+  })
+
+  // Histórico 2K: Ponte de São João — Porto (análise e reabilitação)
+  const h2k = insertHistory.run({
+    team_member_id: m2.lastInsertRowid,
+    project_id: null,
+    project_name: 'Ponte de São João — Avaliação Estrutural e Reforço',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Porto',
+    category: 'transport', start_date: '2020-11-01', end_date: '2022-03-31',
+    notes: 'Avaliação estrutural da Ponte de São João para introdução de tráfego de alta velocidade ferroviária. Modelação dinâmica avançada da ponte e análise da resposta sob comboios a 220 km/h. Proposta de reforço por adição de contraventamentos metálicos e substituição de aparelhos de apoio por isoladores sísmicos de alta amortecimento.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2k.lastInsertRowid,
+    label: 'Ponte São João — Arco Principal', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Porto',
+    material: 'betão armado (arco)',
+    length_m: 1498, height_m: 74, span_m: 250,
+    foundation_type: 'fundação em granito', design_load: 500,
+    latitude: 41.1380, longitude: -8.6000, built_at: '1991-01-01',
+    notes: 'Reavaliação para alta velocidade. Análise modal com 18 modos de vibração. Frequência fundamental 0.48 Hz.',
+  })
+  insertHistoryStructure.run({
+    history_id: h2k.lastInsertRowid,
+    label: 'Aparelhos de Apoio — Substituição', type: 'bridge',
+    macro_region: 'EMEA', country: 'Portugal', place: 'Porto',
+    material: 'elastomérico / HDR',
+    length_m: null, height_m: null, span_m: null,
+    foundation_type: null, design_load: null,
+    latitude: 41.1380, longitude: -8.6000, built_at: null,
+    notes: 'Proposta de substituição dos apoios elastoméricos existentes por isoladores HDR para controlo de vibrações.',
   })
 
   await attachCv(m2.lastInsertRowid, {
-    name: 'Maria Conceição Figueiredo', title: 'Engenheira Geotécnica',
+    name: 'Maria Conceição Figueiredo', title: 'Engenheira Estrutural Sénior',
     email: 'm.figueiredo@coba.pt', phone: '+351 21 000 1042',
-    bio: 'Especialista em infraestruturas hídricas e hidrogeologia na África Subsaariana e Sudeste Asiático. Experiente em programas de prospeção geotécnica de grande escala.',
+    bio: 'Vinte e dois anos de experiência em projeto estrutural de pontes, viadutos e túneis em Portugal, Brasil e Reino Unido. Especialista em betão pré-esforçado, estruturas metálicas mistas e avaliação sísmica.',
     history: [
-      { projectName: 'Sistema de Abastecimento de Água de Luanda Norte', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'water', notes: 'Coordenou o programa geotécnico completo para a estação de tratamento e corredor de 80 km de conduta.' },
-      { projectName: 'Abastecimento de Água e Saneamento de Nacala', country: 'Moçambique', macroRegion: 'Sub-Saharan Africa', category: 'water', notes: 'Avaliação hidrogeológica e projeto de furos de captação para sistema de abastecimento de água rural.' },
+      { projectName: 'Viaduto do Carregado — A10 Lezíria', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2002-01-01', endDate: '2004-08-31', notes: 'Projeto de viaduto de 1 200 m com tabuleiro de viga caixão por avanços sucessivos.' },
+      { projectName: 'Reabilitação da Ponte Marechal Carmona — Luanda', country: 'Angola', macroRegion: 'Sub-Saharan Africa', category: 'transport', startDate: '2007-03-01', endDate: '2008-11-30', notes: 'Avaliação e reforço de ponte metálica histórica com tabuleiro colaborante.' },
+      { projectName: 'A22 Via do Infante — Viadutos do Troço Portimão-Lagos', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2006-04-01', endDate: '2008-07-31', notes: 'Projeto de 6 viadutos de betão pré-esforçado em ambiente marítimo.' },
+      { projectName: 'IP4 — Pontes Variante de Amarante', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2010-06-01', endDate: '2012-09-30', notes: 'Projeto de pontes mistas aço-betão sobre o Rio Tâmega.' },
+      { projectName: 'Passarela Pedonal Museu Nacional dos Coches', country: 'Portugal', macroRegion: 'EMEA', category: 'planning', startDate: '2013-04-01', endDate: '2014-07-31', notes: 'Passarela em aço corten de 62 m com verificação de vibração pedonal.' },
+      { projectName: 'Crossrail — Viadutos de Acesso Eastern Section', country: 'UK', macroRegion: 'EMEA', category: 'transport', startDate: '2015-01-01', endDate: '2017-06-30', notes: 'Especialista em betão pré-esforçado para 3 viadutos do Crossrail em Londres.' },
+      { projectName: 'Nova Ponte Ferroviária do Mondego — Coimbra', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2018-09-01', endDate: '2020-12-31', notes: 'Projeto de pontes ferroviárias mistas de 280 m sobre o Rio Mondego.' },
+      { projectName: 'Ponte de São João — Avaliação Estrutural e Reforço', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2020-11-01', endDate: '2022-03-31', notes: 'Modelação dinâmica avançada para introdução de tráfego de alta velocidade.' },
+      { projectName: 'Metro Lisboa Lote 2 — Estruturas do Túnel', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2022-07-01', notes: 'Projeto de aduelas pré-fabricadas TBM e estação NATM.' },
+      { projectName: 'LAV Lote A — Viadutos e Pontes Aveiro-Porto', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2024-01-01', notes: 'Responsável pelas 7 pontes e 12 viadutos da Alta Velocidade Ferroviária Aveiro-Porto.' },
+      { projectName: 'Linha Vermelha Lisboa Metro — Estruturas da Extensão', country: 'Portugal', macroRegion: 'EMEA', category: 'transport', startDate: '2024-02-01', notes: 'Projeto estrutural de estação NATM e viadutos de acesso da Linha Vermelha.' },
     ],
   })
 
