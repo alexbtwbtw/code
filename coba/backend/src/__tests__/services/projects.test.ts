@@ -79,18 +79,18 @@ describe('listProjects', () => {
     expect(result[0].name).toBe('Lisbon Bridge Project')
   })
 
-  it('sorts by budget descending (null last)', () => {
-    makeProject({ refCode: 'P-001', budget: 50000 })
-    makeProject({ refCode: 'P-002', budget: 200000 })
-    // Insert a project with no budget via raw SQL to get a true NULL
-    db.prepare(`
-      INSERT INTO projects (ref_code, name, client, macro_region, country, place, category, status, priority, currency, project_manager, description, tags)
-      VALUES ('P-003','No Budget','C','EMEA','Portugal','Lisbon','transport','active','medium','EUR','PM','','')
-    `).run()
+  it('sorts by most hours descending', () => {
+    const p1 = makeProject({ refCode: 'P-001' })
+    const p2 = makeProject({ refCode: 'P-002' })
+    const p3 = makeProject({ refCode: 'P-003' })
+    // Add time entries so P-002 has most hours, P-001 has some, P-003 has none
+    const memberId = db.prepare(`INSERT INTO team_members (name, title, email, phone, bio) VALUES ('T','T','t@t.com','','') RETURNING id`).get() as { id: number }
+    db.prepare(`INSERT INTO time_entries (project_id, member_id, hours, date, description) VALUES (?, ?, 5, '2024-01-01', '')`).run(p1.id, memberId.id)
+    db.prepare(`INSERT INTO time_entries (project_id, member_id, hours, date, description) VALUES (?, ?, 20, '2024-01-01', '')`).run(p2.id, memberId.id)
     const result = listProjects({ search: '', status: '', category: '', country: '', sortBy: 'budget' })
-    expect(result[0].budget).toBe(200000)
-    expect(result[1].budget).toBe(50000)
-    expect(result[2].budget).toBeNull()
+    expect(result[0].totalHours).toBe(20)
+    expect(result[1].totalHours).toBe(5)
+    expect(result[2].totalHours).toBe(0)
   })
 
   it('sorts by relevance: active first, then planning', () => {
