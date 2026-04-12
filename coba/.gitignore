@@ -37,3 +37,16 @@ desktop.ini
 # ── Playwright ────────────────────────────────────────────────────────────────
 e2e/test-results/
 e2e/playwright-report/
+
+# ── Terraform ─────────────────────────────────────────────────────────────────
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/terraform.tfstate.d/
+**/tfplan
+**/tfplan.*
+**/*.tfvars
+!**/*.tfvars.example
+**/*.auto.tfvars
+terraform/bootstrap/.terraform.lock.hcl
