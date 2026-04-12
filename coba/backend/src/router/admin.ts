@@ -30,6 +30,7 @@ export const adminRouter = router({
         DELETE FROM geo_entries;
         DELETE FROM projects;
         DELETE FROM team_members;
+        DELETE FROM sqlite_sequence;
       `)
 
       // Re-seed
