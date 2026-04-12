@@ -353,7 +353,7 @@ export const en = {
   taskNoComments: 'No comments yet.',
   taskAddComment: 'Add Comment',
   taskCommentPlaceholder: 'Write a comment…',
-  taskAuthorName: 'Your Name',
+  taskCommentAsUser: 'Commenting as',
   btnEditTask: 'Edit Task',
   btnSaveTask: 'Save Task',
   btnDeleteTask: 'Delete Task',
