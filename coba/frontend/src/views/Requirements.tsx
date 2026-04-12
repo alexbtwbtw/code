@@ -36,6 +36,7 @@ type MatchResult = {
   cvId?: number | null; cvFilename?: string | null
   recentHistory?: { projectName: string; category: string; country: string }[]
   rationale: string; score?: number; evidence?: string
+  cvPageRef?: number | null
 }
 
 type ParsedReq = { title: string; description: string; discipline: string; level: string; yearsExperience: number | null; certifications: string; notes: string; sourceEvidence: string }
@@ -573,15 +574,34 @@ export function RequirementBookDetail({ id, onNavigate }: { id: number; onNaviga
                                   </div>
                                   <p className="suggest-card-rationale">{m.rationale}</p>
                                   {m.evidence && (
-                                    <blockquote className="suggest-evidence">"{m.evidence}"</blockquote>
+                                    <div className="suggest-evidence-block">
+                                      <span className="suggest-evidence-label">{t('suggestEvidenceLabel')}:</span>
+                                      <blockquote className="suggest-evidence">"{m.evidence}"</blockquote>
+                                      {m.cvId && (
+                                        <a
+                                          className="suggest-cv-link"
+                                          href={`/api/cv/${m.cvId}#page=${m.cvPageRef ?? 1}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          title={t('suggestOpenCv')}
+                                        >
+                                          📄 {t('suggestOpenCvPage').replace('{page}', String(m.cvPageRef ?? 1))}
+                                        </a>
+                                      )}
+                                    </div>
                                   )}
-                                  <div className="suggest-card-links">
-                                    {m.cvId && (
-                                      <button className="suggest-cv-btn" onClick={() => handleDownloadCv(m.cvId!, m.cvFilename ?? 'cv.pdf')}>
-                                        📄 {t('memberCvDownload')}
-                                      </button>
-                                    )}
-                                  </div>
+                                  {!m.evidence && m.cvId && (
+                                    <div className="suggest-card-links">
+                                      <a
+                                        className="suggest-cv-link"
+                                        href={`/api/cv/${m.cvId}#page=1`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        📄 {t('suggestOpenCv')}
+                                      </a>
+                                    </div>
+                                  )}
                                   {isExp && (
                                     <div className="suggest-card-detail">
                                       {m.email && <p className="suggest-detail-contact">✉ {m.email}</p>}
@@ -633,16 +653,6 @@ function initials(name: string) {
   return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('')
 }
 
-async function handleDownloadCv(cvId: number, filename: string) {
-  const data = await trpcClient.team.getCvData.query({ cvId })
-  if (!data) return
-  const bytes = Uint8Array.from(atob(data.fileData), c => c.charCodeAt(0))
-  const blob = new Blob([bytes], { type: 'application/pdf' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url; a.download = filename; a.click()
-  URL.revokeObjectURL(url)
-}
 
 // ── Shared components ─────────────────────────────────────────────────────────
 
