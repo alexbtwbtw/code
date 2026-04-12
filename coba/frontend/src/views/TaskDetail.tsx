@@ -5,6 +5,7 @@ import { TASK_STATUS_KEY, TASK_PRIORITY_KEY, TASK_STATUSES, TASK_PRIORITIES } fr
 import { initials, fmtDate } from '../utils/format'
 import { useTaskById, useUpdateTask, useDeleteTask, useAssignTask, useUnassignTask, useAddComment, useDeleteComment } from '../api/tasks'
 import { useTeamList } from '../api/team'
+import { getCurrentUser } from '../auth'
 
 interface Props {
   id: number
@@ -21,7 +22,6 @@ export default function TaskDetail({ id, projectId, projectName, onNavigate }: P
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   // Comment form
-  const [commentAuthor, setCommentAuthor] = useState('')
   const [commentContent, setCommentContent] = useState('')
 
   // Assign member
@@ -74,8 +74,9 @@ export default function TaskDetail({ id, projectId, projectName, onNavigate }: P
 
   function handleAddComment(ev: React.FormEvent) {
     ev.preventDefault()
-    if (!commentAuthor.trim() || !commentContent.trim()) return
-    addComment.mutate({ taskId: id, authorName: commentAuthor, content: commentContent }, {
+    const currentUser = getCurrentUser()
+    if (!currentUser || !commentContent.trim()) return
+    addComment.mutate({ taskId: id, authorName: currentUser.name, content: commentContent }, {
       onSuccess: () => { setCommentContent('') },
     })
   }
@@ -253,15 +254,13 @@ export default function TaskDetail({ id, projectId, projectName, onNavigate }: P
 
         <form className="task-comment-form" onSubmit={handleAddComment}>
           <h3 className="task-comment-form-title">{t('taskAddComment')}</h3>
-          <div className="form-grid form-grid--2">
-            <input className="input" placeholder={t('taskAuthorName')} value={commentAuthor}
-              onChange={e => setCommentAuthor(e.target.value)} required />
-            <div />
-          </div>
+          {getCurrentUser() && (
+            <p className="task-comment-as-user">{t('taskCommentAsUser')}: <strong>{getCurrentUser()!.name}</strong></p>
+          )}
           <textarea className="input textarea" rows={3} placeholder={t('taskCommentPlaceholder')}
             value={commentContent} onChange={e => setCommentContent(e.target.value)} required />
           <div className="form-actions">
-            <button type="submit" className="btn-submit" disabled={addComment.isPending || !commentAuthor.trim() || !commentContent.trim()}>
+            <button type="submit" className="btn-submit" disabled={addComment.isPending || !getCurrentUser() || !commentContent.trim()}>
               {addComment.isPending ? t('btnSubmitting') : t('taskAddComment')}
             </button>
           </div>

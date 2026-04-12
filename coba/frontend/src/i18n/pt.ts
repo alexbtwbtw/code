@@ -355,7 +355,7 @@ export const pt: Record<TranslationKey, string> = {
   taskNoComments: 'Sem comentários.',
   taskAddComment: 'Adicionar Comentário',
   taskCommentPlaceholder: 'Escreva um comentário…',
-  taskAuthorName: 'O Seu Nome',
+  taskCommentAsUser: 'A comentar como',
   btnEditTask: 'Editar Tarefa',
   btnSaveTask: 'Guardar Tarefa',
   btnDeleteTask: 'Eliminar Tarefa',
