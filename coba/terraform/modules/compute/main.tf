@@ -87,9 +87,9 @@ resource "aws_instance" "backend" {
     echo '/dev/xvdf /data ext4 defaults,nofail 0 2' >> /etc/fstab
     mount -a
 
-    # Create app and log directories
-    mkdir -p /app
-    mkdir -p /var/log/coba
+    # Create app and log directories with correct ownership
+    mkdir -p /app /var/log/coba
+    chown -R ec2-user:ec2-user /app /var/log/coba
   EOF
 
   tags = { Name = "coba-poc-backend" }

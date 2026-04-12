@@ -79,8 +79,11 @@ jobs:
               --name /coba/poc/s3-files-bucket \
               --query Parameter.Value --output text)
 
+            # Ensure /app is owned by ec2-user
+            sudo mkdir -p /app /var/log/coba
+            sudo chown -R ec2-user:ec2-user /app /var/log/coba
+
             # Extract artifact
-            mkdir -p /app
             cd /app
             unzip -o /tmp/backend-artifact.zip
             rm /tmp/backend-artifact.zip
