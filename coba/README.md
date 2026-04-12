@@ -304,12 +304,14 @@ All narrative text (descriptions, notes, bios) is in **Portuguese**.
 
 COBA can be deployed to AWS at ~$13/month (eu-west-1) using EC2 + SQLite on EBS + S3 + CloudFront. Pushing to `main` triggers an automatic deploy via GitHub Actions.
 
+No custom domain is required — the app is served over the free `*.cloudfront.net` HTTPS URL that CloudFront assigns automatically (e.g. `https://d1abc23def.cloudfront.net`).
+
 **Full infrastructure docs:** [`docs/aws/`](docs/aws/)
 
 ### Architecture
 
 ```
-Browser → CloudFront
+Browser → https://dXXXXXXXXX.cloudfront.net (free CloudFront domain)
   ├─ /api/* and /trpc/* → EC2 t3.micro (Node.js + pm2, port 3000)
   │                          └─ SQLite on EBS 30 GB at /data/coba.db
   └─ /*               → S3 (Vite SPA build)
@@ -368,9 +370,10 @@ export TF_VAR_anthropic_api_key="sk-ant-..."
 terraform init
 terraform apply \
   -var="account_id=YOUR_ACCOUNT_ID" \
-  -var="domain_name=coba.yourdomain.com" \
-  -var="route53_zone_id=YOUR_ZONE_ID" \
   -var="ssh_key_name=YOUR_KEY_PAIR_NAME"
+
+# The app URL is shown in the outputs:
+# cloudfront_domain = "dXXXXXXXXX.cloudfront.net"
 ```
 
 ### Deploy pipeline

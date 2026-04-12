@@ -13,8 +13,6 @@ provider "aws" {
 }
 
 # ── Compute (EC2 + EBS + IAM + SSM) ──────────────────────────────────────────
-# Note: compute module is declared before networking so that its instance_id
-# can be passed into networking for the Elastic IP association.
 module "compute" {
   source = "../../modules/compute"
 
@@ -45,16 +43,13 @@ module "storage" {
   public_route_table_id       = module.networking.public_route_table_id
   files_bucket_name           = var.files_bucket_name
   frontend_bucket_name        = var.frontend_bucket_name
-  domain_name                 = var.domain_name
   cloudfront_distribution_arn = module.cdn.distribution_arn
 }
 
-# ── CDN (CloudFront + ACM cert + Route 53) ───────────────────────────────────
+# ── CDN (CloudFront with default *.cloudfront.net certificate) ────────────────
 module "cdn" {
   source = "../../modules/cdn"
 
-  domain_name                     = var.domain_name
-  route53_zone_id                 = var.route53_zone_id
   ec2_public_dns                  = module.compute.public_dns
   frontend_bucket_regional_domain = module.storage.frontend_bucket_regional_domain
 }

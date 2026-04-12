@@ -8,16 +8,6 @@ variable "account_id" {
   description = "12-digit AWS account ID"
 }
 
-variable "domain_name" {
-  type        = string
-  description = "Domain name for the app (e.g. coba.example.com)"
-}
-
-variable "route53_zone_id" {
-  type        = string
-  description = "Route 53 hosted zone ID for the domain"
-}
-
 variable "ssh_key_name" {
   type        = string
   description = "Name of the EC2 key pair for SSH access"

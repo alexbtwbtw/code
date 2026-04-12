@@ -1,37 +1,3 @@
-# ACM cert must be in us-east-1 for CloudFront
-provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
-}
-
-resource "aws_acm_certificate" "main" {
-  provider          = aws.us_east_1
-  domain_name       = var.domain_name
-  validation_method = "DNS"
-  lifecycle { create_before_destroy = true }
-}
-
-resource "aws_route53_record" "cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.main.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-  zone_id = var.route53_zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
-  ttl     = 60
-}
-
-resource "aws_acm_certificate_validation" "main" {
-  provider                = aws.us_east_1
-  certificate_arn         = aws_acm_certificate.main.arn
-  validation_record_fqdns = [for r in aws_route53_record.cert_validation : r.fqdn]
-}
-
 resource "aws_cloudfront_origin_access_control" "frontend" {
   name                              = "coba-poc-frontend-oac"
   origin_access_control_origin_type = "s3"
@@ -43,7 +9,6 @@ resource "aws_cloudfront_distribution" "main" {
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
-  aliases             = [var.domain_name]
   price_class         = "PriceClass_100" # US, Canada, Europe only
 
   # Origin 1: EC2 backend (port 3000)
@@ -111,10 +76,9 @@ resource "aws_cloudfront_distribution" "main" {
     error_caching_min_ttl = 0
   }
 
+  # Use the free default CloudFront certificate (*.cloudfront.net)
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.main.certificate_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+    cloudfront_default_certificate = true
   }
 
   restrictions {
@@ -122,15 +86,4 @@ resource "aws_cloudfront_distribution" "main" {
   }
 
   tags = { Name = "coba-poc-cdn" }
-}
-
-resource "aws_route53_record" "app" {
-  zone_id = var.route53_zone_id
-  name    = var.domain_name
-  type    = "A"
-  alias {
-    name                   = aws_cloudfront_distribution.main.domain_name
-    zone_id                = aws_cloudfront_distribution.main.hosted_zone_id
-    evaluate_target_health = false
-  }
 }
