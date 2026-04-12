@@ -229,6 +229,7 @@ export const pt: Record<TranslationKey, string> = {
   cvPreviewHint: 'Reveja e edite a informação extraída antes de guardar.',
   cvErrorNotPdf: 'Por favor carregue um ficheiro PDF.',
   cvErrorTooLarge: 'Ficheiro demasiado grande (máximo 10 MB).',
+  aiDisabled: 'As funcionalidades de IA estão desativadas neste servidor.',
   cvRequired: 'É obrigatório carregar um CV (PDF).',
   cvFieldLabel: 'Curriculum Vitae (PDF)',
   cvFileSelected: 'Selecionado',

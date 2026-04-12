@@ -13,6 +13,7 @@ import type { ProjectPriority } from '../constants/projects'
 import { GEO_TYPE_KEY } from '../constants/geo'
 import { TASK_STATUS_KEY, TASK_PRIORITY_KEY, TASK_STATUSES, TASK_PRIORITIES } from '../constants/tasks'
 import { fmt, fmtDate, fmtDim, initials } from '../utils/format'
+import { useAiEnabled } from '../api/system'
 import { useProjectById, useUpdateProject } from '../api/projects'
 import { useGeoByProject } from '../api/geo'
 import { useStructuresByProject } from '../api/structures'
@@ -63,6 +64,8 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
   // Create feature form state
   const [showCreateFeature, setShowCreateFeature] = useState(false)
   const [newFeature, setNewFeature] = useState({ label: '', description: '', latitude: '', longitude: '' })
+
+  const aiEnabled = useAiEnabled()
 
   // Queries
   const { data: project, isLoading: loadingProject } = useProjectById(id)
@@ -476,7 +479,9 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
                 </button>
                 <button type="button"
                   className={`suggest-mode-btn${suggestMode === 'ai' ? ' suggest-mode-btn--active' : ''}`}
-                  onClick={() => setSuggestMode('ai')}>
+                  onClick={() => setSuggestMode('ai')}
+                  disabled={!aiEnabled}
+                  title={!aiEnabled ? t('aiDisabled') : undefined}>
                   {t('suggestModeAi')}
                 </button>
               </div>

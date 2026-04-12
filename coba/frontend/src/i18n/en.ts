@@ -227,6 +227,7 @@ export const en = {
   cvPreviewHint: 'Review and edit the extracted information before saving.',
   cvErrorNotPdf: 'Please upload a PDF file.',
   cvErrorTooLarge: 'File is too large (max 10 MB).',
+  aiDisabled: 'AI features are disabled on this server.',
   cvRequired: 'A CV (PDF) is required.',
   cvFieldLabel: 'Curriculum Vitae (PDF)',
   cvFileSelected: 'Selected',

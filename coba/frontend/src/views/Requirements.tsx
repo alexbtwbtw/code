@@ -7,6 +7,7 @@ import { CATEGORIES, CAT_KEY } from '../constants/projects'
 import { useListBooks, useCreateBook, useBookById, useUpdateBook, useDeleteBook, useCreateRequirement, useUpdateRequirement, useDeleteRequirement, useMatchMembers, useAddReqAssignment, useRemoveReqAssignment, useParseRequirementsFromPdf } from '../api/requirements'
 import { useProjectsList } from '../api/projects'
 import { useTeamList } from '../api/team'
+import { useAiEnabled } from '../api/system'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -63,6 +64,7 @@ export default function Requirements({ onNavigate }: Props) {
   const [importError, setImportError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const aiEnabled = useAiEnabled()
   const { data: books, isLoading } = useListBooks()
   const { data: allProjects } = useProjectsList({})
 
@@ -144,7 +146,7 @@ export default function Requirements({ onNavigate }: Props) {
         </div>
         <div style={{ display: 'flex', gap: '.5rem' }}>
           <input ref={fileInputRef} type="file" accept=".pdf,.docx" style={{ display: 'none' }} onChange={handleFileChange} />
-          <button className="btn-secondary" onClick={() => fileInputRef.current?.click()} disabled={importPhase === 'loading'}>
+          <button className="btn-secondary" onClick={() => fileInputRef.current?.click()} disabled={importPhase === 'loading' || !aiEnabled} title={!aiEnabled ? t('aiDisabled') : undefined}>
             {importPhase === 'loading' ? t('importParsing') : t('importFromPdf')}
           </button>
           <button className="btn-submit" onClick={() => setShowNewForm(p => !p)}>
@@ -274,6 +276,7 @@ export default function Requirements({ onNavigate }: Props) {
 
 export function RequirementBookDetail({ id, onNavigate }: { id: number; onNavigate: (page: Page) => void }) {
   const { t } = useTranslation()
+  const aiEnabled = useAiEnabled()
 
   // Edit book state
   const [isEditingBook, setIsEditingBook] = useState(false)
@@ -538,7 +541,7 @@ export function RequirementBookDetail({ id, onNavigate }: { id: number; onNaviga
                       <div className="suggest-controls">
                         <div className="suggest-mode-tabs">
                           <button type="button" className={`suggest-mode-btn${matchMode === 'local' ? ' suggest-mode-btn--active' : ''}`} onClick={() => setMatchMode('local')}>{t('reqMatchModeLocal')}</button>
-                          <button type="button" className={`suggest-mode-btn${matchMode === 'ai' ? ' suggest-mode-btn--active' : ''}`} onClick={() => setMatchMode('ai')}>{t('reqMatchModeAi')}</button>
+                          <button type="button" className={`suggest-mode-btn${matchMode === 'ai' ? ' suggest-mode-btn--active' : ''}`} onClick={() => setMatchMode('ai')} disabled={!aiEnabled} title={!aiEnabled ? t('aiDisabled') : undefined}>{t('reqMatchModeAi')}</button>
                         </div>
                         <label className="suggest-topn-label">
                           {t('reqMatchTopN')}

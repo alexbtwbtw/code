@@ -6,6 +6,7 @@ import { structuresRouter } from './structures'
 import { featuresRouter } from './features'
 import { requirementsRouter } from './requirements'
 import { tasksRouter } from './tasks'
+import { systemRouter } from './system'
 
 export const appRouter = router({
   projects:     projectsRouter,
@@ -15,6 +16,7 @@ export const appRouter = router({
   team:         teamRouter,
   requirements: requirementsRouter,
   tasks:        tasksRouter,
+  system:       systemRouter,
 })
 
 export type AppRouter = typeof appRouter
