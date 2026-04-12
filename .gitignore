@@ -28,8 +28,12 @@ desktop.ini
 .vscode/
 .idea/
 
+# ── Claude Code ───────────────────────────────────────────────────────────────
+.claude/
+
 # ── TypeScript cache ──────────────────────────────────────────────────────────
 *.tsbuildinfo
 
 #- OTHER
 .VSCodeCounter/
+unity/
