@@ -16,7 +16,8 @@
     "electron:rebuild": "electron-rebuild --module-dir backend",
     "electron:dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"wait-on tcp:5173 tcp:3000 && electron .\"",
     "electron:build": "npm run build && npm run electron:rebuild && npm run electron:compile && node scripts/assemble-electron.mjs",
-    "electron:pack": "npm run electron:compile && node scripts/assemble-electron.mjs"
+    "electron:pack": "npm run electron:compile && node scripts/assemble-electron.mjs",
+    "test:e2e": "npm --prefix e2e run test"
   },
   "build": {
     "appId": "com.coba.app",

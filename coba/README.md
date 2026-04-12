@@ -98,7 +98,7 @@ coba/
 │       │   └── suggestMembersAi.ts # Claude API: match members to requirements
 │       └── seed/
 │           ├── projects.ts    # 34 real COBA projects with geo + structures
-│           ├── team.ts        # 4 team members with history + generated CVs
+│           ├── team.ts        # 10 team members with history + generated CVs
 │           ├── requirements.ts# Sample requirement books
 │           └── tasks.ts       # 89 tasks across projects
 │
@@ -290,7 +290,7 @@ i18n/context.tsx← LanguageProvider + useTranslation()
 
 34 real COBA projects are seeded at startup, covering Portugal, Angola, Mozambique, Tanzania, Nigeria, Ethiopia, and other regions — spanning water, transport, energy, environment, and planning sectors.
 
-4 team members are seeded with full project histories and generated PDF CVs.
+10 team members are seeded with full project histories and generated PDF CVs.
 
 89 tasks are distributed across projects with realistic statuses and priorities.
 
