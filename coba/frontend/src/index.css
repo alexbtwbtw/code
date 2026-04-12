@@ -1113,6 +1113,12 @@ div.tagged-project-row:hover { border-color: var(--border); }
   .filter-row select,
   .filter-row input { flex: 1 1 calc(50% - 8px); min-width: 120px; }
 
+  /* Search page */
+  .search-filters { padding: 14px 16px; }
+  .pc-top { flex-wrap: wrap; gap: 6px; }
+  .pc-bottom { gap: 8px; }
+  .pc-financials { flex-wrap: wrap; gap: 8px; }
+
   /* Report filter bar */
   .report-filter-bar { flex-wrap: wrap; gap: 6px; }
 
@@ -1178,6 +1184,16 @@ div.tagged-project-row:hover { border-color: var(--border); }
 
   /* Search header: stack */
   .search-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+  /* Search page: tighten on phone */
+  .search-page { gap: 16px; }
+  .search-filters { padding: 12px 14px; gap: 10px; }
+  .project-list { gap: 12px; }
+  .project-card { padding: 14px 16px; }
+  .pc-top { flex-wrap: wrap; gap: 6px; }
+  .pc-arrow { display: none; }
+  .pc-financials { flex-wrap: wrap; gap: 6px; }
+  .pc-bottom { gap: 6px; margin-top: 6px; padding-top: 8px; }
 
   /* Suggest card: stack rank/avatar inline still ok, but tighten */
   .suggest-card { padding: 10px 12px; gap: 8px; }
