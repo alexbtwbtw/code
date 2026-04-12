@@ -31,7 +31,6 @@ module "compute" {
   source = "../../modules/compute"
 
   region            = var.region
-  account_id        = var.account_id
   public_subnet_id  = module.networking.public_subnet_id
   ec2_sg_id         = module.networking.ec2_sg_id
   ssh_key_name      = aws_key_pair.ec2.key_name

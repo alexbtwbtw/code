@@ -2,11 +2,6 @@ variable "region" {
   type = string
 }
 
-variable "account_id" {
-  type        = string
-  description = "12-digit AWS account ID"
-}
-
 variable "public_subnet_id" {
   type = string
 }

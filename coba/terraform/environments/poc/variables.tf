@@ -3,11 +3,6 @@ variable "region" {
   default = "eu-west-2"
 }
 
-variable "account_id" {
-  type        = string
-  description = "12-digit AWS account ID"
-}
-
 variable "deploy_ssh_cidr" {
   type        = string
   description = "CIDR allowed to SSH — restrict to your IP or GitHub Actions IPs in production"
