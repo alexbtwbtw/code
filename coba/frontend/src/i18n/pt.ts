@@ -440,6 +440,39 @@ export const pt: Record<TranslationKey, string> = {
   priorityVeryLow: 'Muito Baixo',
   priorityMinimal: 'Mínimo',
 
+  // Project detail sidebar nav
+  sidebarOverview:   'Resumo',
+  sidebarTasks:      'Tarefas',
+  sidebarTeam:       'Equipa',
+  sidebarStructures: 'Estruturas',
+  sidebarFeatures:   'Características',
+  sidebarGeo:        'Geologia',
+
+  // Time tracking
+  timeTitle: 'Tempo Registado',
+  timeTotal: 'Total de Horas',
+  timeDate: 'Data',
+  timeHours: 'Horas',
+  timeDesc: 'Descrição',
+  timeMember: 'Membro',
+  timeProject: 'Projeto',
+  timeAdd: 'Registar Tempo',
+  timeEmpty: 'Sem tempo registado.',
+  timeNoUser: 'Selecione um utilizador para registar tempo.',
+
+  // Company Teams
+  companyTeamsNav: 'Equipas Internas',
+  companyTeamsTitle: 'Equipas Internas',
+  companyTeamsSubtitle: 'Gerir equipas organizacionais internas',
+  companyTeamName: 'Nome da Equipa',
+  companyTeamDesc: 'Descrição',
+  companyTeamMembers: 'Membros',
+  companyTeamEmpty: 'Sem equipas.',
+  companyTeamAdd: 'Nova Equipa',
+  companyTeamDelete: 'Eliminar Equipa',
+  companyTeamAddMember: 'Adicionar Membro',
+  memberTeams: 'Equipas Internas',
+
   // Misc
   optional: '(opcional)',
   na: 'N/D',

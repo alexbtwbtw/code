@@ -438,6 +438,39 @@ export const en = {
   priorityVeryLow: 'Very Low',
   priorityMinimal: 'Minimal',
 
+  // Project detail sidebar nav
+  sidebarOverview:   'Overview',
+  sidebarTasks:      'Tasks',
+  sidebarTeam:       'Team',
+  sidebarStructures: 'Structures',
+  sidebarFeatures:   'Features',
+  sidebarGeo:        'Geo Entries',
+
+  // Time tracking
+  timeTitle: 'Time Logged',
+  timeTotal: 'Total Hours',
+  timeDate: 'Date',
+  timeHours: 'Hours',
+  timeDesc: 'Description',
+  timeMember: 'Member',
+  timeProject: 'Project',
+  timeAdd: 'Log Time',
+  timeEmpty: 'No time logged yet.',
+  timeNoUser: 'Select a user to log time.',
+
+  // Company Teams
+  companyTeamsNav: 'Company Teams',
+  companyTeamsTitle: 'Company Teams',
+  companyTeamsSubtitle: 'Manage internal organisational teams',
+  companyTeamName: 'Team Name',
+  companyTeamDesc: 'Description',
+  companyTeamMembers: 'Members',
+  companyTeamEmpty: 'No teams yet.',
+  companyTeamAdd: 'New Team',
+  companyTeamDelete: 'Delete Team',
+  companyTeamAddMember: 'Add Member',
+  memberTeams: 'Internal Teams',
+
   // Misc
   optional: '(optional)',
   na: 'N/A',

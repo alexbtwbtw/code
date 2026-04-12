@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { trpcClient } from '../trpc'
 import type { Suggestion } from '../types/suggestions'
@@ -20,6 +20,8 @@ import { useStructuresByProject } from '../api/structures'
 import { useFeaturesByProject, useCreateFeature, useDeleteFeature } from '../api/features'
 import { useTeamByProject, useTeamList, useTagProject, useUntagProject, useSuggestMembers } from '../api/team'
 import { useTasksByProject, useCreateTask } from '../api/tasks'
+import { useTimeByProject, useCreateTimeEntry, useDeleteTimeEntry } from '../api/timeEntries'
+import { getCurrentUser } from '../auth'
 
 interface Props {
   id: number
@@ -65,6 +67,10 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
   const [showCreateFeature, setShowCreateFeature] = useState(false)
   const [newFeature, setNewFeature] = useState({ label: '', description: '', latitude: '', longitude: '' })
 
+  // Time entry form state
+  const [showTimeForm, setShowTimeForm] = useState(false)
+  const [newTime, setNewTime] = useState({ date: '', hours: '', description: '' })
+
   const aiEnabled = useAiEnabled()
 
   // Queries
@@ -75,6 +81,7 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
   const { data: projectTeam } = useTeamByProject(id)
   const { data: allMembers } = useTeamList()
   const { data: tasks, isLoading: loadingTasks } = useTasksByProject(id)
+  const { data: timeEntries } = useTimeByProject(id)
 
   // Mutations
   const updateProject  = useUpdateProject()
@@ -84,6 +91,8 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
   const createTask     = useCreateTask()
   const createFeature  = useCreateFeature()
   const deleteFeature  = useDeleteFeature()
+  const createTimeEntry = useCreateTimeEntry()
+  const deleteTimeEntry = useDeleteTimeEntry()
 
   // ── Edit project ────────────────────────────────────────────────────────────
   function startEditing() {
@@ -285,11 +294,13 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
 
   // ── View mode ───────────────────────────────────────────────────────────────
   return (
-    <div className="project-page">
+    <div className="project-detail-layout">
+      <ProjectSidebarNav />
+      <div className="project-page">
       {editSuccess && <div className="alert alert--success">{t('successEditMessage')}</div>}
 
       {/* Hero */}
-      <div className="project-hero">
+      <div id="section-overview" className="project-hero">
         <div className="project-hero-top">
           <span className="project-ref">{project.refCode}</span>
           <span className={`status-pill status-pill--${project.status}`}>{t(STATUS_KEY[project.status] ?? 'statusActive')}</span>
@@ -330,7 +341,7 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
       )}
 
       {/* Tasks */}
-      <section className="detail-section">
+      <section id="section-tasks" className="detail-section">
         <div className="section-heading-row">
           <h2 className="detail-section-title">{t('tasksTitle')}</h2>
           <button className="btn-add-geo" onClick={() => setShowCreateTask(p => !p)}>
@@ -443,6 +454,102 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
         )}
       </section>
 
+      {/* Time Logged */}
+      <section className="detail-section">
+        {(() => {
+          const currentUser = getCurrentUser()
+          const totalHours = timeEntries?.reduce((sum, e) => sum + e.hours, 0) ?? 0
+          return (
+            <>
+              <div className="section-heading-row">
+                <h2 className="detail-section-title">
+                  {t('timeTitle')}
+                  {totalHours > 0 && (
+                    <span className="time-total-badge"> — {t('timeTotal')}: {totalHours.toFixed(1)} h</span>
+                  )}
+                </h2>
+                <button className="btn-add-geo" onClick={() => setShowTimeForm(p => !p)}>
+                  {showTimeForm ? t('btnCancelEdit') : `+ ${t('timeAdd')}`}
+                </button>
+              </div>
+
+              {showTimeForm && (
+                <form className="task-create-form" onSubmit={ev => {
+                  ev.preventDefault()
+                  if (!currentUser) return
+                  if (!newTime.date || !newTime.hours) return
+                  createTimeEntry.mutate({
+                    projectId: id,
+                    memberId: currentUser.id,
+                    date: newTime.date,
+                    hours: parseFloat(newTime.hours),
+                    description: newTime.description,
+                  }, {
+                    onSuccess: () => {
+                      setNewTime({ date: '', hours: '', description: '' })
+                      setShowTimeForm(false)
+                    },
+                  })
+                }}>
+                  {!currentUser ? (
+                    <p className="muted">{t('timeNoUser')}</p>
+                  ) : (
+                    <>
+                      <div className="form-grid form-grid--2">
+                        <Field label={t('timeDate')} required>
+                          <input className="input" type="date" value={newTime.date} onChange={e => setNewTime(f => ({ ...f, date: e.target.value }))} />
+                        </Field>
+                        <Field label={t('timeHours')} required>
+                          <input className="input" type="number" min="0.1" step="0.1" value={newTime.hours} onChange={e => setNewTime(f => ({ ...f, hours: e.target.value }))} />
+                        </Field>
+                      </div>
+                      <Field label={t('timeDesc')}>
+                        <input className="input" value={newTime.description} onChange={e => setNewTime(f => ({ ...f, description: e.target.value }))} />
+                      </Field>
+                      <div className="form-actions">
+                        <button type="button" className="btn-cancel" onClick={() => setShowTimeForm(false)}>{t('btnCancelEdit')}</button>
+                        <button type="submit" className="btn-submit" disabled={createTimeEntry.isPending || !newTime.date || !newTime.hours}>
+                          {createTimeEntry.isPending ? t('btnSubmitting') : t('timeAdd')}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </form>
+              )}
+
+              {!timeEntries?.length ? (
+                <p className="muted">{t('timeEmpty')}</p>
+              ) : (
+                <table className="time-table">
+                  <thead>
+                    <tr>
+                      <th>{t('timeDate')}</th>
+                      <th>{t('timeMember')}</th>
+                      <th>{t('timeHours')}</th>
+                      <th>{t('timeDesc')}</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timeEntries.map(entry => (
+                      <tr key={entry.id}>
+                        <td>{entry.date.slice(0, 10)}</td>
+                        <td>{entry.memberName}</td>
+                        <td>{entry.hours.toFixed(1)}</td>
+                        <td>{entry.description}</td>
+                        <td>
+                          <button className="btn-untag" onClick={() => deleteTimeEntry.mutate({ id: entry.id })} title={t('btnRemoveGeo')}>✕</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
+          )
+        })()}
+      </section>
+
       {project.tags && (
         <section className="detail-section">
           <h2 className="detail-section-title">{t('detailTags')}</h2>
@@ -453,7 +560,7 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
       )}
 
       {/* Team members */}
-      <section className="detail-section">
+      <section id="section-team" className="detail-section">
         <div className="section-heading-row">
           <h2 className="detail-section-title">{t('projectTeamTitle')}</h2>
           <div className="team-section-actions">
@@ -623,7 +730,7 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
       </section>
 
       {/* Structures */}
-      <section className="detail-section">
+      <section id="section-structures" className="detail-section">
         <h2 className="detail-section-title">{t('detailStructures')}</h2>
         {loadingStructures ? (
           <p className="muted">{t('loading')}</p>
@@ -658,7 +765,7 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
       </section>
 
       {/* Project Features */}
-      <section className="detail-section">
+      <section id="section-features" className="detail-section">
         <div className="section-heading-row">
           <h2 className="detail-section-title">{t('detailFeatures')}</h2>
           <button className="btn-add-geo" onClick={() => setShowCreateFeature(p => !p)}>
@@ -727,7 +834,7 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
       </section>
 
       {/* Geological entries */}
-      <section className="detail-section">
+      <section id="section-geo" className="detail-section">
         <h2 className="detail-section-title">{t('detailGeo')}</h2>
         {loadingGeo ? (
           <p className="muted">{t('loading')}</p>
@@ -765,6 +872,76 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
         <button className="btn-back" onClick={() => onNavigate({ view: 'search' })}>&larr; {t('navSearch')}</button>
       </div>
     </div>
+    </div>
+  )
+}
+
+// ── Sidebar nav ─────────────────────────────────────────────────────────────
+const SIDEBAR_SECTIONS = [
+  { id: 'section-overview',    labelKey: 'sidebarOverview'    as const },
+  { id: 'section-tasks',       labelKey: 'sidebarTasks'       as const },
+  { id: 'section-team',        labelKey: 'sidebarTeam'        as const },
+  { id: 'section-structures',  labelKey: 'sidebarStructures'  as const },
+  { id: 'section-features',    labelKey: 'sidebarFeatures'    as const },
+  { id: 'section-geo',         labelKey: 'sidebarGeo'         as const },
+]
+
+function ProjectSidebarNav() {
+  const { t } = useTranslation()
+  const [activeId, setActiveId] = useState<string>('section-overview')
+  const observerRef = useRef<IntersectionObserver | null>(null)
+
+  useEffect(() => {
+    const candidates: { id: string; top: number }[] = []
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          const idx = candidates.findIndex(c => c.id === entry.target.id)
+          if (idx !== -1) {
+            candidates[idx].top = entry.isIntersecting
+              ? (entry.target as HTMLElement).getBoundingClientRect().top
+              : Infinity
+          }
+        })
+        // Pick the section with smallest positive top (closest to top of viewport)
+        const visible = candidates.filter(c => c.top < Infinity).sort((a, b) => a.top - b.top)
+        if (visible.length > 0) setActiveId(visible[0].id)
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+    )
+
+    SIDEBAR_SECTIONS.forEach(({ id }) => {
+      const el = document.getElementById(id)
+      if (el) {
+        candidates.push({ id, top: Infinity })
+        observerRef.current!.observe(el)
+      }
+    })
+
+    return () => observerRef.current?.disconnect()
+  }, [])
+
+  function scrollTo(id: string) {
+    const el = document.getElementById(id)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  return (
+    <nav className="project-sidebar-nav" aria-label="Page sections">
+      <ul className="project-sidebar-list">
+        {SIDEBAR_SECTIONS.map(({ id, labelKey }) => (
+          <li key={id}>
+            <button
+              className={`project-sidebar-item${activeId === id ? ' project-sidebar-item--active' : ''}`}
+              onClick={() => scrollTo(id)}
+            >
+              {t(labelKey)}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
   )
 }
 
