@@ -1,4 +1,4 @@
-import { router, adminProcedure } from '../trpc'
+import { router, adminProcedure, oversightProcedure } from '../trpc'
 import { db } from '../db'
 import { seedProjects } from '../seed/projects'
 import { seedTeam } from '../seed/team'
@@ -37,7 +37,7 @@ const WIPE_SQL = `
 `
 
 export const adminRouter = router({
-  reseed: adminProcedure
+  reseed: oversightProcedure
     .mutation(async () => {
       db.exec(WIPE_SQL)
 
@@ -59,7 +59,7 @@ export const adminRouter = router({
       return { ok: true, message: 'Database re-seeded successfully' }
     }),
 
-  wipe: adminProcedure
+  wipe: oversightProcedure
     .mutation(() => {
       db.exec(WIPE_SQL)
       return { success: true }

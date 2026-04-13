@@ -14,7 +14,7 @@ export default function AdminPanel() {
   const [reseedMsg, setReseedMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [wipeMsg, setWipeMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role === 'admin' || user?.role === 'oversight'
 
   const reseedMutation = useMutation({
     mutationFn: () => trpcClient.admin.reseed.mutate(),
