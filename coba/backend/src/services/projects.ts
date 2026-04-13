@@ -262,6 +262,11 @@ export function getPriorityList() {
   })
 }
 
+export function deleteProject(id: number) {
+  db.prepare(`DELETE FROM projects WHERE id = ?`).run(id)
+  return { success: true }
+}
+
 export function getRiskSummary() {
   const today = new Date().toISOString().slice(0, 10)
   const overdue = db.prepare(`

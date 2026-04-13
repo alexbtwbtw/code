@@ -2,8 +2,14 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { trpc } from '../trpc'
 import { useCurrentUser } from '../auth'
-import type { CurrentUser } from '../auth'
+import type { CurrentUser, Role } from '../auth'
 import { useTranslation } from '../i18n/context'
+
+const ALL_ROLES: Role[] = ['admin', 'oversight', 'manager', 'finance', 'user']
+
+function normaliseRole(raw: string): Role {
+  return ALL_ROLES.includes(raw as Role) ? (raw as Role) : 'user'
+}
 
 export default function UserSwitcher() {
   const { t } = useTranslation()
@@ -21,7 +27,7 @@ export default function UserSwitcher() {
         name: first.name,
         title: first.title,
         email: first.email,
-        role: first.role === 'oversight' ? 'oversight' : first.role === 'finance' ? 'finance' : 'user',
+        role: normaliseRole(first.role),
       }
       switchUser(next)
     }
@@ -31,13 +37,21 @@ export default function UserSwitcher() {
     return name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
   }
 
+  function roleBadgeLabel(role: Role): string {
+    if (role === 'oversight') return t('userRoleOversight')
+    if (role === 'finance')   return t('roleFinance')
+    if (role === 'manager')   return 'manager'
+    if (role === 'admin')     return 'admin'
+    return t('userRoleUser')
+  }
+
   function handleSelect(member: NonNullable<typeof members>[number]) {
     const next: CurrentUser = {
       id: member.id,
       name: member.name,
       title: member.title,
       email: member.email,
-      role: member.role === 'oversight' ? 'oversight' : member.role === 'finance' ? 'finance' : 'user',
+      role: normaliseRole(member.role),
     }
     switchUser(next)
     setOpen(false)
@@ -66,7 +80,7 @@ export default function UserSwitcher() {
           <p className="user-switcher-label">{t('userSwitcherLabel')}</p>
           <div className="user-switcher-scroll">
             {(members ?? []).map(member => {
-              const role = member.role === 'oversight' ? 'oversight' : member.role === 'finance' ? 'finance' : 'user'
+              const role = normaliseRole(member.role)
               const isActive = user?.id === member.id
               return (
                 <button
@@ -76,7 +90,7 @@ export default function UserSwitcher() {
                 >
                   <span className="user-switcher-name">{member.name}</span>
                   <span className={`user-switcher-role-badge user-switcher-role-badge--${role}`}>
-                    {role === 'oversight' ? t('userRoleOversight') : role === 'finance' ? t('roleFinance') : t('userRoleUser')}
+                    {roleBadgeLabel(role)}
                   </span>
                 </button>
               )

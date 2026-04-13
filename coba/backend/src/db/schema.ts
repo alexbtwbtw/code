@@ -297,4 +297,15 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_project_fixed_costs_project
     ON project_fixed_costs(project_id, cost_date DESC);
+
+  CREATE TABLE IF NOT EXISTS audit_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER,
+    user_name  TEXT,
+    action     TEXT    NOT NULL,
+    entity     TEXT    NOT NULL,
+    entity_id  INTEGER,
+    changes    TEXT,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
 `)

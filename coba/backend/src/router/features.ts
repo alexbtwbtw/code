@@ -1,22 +1,31 @@
 import { z } from 'zod'
-import { router, publicProcedure } from '../trpc'
+import { router, authedProcedure, managerProcedure } from '../trpc'
 import { type RawFeature, mapFeature } from '../types/features'
 import { CreateFeatureSchema } from '../schemas/features'
 import * as featuresService from '../services/features'
+import { logAudit } from '../services/audit'
 
 export { type RawFeature, mapFeature, CreateFeatureSchema }
 export type { FeatureInput } from '../schemas/features'
 
 export const featuresRouter = router({
-  byProject: publicProcedure
+  byProject: authedProcedure
     .input(z.object({ projectId: z.number().int() }))
     .query(({ input }) => featuresService.getFeaturesByProject(input.projectId)),
 
-  create: publicProcedure
+  create: managerProcedure
     .input(CreateFeatureSchema)
-    .mutation(({ input }) => featuresService.createFeature(input)),
+    .mutation(({ ctx, input }) => {
+      const feature = featuresService.createFeature(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'project_features', (feature as { id: number }).id)
+      return feature
+    }),
 
-  delete: publicProcedure
+  delete: managerProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) => featuresService.deleteFeature(input.id)),
+    .mutation(({ ctx, input }) => {
+      const result = featuresService.deleteFeature(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'project_features', input.id)
+      return result
+    }),
 })

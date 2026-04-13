@@ -2808,4 +2808,33 @@ export async function seedTeam() {
     bio: 'Controller financeiro com experiência em análise de rentabilidade, controlo de custos e reporting financeiro para projetos de engenharia civil.',
     role: 'finance',
   })
+
+  // ── Gestores de Projeto (manager) ─────────────────────────────────────────
+  insertMember.run({
+    name: 'Ana Ferreira',
+    title: 'Gestora de Projetos Sénior',
+    email: 'ana.ferreira@coba.pt',
+    phone: '+351 21 000 9005',
+    bio: 'Gestora de projetos sénior com 15 anos de experiência na coordenação de projetos de infraestrutura em Portugal e mercados internacionais. Especialista em planeamento, controlo de prazos e gestão de equipas multidisciplinares.',
+    role: 'manager',
+  })
+
+  insertMember.run({
+    name: 'Pedro Lopes',
+    title: 'Gestor de Projetos',
+    email: 'pedro.lopes@coba.pt',
+    phone: '+351 21 000 9006',
+    bio: 'Gestor de projetos com 10 anos de experiência em obras de engenharia civil. Responsável pela coordenação de projetos de transporte e estruturas, com forte competência em gestão de risco e reporte executivo.',
+    role: 'manager',
+  })
+
+  // ── Administrador de Sistema (admin) ──────────────────────────────────────
+  insertMember.run({
+    name: 'Carlos Mendes',
+    title: 'Administrador de Sistema',
+    email: 'carlos.mendes@coba.pt',
+    phone: '+351 21 000 9000',
+    bio: 'Administrador de sistemas responsável pela gestão da plataforma COBA, controlo de acessos e manutenção da base de dados.',
+    role: 'admin',
+  })
 }

@@ -1,10 +1,11 @@
 import { z } from 'zod'
-import { router, publicProcedure } from '../trpc'
+import { router, authedProcedure, managerProcedure } from '../trpc'
 import { db } from '../db/client'
+import { logAudit } from '../services/audit'
 
 export const companyTeamsRouter = router({
 
-  list: publicProcedure
+  list: authedProcedure
     .query(() => {
       return db.prepare(`
         SELECT ct.id, ct.name, ct.description, ct.created_at AS createdAt,
@@ -16,7 +17,7 @@ export const companyTeamsRouter = router({
       `).all() as { id: number; name: string; description: string; createdAt: string; memberCount: number }[]
     }),
 
-  byId: publicProcedure
+  byId: authedProcedure
     .input(z.object({ id: z.number().int() }))
     .query(({ input }) => {
       const team = db.prepare(`
@@ -33,50 +34,56 @@ export const companyTeamsRouter = router({
       return { ...team, members }
     }),
 
-  create: publicProcedure
+  create: managerProcedure
     .input(z.object({ name: z.string().min(1), description: z.string().default('') }))
-    .mutation(({ input }) => {
+    .mutation(({ ctx, input }) => {
       const result = db.prepare(`
         INSERT INTO company_teams (name, description) VALUES (?, ?)
       `).run(input.name, input.description)
-      return { id: Number(result.lastInsertRowid), name: input.name, description: input.description }
+      const id = Number(result.lastInsertRowid)
+      logAudit(ctx.userId, ctx.userName, 'create', 'company_teams', id)
+      return { id, name: input.name, description: input.description }
     }),
 
-  update: publicProcedure
+  update: managerProcedure
     .input(z.object({ id: z.number().int(), name: z.string().min(1), description: z.string().default('') }))
-    .mutation(({ input }) => {
+    .mutation(({ ctx, input }) => {
       db.prepare(`
         UPDATE company_teams SET name = ?, description = ? WHERE id = ?
       `).run(input.name, input.description, input.id)
+      logAudit(ctx.userId, ctx.userName, 'update', 'company_teams', input.id)
       return { id: input.id, name: input.name, description: input.description }
     }),
 
-  delete: publicProcedure
+  delete: managerProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) => {
+    .mutation(({ ctx, input }) => {
       db.prepare(`DELETE FROM company_teams WHERE id = ?`).run(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'company_teams', input.id)
       return { success: true }
     }),
 
-  addMember: publicProcedure
+  addMember: managerProcedure
     .input(z.object({ teamId: z.number().int(), memberId: z.number().int() }))
-    .mutation(({ input }) => {
+    .mutation(({ ctx, input }) => {
       db.prepare(`
         INSERT OR IGNORE INTO company_team_members (team_id, member_id) VALUES (?, ?)
       `).run(input.teamId, input.memberId)
+      logAudit(ctx.userId, ctx.userName, 'create', 'company_team_members', input.teamId)
       return { success: true }
     }),
 
-  removeMember: publicProcedure
+  removeMember: managerProcedure
     .input(z.object({ teamId: z.number().int(), memberId: z.number().int() }))
-    .mutation(({ input }) => {
+    .mutation(({ ctx, input }) => {
       db.prepare(`
         DELETE FROM company_team_members WHERE team_id = ? AND member_id = ?
       `).run(input.teamId, input.memberId)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'company_team_members', input.teamId)
       return { success: true }
     }),
 
-  byMember: publicProcedure
+  byMember: authedProcedure
     .input(z.object({ memberId: z.number().int() }))
     .query(({ input }) => {
       return db.prepare(`

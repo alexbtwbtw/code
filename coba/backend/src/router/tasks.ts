@@ -1,39 +1,40 @@
 import { z } from 'zod'
-import { router, publicProcedure } from '../trpc'
+import { router, authedProcedure, managerProcedure } from '../trpc'
 import { TaskStatusSchema, TaskPrioritySchema } from '../schemas/tasks'
 import * as tasksService from '../services/tasks'
+import { logAudit } from '../services/audit'
 
 export const tasksRouter = router({
-  overdue: publicProcedure
+  overdue: authedProcedure
     .query(() => tasksService.getOverdue()),
 
-  nearDeadline: publicProcedure
+  nearDeadline: authedProcedure
     .query(() => tasksService.getNearDeadline()),
 
-  blocked: publicProcedure
+  blocked: authedProcedure
     .query(() => tasksService.getBlocked()),
 
-  myOverdue: publicProcedure
+  myOverdue: authedProcedure
     .input(z.object({ memberId: z.number() }))
     .query(({ input }) => tasksService.getMyOverdue(input.memberId)),
 
-  myNearDeadline: publicProcedure
+  myNearDeadline: authedProcedure
     .input(z.object({ memberId: z.number() }))
     .query(({ input }) => tasksService.getMyNearDeadline(input.memberId)),
 
-  byProject: publicProcedure
+  byProject: authedProcedure
     .input(z.object({ projectId: z.number().int() }))
     .query(({ input }) => tasksService.getTasksByProject(input.projectId)),
 
-  byMember: publicProcedure
+  byMember: authedProcedure
     .input(z.object({ teamMemberId: z.number().int() }))
     .query(({ input }) => tasksService.getTasksByMember(input.teamMemberId)),
 
-  byId: publicProcedure
+  byId: authedProcedure
     .input(z.object({ id: z.number().int() }))
     .query(({ input }) => tasksService.getTaskById(input.id)),
 
-  create: publicProcedure
+  create: managerProcedure
     .input(z.object({
       projectId: z.number().int(),
       title: z.string().min(1),
@@ -43,9 +44,13 @@ export const tasksRouter = router({
       stateSummary: z.string().default(''),
       dueDate: z.string().optional(),
     }))
-    .mutation(({ input }) => tasksService.createTask(input)),
+    .mutation(({ ctx, input }) => {
+      const task = tasksService.createTask(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'tasks', (task as { id: number }).id)
+      return task
+    }),
 
-  update: publicProcedure
+  update: authedProcedure
     .input(z.object({
       id: z.number().int(),
       title: z.string().min(1).optional(),
@@ -55,29 +60,53 @@ export const tasksRouter = router({
       stateSummary: z.string().optional(),
       dueDate: z.string().nullable().optional(),
     }))
-    .mutation(({ input }) => tasksService.updateTask(input)),
+    .mutation(({ ctx, input }) => {
+      const task = tasksService.updateTask(input)
+      logAudit(ctx.userId, ctx.userName, 'update', 'tasks', input.id)
+      return task
+    }),
 
-  delete: publicProcedure
+  delete: managerProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) => tasksService.deleteTask(input.id)),
+    .mutation(({ ctx, input }) => {
+      const result = tasksService.deleteTask(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'tasks', input.id)
+      return result
+    }),
 
-  assign: publicProcedure
+  assign: managerProcedure
     .input(z.object({ taskId: z.number().int(), teamMemberId: z.number().int() }))
-    .mutation(({ input }) => tasksService.assignTask(input.taskId, input.teamMemberId)),
+    .mutation(({ ctx, input }) => {
+      const result = tasksService.assignTask(input.taskId, input.teamMemberId)
+      logAudit(ctx.userId, ctx.userName, 'create', 'task_assignments', input.taskId)
+      return result
+    }),
 
-  unassign: publicProcedure
+  unassign: managerProcedure
     .input(z.object({ taskId: z.number().int(), teamMemberId: z.number().int() }))
-    .mutation(({ input }) => tasksService.unassignTask(input.taskId, input.teamMemberId)),
+    .mutation(({ ctx, input }) => {
+      const result = tasksService.unassignTask(input.taskId, input.teamMemberId)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'task_assignments', input.taskId)
+      return result
+    }),
 
-  addComment: publicProcedure
+  addComment: authedProcedure
     .input(z.object({
       taskId: z.number().int(),
       authorName: z.string().min(1),
       content: z.string().min(1),
     }))
-    .mutation(({ input }) => tasksService.addComment(input.taskId, input.authorName, input.content)),
+    .mutation(({ ctx, input }) => {
+      const comment = tasksService.addComment(input.taskId, input.authorName, input.content)
+      logAudit(ctx.userId, ctx.userName, 'create', 'task_comments', input.taskId)
+      return comment
+    }),
 
-  deleteComment: publicProcedure
+  deleteComment: authedProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) => tasksService.deleteComment(input.id)),
+    .mutation(({ ctx, input }) => {
+      const result = tasksService.deleteComment(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'task_comments', input.id)
+      return result
+    }),
 })

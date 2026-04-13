@@ -62,9 +62,11 @@ app.all('/trpc/*', (c) =>
     req: c.req.raw,
     router: appRouter,
     // TODO: Replace with verified JWT/Cognito claims when real auth is implemented.
-    // For now, trust the x-user-role header sent by the frontend dev switcher.
+    // For now, trust the x-user-role/id/name headers sent by the frontend dev switcher.
     createContext: ({ req }): AppContext => ({
-      userRole: req.headers.get('x-user-role') ?? null,
+      userRole: (req.headers.get('x-user-role') ?? null) as import('./trpc').Role | null,
+      userId:   req.headers.get('x-user-id')   ?? null,
+      userName: req.headers.get('x-user-name') ?? null,
     }),
   })
 )

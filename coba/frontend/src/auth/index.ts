@@ -2,12 +2,14 @@
 // Auth abstraction layer — swap only the three exported function bodies for AWS/Cognito.
 // Everything else (useCurrentUser hook, CurrentUser type) stays the same.
 
+export type Role = 'admin' | 'oversight' | 'manager' | 'finance' | 'user'
+
 export type CurrentUser = {
   id: number
   name: string
   title: string
   email: string
-  role: 'user' | 'finance' | 'oversight'
+  role: Role
 }
 
 const LOCAL_STORAGE_KEY = 'coba_current_user'

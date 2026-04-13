@@ -11,6 +11,7 @@ if (process.env.USE_REAL_AI === 'true') {
 
 export function resetDb() {
   db.exec(`
+    DELETE FROM audit_log;
     DELETE FROM task_comments;
     DELETE FROM task_assignments;
     DELETE FROM tasks;

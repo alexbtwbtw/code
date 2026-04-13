@@ -130,6 +130,11 @@ export function updateMember(input: z.infer<typeof MemberInputSchema> & { id: nu
   return mapMember(db.prepare(`SELECT * FROM team_members WHERE id = ?`).get(input.id) as RawMember)
 }
 
+export function deleteMember(id: number) {
+  db.prepare(`DELETE FROM team_members WHERE id = ?`).run(id)
+  return { success: true }
+}
+
 export function getMembersByProject(projectId: number) {
   const rows = db.prepare(`
     SELECT m.*, pt.role_on_project FROM project_team pt

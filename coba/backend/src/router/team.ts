@@ -1,65 +1,106 @@
 import { z } from 'zod'
-import { router, publicProcedure } from '../trpc'
+import { router, authedProcedure, managerProcedure, oversightProcedure } from '../trpc'
 import { MemberInputSchema, HistoryInputSchema } from '../schemas/team'
 import * as teamService from '../services/team'
+import { logAudit } from '../services/audit'
 
 export const teamRouter = router({
 
-  list: publicProcedure
+  list: authedProcedure
     .query(() => teamService.listMembers()),
 
-  byId: publicProcedure
+  byId: authedProcedure
     .input(z.object({ id: z.number().int() }))
     .query(({ input }) => teamService.getMemberById(input.id)),
 
-  create: publicProcedure
+  create: managerProcedure
     .input(MemberInputSchema.extend({
       cv: z.object({ filename: z.string(), fileSize: z.number().int(), fileData: z.string() }).optional(),
     }))
-    .mutation(({ input }) => teamService.createMember(input)),
+    .mutation(({ ctx, input }) => {
+      const member = teamService.createMember(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'team_members', (member as { id: number }).id)
+      return member
+    }),
 
-  update: publicProcedure
+  update: managerProcedure
     .input(MemberInputSchema.extend({ id: z.number().int() }))
-    .mutation(({ input }) => teamService.updateMember(input)),
+    .mutation(({ ctx, input }) => {
+      const member = teamService.updateMember(input)
+      logAudit(ctx.userId, ctx.userName, 'update', 'team_members', input.id)
+      return member
+    }),
 
-  byProject: publicProcedure
+  delete: oversightProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(({ ctx, input }) => {
+      const result = teamService.deleteMember(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'team_members', input.id)
+      return result
+    }),
+
+  byProject: authedProcedure
     .input(z.object({ projectId: z.number().int() }))
     .query(({ input }) => teamService.getMembersByProject(input.projectId)),
 
-  tagProject: publicProcedure
+  tagProject: managerProcedure
     .input(z.object({ projectId: z.number().int(), teamMemberId: z.number().int(), roleOnProject: z.string().default('') }))
-    .mutation(({ input }) => teamService.tagProject(input.projectId, input.teamMemberId, input.roleOnProject)),
+    .mutation(({ ctx, input }) => {
+      const result = teamService.tagProject(input.projectId, input.teamMemberId, input.roleOnProject)
+      logAudit(ctx.userId, ctx.userName, 'create', 'project_team', input.projectId)
+      return result
+    }),
 
-  untagProject: publicProcedure
+  untagProject: managerProcedure
     .input(z.object({ projectId: z.number().int(), teamMemberId: z.number().int() }))
-    .mutation(({ input }) => teamService.untagProject(input.projectId, input.teamMemberId)),
+    .mutation(({ ctx, input }) => {
+      const result = teamService.untagProject(input.projectId, input.teamMemberId)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'project_team', input.projectId)
+      return result
+    }),
 
-  addHistory: publicProcedure
+  addHistory: managerProcedure
     .input(HistoryInputSchema)
-    .mutation(({ input }) => teamService.addHistory(input)),
+    .mutation(({ ctx, input }) => {
+      const history = teamService.addHistory(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'member_history', (history as { id: number }).id)
+      return history
+    }),
 
-  updateHistory: publicProcedure
+  updateHistory: managerProcedure
     .input(HistoryInputSchema.extend({ id: z.number().int() }))
-    .mutation(({ input }) => teamService.updateHistory(input)),
+    .mutation(({ ctx, input }) => {
+      const history = teamService.updateHistory(input)
+      logAudit(ctx.userId, ctx.userName, 'update', 'member_history', input.id)
+      return history
+    }),
 
-  deleteHistory: publicProcedure
+  deleteHistory: managerProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) => teamService.deleteHistory(input.id)),
+    .mutation(({ ctx, input }) => {
+      const result = teamService.deleteHistory(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'member_history', input.id)
+      return result
+    }),
 
-  getCvData: publicProcedure
+  getCvData: authedProcedure
     .input(z.object({ cvId: z.number().int() }))
     .query(({ input }) => teamService.getCvData(input.cvId)),
 
-  attachCv: publicProcedure
+  attachCv: managerProcedure
     .input(z.object({
       teamMemberId: z.number().int(),
       filename:     z.string(),
       fileSize:     z.number().int(),
       fileData:     z.string().optional(),
     }))
-    .mutation(({ input }) => teamService.attachCv(input)),
+    .mutation(({ ctx, input }) => {
+      const result = teamService.attachCv(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'member_cvs', input.teamMemberId)
+      return result
+    }),
 
-  createWithHistory: publicProcedure
+  createWithHistory: managerProcedure
     .input(z.object({
       member: MemberInputSchema,
       history: z.array(z.object({
@@ -81,13 +122,17 @@ export const teamRouter = router({
         fileData: z.string(),
       }).optional(),
     }))
-    .mutation(({ input }) => teamService.createWithHistory(input)),
+    .mutation(({ ctx, input }) => {
+      const member = teamService.createWithHistory(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'team_members', (member as { id: number }).id)
+      return member
+    }),
 
-  parseCv: publicProcedure
+  parseCv: managerProcedure
     .input(z.object({ pdfBase64: z.string() }))
     .mutation(({ input }) => teamService.parseCvService(input.pdfBase64)),
 
-  suggestMembers: publicProcedure
+  suggestMembers: managerProcedure
     .input(z.object({
       projectId: z.number().int(),
       mode:      z.enum(['ai', 'local']),

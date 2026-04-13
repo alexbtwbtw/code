@@ -19,7 +19,12 @@ export const trpcClient = createTRPCClient<AppRouter>({
         // TODO: Replace with real auth token headers (e.g. Authorization: Bearer <jwt>)
         // when Cognito / real auth is implemented. For now sends the dev-switcher role.
         const user = getCurrentUser()
-        return user ? { 'x-user-role': user.role } : {}
+        if (!user) return {}
+        return {
+          'x-user-role': user.role,
+          'x-user-id':   String(user.id),
+          'x-user-name': user.name,
+        }
       },
     }),
   ],

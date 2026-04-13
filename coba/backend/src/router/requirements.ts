@@ -1,45 +1,70 @@
 import { z } from 'zod'
-import { router, publicProcedure } from '../trpc'
+import { router, authedProcedure, managerProcedure } from '../trpc'
 import { DISCIPLINES, LEVELS, BookInputSchema, RequirementInputSchema, ReqAssignmentInputSchema } from '../schemas/requirements'
 import * as requirementsService from '../services/requirements'
 import { parseRequirementsFromPdf, parseRequirementsFromDocx } from '../lib/parseRequirements'
+import { logAudit } from '../services/audit'
 
 export { DISCIPLINES, LEVELS }
 
 export const requirementsRouter = router({
 
-  listBooks: publicProcedure
+  listBooks: authedProcedure
     .query(() => requirementsService.listBooks()),
 
-  bookById: publicProcedure
+  bookById: authedProcedure
     .input(z.object({ id: z.number().int() }))
     .query(({ input }) => requirementsService.getBookById(input.id)),
 
-  createBook: publicProcedure
+  createBook: managerProcedure
     .input(BookInputSchema)
-    .mutation(({ input }) => requirementsService.createBook(input)),
+    .mutation(({ ctx, input }) => {
+      const book = requirementsService.createBook(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'requirement_books', (book as { id: number }).id)
+      return book
+    }),
 
-  updateBook: publicProcedure
+  updateBook: managerProcedure
     .input(BookInputSchema.extend({ id: z.number().int() }))
-    .mutation(({ input }) => requirementsService.updateBook(input)),
+    .mutation(({ ctx, input }) => {
+      const book = requirementsService.updateBook(input)
+      logAudit(ctx.userId, ctx.userName, 'update', 'requirement_books', input.id)
+      return book
+    }),
 
-  deleteBook: publicProcedure
+  deleteBook: managerProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) => requirementsService.deleteBook(input.id)),
+    .mutation(({ ctx, input }) => {
+      const result = requirementsService.deleteBook(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'requirement_books', input.id)
+      return result
+    }),
 
-  createRequirement: publicProcedure
+  createRequirement: managerProcedure
     .input(RequirementInputSchema)
-    .mutation(({ input }) => requirementsService.createRequirement(input)),
+    .mutation(({ ctx, input }) => {
+      const req = requirementsService.createRequirement(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'requirements', (req as { id: number }).id)
+      return req
+    }),
 
-  updateRequirement: publicProcedure
+  updateRequirement: managerProcedure
     .input(RequirementInputSchema.extend({ id: z.number().int() }))
-    .mutation(({ input }) => requirementsService.updateRequirement(input)),
+    .mutation(({ ctx, input }) => {
+      const req = requirementsService.updateRequirement(input)
+      logAudit(ctx.userId, ctx.userName, 'update', 'requirements', input.id)
+      return req
+    }),
 
-  deleteRequirement: publicProcedure
+  deleteRequirement: managerProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) => requirementsService.deleteRequirement(input.id)),
+    .mutation(({ ctx, input }) => {
+      const result = requirementsService.deleteRequirement(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'requirements', input.id)
+      return result
+    }),
 
-  matchMembers: publicProcedure
+  matchMembers: managerProcedure
     .input(z.object({
       requirementId: z.number().int(),
       mode:          z.enum(['ai', 'local']),
@@ -52,15 +77,23 @@ export const requirementsRouter = router({
       return requirementsService.matchMembersAi(input.requirementId, input.topN)
     }),
 
-  addAssignment: publicProcedure
+  addAssignment: managerProcedure
     .input(ReqAssignmentInputSchema)
-    .mutation(({ input }) => requirementsService.addReqAssignment(input)),
+    .mutation(({ ctx, input }) => {
+      const result = requirementsService.addReqAssignment(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'requirement_assignments', input.requirementId)
+      return result
+    }),
 
-  removeAssignment: publicProcedure
+  removeAssignment: managerProcedure
     .input(z.object({ requirementId: z.number().int(), teamMemberId: z.number().int() }))
-    .mutation(({ input }) => requirementsService.removeReqAssignment(input.requirementId, input.teamMemberId)),
+    .mutation(({ ctx, input }) => {
+      const result = requirementsService.removeReqAssignment(input.requirementId, input.teamMemberId)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'requirement_assignments', input.requirementId)
+      return result
+    }),
 
-  parseFromPdf: publicProcedure
+  parseFromPdf: managerProcedure
     .input(z.object({ fileBase64: z.string(), fileType: z.enum(['pdf', 'docx']).default('pdf') }))
     .mutation(({ input }) =>
       input.fileType === 'docx'

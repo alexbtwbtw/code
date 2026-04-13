@@ -13,8 +13,8 @@ interface Props {
 export default function Layout({ page, onNavigate, children }: Props) {
   const { t, lang, setLang } = useTranslation()
   const { user } = useCurrentUser()
-  const isOversight = user?.role === 'oversight'
-  const hasFinanceAccess = user?.role === 'finance' || user?.role === 'oversight'
+  const isAdminOrOversight = user?.role === 'admin' || user?.role === 'oversight'
+  const hasFinanceAccess = user?.role === 'finance' || user?.role === 'oversight' || user?.role === 'admin'
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
   const [reportsOpen, setReportsOpen] = useState(false)
@@ -146,8 +146,8 @@ export default function Layout({ page, onNavigate, children }: Props) {
               )}
             </div>
 
-            {/* Admin — oversight only, pushed to the right */}
-            {isOversight && (
+            {/* Admin — oversight and admin only, pushed to the right */}
+            {isAdminOrOversight && (
               <NavBtn
                 active={activeTab === 'admin'}
                 label={t('adminNav')}
@@ -163,7 +163,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
           >
             {lang === 'pt' ? 'EN' : 'PT'}
           </button>
-          <UserSwitcher />
+          {import.meta.env.DEV && <UserSwitcher />}
         </div>
       </header>
 

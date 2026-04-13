@@ -1,7 +1,8 @@
 import { z } from 'zod'
-import { router, publicProcedure } from '../trpc'
+import { router, authedProcedure, financeProcedure } from '../trpc'
 import { db } from '../db'
 import { getCurrentRate } from '../services/finance'
+import { logAudit } from '../services/audit'
 
 interface RawTimeEntry {
   id: number
@@ -48,7 +49,8 @@ function mapEntryWithProject(row: RawTimeEntryWithProject) {
 }
 
 export const timeEntriesRouter = router({
-  byProject: publicProcedure
+  // byProject and report require finance/oversight/admin (aggregate financial data)
+  byProject: financeProcedure
     .input(z.object({ projectId: z.number().int() }))
     .query(({ input }) => {
       const rows = db.prepare(`
@@ -61,7 +63,8 @@ export const timeEntriesRouter = router({
       return rows.map(mapEntry)
     }),
 
-  byMember: publicProcedure
+  // byMember is available to any authed user (ownership enforced in front-end / per role)
+  byMember: authedProcedure
     .input(z.object({ memberId: z.number().int() }))
     .query(({ input }) => {
       const rows = db.prepare(`
@@ -74,7 +77,7 @@ export const timeEntriesRouter = router({
       return rows.map(mapEntryWithProject)
     }),
 
-  create: publicProcedure
+  create: authedProcedure
     .input(z.object({
       projectId: z.number().int(),
       memberId: z.number().int(),
@@ -82,7 +85,7 @@ export const timeEntriesRouter = router({
       hours: z.number().positive(),
       description: z.string().default(''),
     }))
-    .mutation(({ input }) => {
+    .mutation(({ ctx, input }) => {
       // Snapshot the member's current rate at the entry date
       const rateRecord = getCurrentRate(input.memberId, input.date)
       const snapshotRate = rateRecord?.hourlyRate ?? null
@@ -97,17 +100,19 @@ export const timeEntriesRouter = router({
         JOIN team_members tm ON tm.id = te.member_id
         WHERE te.id = ?
       `).get(result.lastInsertRowid) as RawTimeEntryWithMember
+      logAudit(ctx.userId, ctx.userName, 'create', 'time_entries', Number(result.lastInsertRowid))
       return mapEntry(row)
     }),
 
-  delete: publicProcedure
+  delete: authedProcedure
     .input(z.object({ id: z.number().int() }))
-    .mutation(({ input }) => {
+    .mutation(({ ctx, input }) => {
       db.prepare(`DELETE FROM time_entries WHERE id = ?`).run(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'time_entries', input.id)
       return { success: true }
     }),
 
-  report: publicProcedure
+  report: financeProcedure
     .query(() => {
       interface ByProjectRow {
         project_id: number

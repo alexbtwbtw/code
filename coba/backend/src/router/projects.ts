@@ -1,11 +1,12 @@
 import { z } from 'zod'
-import { router, publicProcedure } from '../trpc'
+import { router, authedProcedure, managerProcedure, oversightProcedure } from '../trpc'
 import { parseProject } from '../lib/parseProject'
 import { CreateProjectSchema } from '../schemas/projects'
 import * as projectsService from '../services/projects'
+import { logAudit } from '../services/audit'
 
 export const projectsRouter = router({
-  list: publicProcedure
+  list: authedProcedure
     .input(z.object({
       search: z.string().default(''),
       status: z.string().default(''),
@@ -15,33 +16,49 @@ export const projectsRouter = router({
     }))
     .query(({ input }) => projectsService.listProjects(input)),
 
-  byId: publicProcedure
+  byId: authedProcedure
     .input(z.object({ id: z.number().int() }))
     .query(({ input }) => projectsService.getProjectById(input.id)),
 
-  create: publicProcedure
+  create: managerProcedure
     .input(CreateProjectSchema)
-    .mutation(({ input }) => projectsService.createProject(input)),
+    .mutation(({ ctx, input }) => {
+      const project = projectsService.createProject(input)
+      logAudit(ctx.userId, ctx.userName, 'create', 'projects', (project as { id: number }).id)
+      return project
+    }),
 
-  update: publicProcedure
+  update: managerProcedure
     .input(CreateProjectSchema.partial().extend({ id: z.number().int() }))
-    .mutation(({ input }) => projectsService.updateProject(input)),
+    .mutation(({ ctx, input }) => {
+      const project = projectsService.updateProject(input)
+      logAudit(ctx.userId, ctx.userName, 'update', 'projects', input.id)
+      return project
+    }),
 
-  parseProject: publicProcedure
+  parseProject: managerProcedure
     .input(z.object({ pdfBase64: z.string() }))
     .mutation(({ input }) => parseProject(input.pdfBase64)),
 
-  stats: publicProcedure
+  stats: authedProcedure
     .input(z.object({ status: z.string().optional() }).optional())
     .query(({ input }) => projectsService.getProjectStats(input?.status)),
 
-  myProjects: publicProcedure
+  myProjects: authedProcedure
     .input(z.object({ memberId: z.number() }))
     .query(({ input }) => projectsService.getMyProjects(input.memberId)),
 
-  riskSummary: publicProcedure
+  riskSummary: authedProcedure
     .query(() => projectsService.getRiskSummary()),
 
-  priorityList: publicProcedure
+  priorityList: authedProcedure
     .query(() => projectsService.getPriorityList()),
+
+  delete: oversightProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(({ ctx, input }) => {
+      const result = projectsService.deleteProject(input.id)
+      logAudit(ctx.userId, ctx.userName, 'delete', 'projects', input.id)
+      return result
+    }),
 })

@@ -11,12 +11,12 @@ Each agent must update their section when they start, change, or finish a task.
 
 | Agent | Status | Working On | Last Updated |
 |-------|--------|------------|--------------|
-| Features | Idle | Added finance role: auth type, seed users, financeProcedure middleware, finance router protection, frontend role checks + UserSwitcher badge | 2026-04-13 19:33 |
-| Architecture & Docs | Idle | Finance tracking design | 2026-04-13 19:08 |
+| Features | Idle | RBAC full implementation: audit_log table, composable middleware stack (authed/manager/finance/oversight/admin), all routers updated, audit logging, frontend permissions hook, seed admin+manager users, UserSwitcher badges, AdminPanel audit viewer | 2026-04-13 20:03 |
+| Architecture & Docs | Idle | RBAC design proposal written to docs/RBAC_PLAN.md | 2026-04-13 19:50 |
 | UI | Idle | Nav rework complete | 2026-04-13 18:48 |
 | Seed Data | Idle | Fixed pt.member_id → pt.team_member_id in report query | 2026-04-13 18:46 |
 | Reporting | Idle | FinancialReport view built: KPI row, date filter, projects cost table (sortable), category breakdown, monthly trend; nav + routing wired | 2026-04-13 19:20 |
-| Testing | Idle | Fixed setup.ts jest-dom/vitest import; 107 frontend + 286 backend tests pass | 2026-04-13 19:02 |
+| Testing | Idle | Verified RBAC build; added audit_log to resetDb; wrote audit.test.ts, procedures.test.ts, permissions.test.ts; 137 frontend + 372 backend tests pass | 2026-04-13 23:04 |
 | AWS Migration | Idle | Decommission guide written | 2026-04-13 18:28 |
 | Security | Idle | Audit complete | 2026-04-13 18:30 |
 
@@ -29,7 +29,7 @@ _Agents: update this table (status, working on, last updated) whenever you pick 
 ### Features Agent
 Adds and completes missing product features: new backend endpoints, frontend UI sections, delete flows, confirmation dialogs, and cross-cutting feature gaps.
 
-#### Findings Summary (audited 2026-04-13 18:27; finance role added 2026-04-13 19:33)
+#### Findings Summary (audited 2026-04-13 18:27; finance role added 2026-04-13 19:33; RBAC full implementation 2026-04-13 20:03)
 
 The codebase is broadly functional but has several notable gaps:
 
@@ -84,6 +84,10 @@ The codebase is broadly functional but has several notable gaps:
 
 ### Architecture & Docs Agent
 Owns code structure, refactoring, type safety, N+1 query fixes, error handling standardisation, pagination, and developer documentation.
+
+#### Latest work (2026-04-13 19:50)
+
+RBAC design proposal written to `docs/RBAC_PLAN.md`. Covers five-role hierarchy (admin/oversight/manager/finance/user), full permission matrix across all domains, composable tRPC middleware stack, AWS Cognito compatibility design, `usePermissions()` hook design, and a two-phase migration plan. Awaiting product review before implementation.
 
 #### Findings Summary (audited 2026-04-13 18:28)
 
