@@ -39,7 +39,7 @@ export type RawCv = {
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
 export function mapMember(r: RawMember) {
-  return { id: r.id, name: r.name, title: r.title, email: r.email, phone: r.phone, bio: r.bio, role: r.role as 'user' | 'oversight', createdAt: r.created_at, updatedAt: r.updated_at }
+  return { id: r.id, name: r.name, title: r.title, email: r.email, phone: r.phone, bio: r.bio, role: r.role as 'user' | 'finance' | 'oversight', createdAt: r.created_at, updatedAt: r.updated_at }
 }
 
 export function mapHistory(r: RawHistory) {

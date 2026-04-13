@@ -11,7 +11,7 @@ Each agent must update their section when they start, change, or finish a task.
 
 | Agent | Status | Working On | Last Updated |
 |-------|--------|------------|--------------|
-| Features | Idle | Finance tracking system fully implemented (schema, service, router, seed, frontend tabs + FinancialReport view) | 2026-04-13 19:25 |
+| Features | Idle | Added finance role: auth type, seed users, financeProcedure middleware, finance router protection, frontend role checks + UserSwitcher badge | 2026-04-13 19:33 |
 | Architecture & Docs | Idle | Finance tracking design | 2026-04-13 19:08 |
 | UI | Idle | Nav rework complete | 2026-04-13 18:48 |
 | Seed Data | Idle | Fixed pt.member_id → pt.team_member_id in report query | 2026-04-13 18:46 |
@@ -29,7 +29,7 @@ _Agents: update this table (status, working on, last updated) whenever you pick 
 ### Features Agent
 Adds and completes missing product features: new backend endpoints, frontend UI sections, delete flows, confirmation dialogs, and cross-cutting feature gaps.
 
-#### Findings Summary (audited 2026-04-13 18:27)
+#### Findings Summary (audited 2026-04-13 18:27; finance role added 2026-04-13 19:33)
 
 The codebase is broadly functional but has several notable gaps:
 

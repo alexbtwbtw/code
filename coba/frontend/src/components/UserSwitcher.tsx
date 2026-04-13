@@ -21,7 +21,7 @@ export default function UserSwitcher() {
         name: first.name,
         title: first.title,
         email: first.email,
-        role: first.role === 'oversight' ? 'oversight' : 'user',
+        role: first.role === 'oversight' ? 'oversight' : first.role === 'finance' ? 'finance' : 'user',
       }
       switchUser(next)
     }
@@ -37,7 +37,7 @@ export default function UserSwitcher() {
       name: member.name,
       title: member.title,
       email: member.email,
-      role: member.role === 'oversight' ? 'oversight' : 'user',
+      role: member.role === 'oversight' ? 'oversight' : member.role === 'finance' ? 'finance' : 'user',
     }
     switchUser(next)
     setOpen(false)
@@ -66,7 +66,7 @@ export default function UserSwitcher() {
           <p className="user-switcher-label">{t('userSwitcherLabel')}</p>
           <div className="user-switcher-scroll">
             {(members ?? []).map(member => {
-              const role = member.role === 'oversight' ? 'oversight' : 'user'
+              const role = member.role === 'oversight' ? 'oversight' : member.role === 'finance' ? 'finance' : 'user'
               const isActive = user?.id === member.id
               return (
                 <button
@@ -76,7 +76,7 @@ export default function UserSwitcher() {
                 >
                   <span className="user-switcher-name">{member.name}</span>
                   <span className={`user-switcher-role-badge user-switcher-role-badge--${role}`}>
-                    {role === 'oversight' ? t('userRoleOversight') : t('userRoleUser')}
+                    {role === 'oversight' ? t('userRoleOversight') : role === 'finance' ? t('roleFinance') : t('userRoleUser')}
                   </span>
                 </button>
               )

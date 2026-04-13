@@ -58,7 +58,7 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
   const [newRate, setNewRate] = useState({ hourlyRate: '', effectiveFrom: '', notes: '' })
 
   const { user: currentUserObj } = useCurrentUser()
-  const isOversight = currentUserObj?.role === 'oversight'
+  const hasFinanceAccess = currentUserObj?.role === 'finance' || currentUserObj?.role === 'oversight'
 
   const { data: member, isLoading } = useMemberById(id)
   const { data: allProjects } = useProjectsList({})
@@ -556,8 +556,8 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
         })()}
       </section>
 
-      {/* Rates & Costs (oversight only) */}
-      {isOversight && (
+      {/* Rates & Costs (finance and oversight only) */}
+      {hasFinanceAccess && (
         <section className="detail-section">
           <div className="section-heading-row">
             <h2 className="detail-section-title">{t('financeTabRates')}</h2>

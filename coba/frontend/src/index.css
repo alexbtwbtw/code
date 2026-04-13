@@ -1766,6 +1766,7 @@ div.tagged-project-row:hover { border-color: var(--border); }
 }
 .user-switcher-role-badge--user     { background: rgba(59,130,246,.2); color: #60a5fa; }
 .user-switcher-role-badge--oversight { background: rgba(234,179,8,.2); color: #facc15; }
+.user-switcher-role-badge--finance  { background: rgba(20,184,166,.2); color: #2dd4bf; }
 
 /* ── Oversight Home ────────────────────────────────────────── */
 .oversight-risk-table { width: 100%; border-collapse: collapse; font-size: .9rem; }

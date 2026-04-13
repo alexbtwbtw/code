@@ -553,8 +553,8 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
         })()}
       </section>
 
-      {/* Finance */}
-      <section id="section-finance" className="detail-section">
+      {/* Finance — visible to finance and oversight roles only */}
+      {hasFinanceAccess && <section id="section-finance" className="detail-section">
         <div className="section-heading-row">
           <h2 className="detail-section-title">{t('financeTabLabel')}</h2>
           {isOversight && (
@@ -735,7 +735,7 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
       {project.tags && (
         <section className="detail-section">

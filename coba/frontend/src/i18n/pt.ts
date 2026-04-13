@@ -423,6 +423,8 @@ export const pt: Record<TranslationKey, string> = {
   userSwitcherLabel: 'Mudar utilizador (dev local)',
   userRoleUser: 'utilizador',
   userRoleOversight: 'supervisão',
+  roleFinance: 'Finanças',
+  financeAccessDenied: 'Acesso restrito a utilizadores Financeiros e de Supervisão',
   homeMyProjects: 'Os Meus Projetos',
   homeMyOpenTasks: 'Tarefas Abertas',
   homeOversightTitle: 'Visão Geral do Portfolio',

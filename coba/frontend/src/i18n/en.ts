@@ -421,6 +421,8 @@ export const en = {
   userSwitcherLabel: 'Switch user (local dev)',
   userRoleUser: 'user',
   userRoleOversight: 'oversight',
+  roleFinance: 'Finance',
+  financeAccessDenied: 'Access restricted to Finance and Oversight users',
   homeMyProjects: 'My Projects',
   homeMyOpenTasks: 'My Open Tasks',
   homeOversightTitle: 'Portfolio Overview',

@@ -14,6 +14,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
   const { t, lang, setLang } = useTranslation()
   const { user } = useCurrentUser()
   const isOversight = user?.role === 'oversight'
+  const hasFinanceAccess = user?.role === 'finance' || user?.role === 'oversight'
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
 
@@ -67,7 +68,9 @@ export default function Layout({ page, onNavigate, children }: Props) {
             <NavBtn active={activeTab === 'team'}    label={t('navTeam')}    onClick={() => navigate({ view: 'team' })} />
             <NavBtn active={activeTab === 'reports'} label={t('navReports')} onClick={() => navigate({ view: 'reports' })} />
             <NavBtn active={activeTab === 'time-report'} label={t('timeReportNav')} onClick={() => navigate({ view: 'time-report' })} />
-            <NavBtn active={activeTab === 'finance-report'} label={t('navFinance')} onClick={() => navigate({ view: 'finance-report' })} />
+            {hasFinanceAccess && (
+              <NavBtn active={activeTab === 'finance-report'} label={t('navFinance')} onClick={() => navigate({ view: 'finance-report' })} />
+            )}
 
             {/* "More" dropdown for secondary items */}
             <div className={`nav-more${moreOpen ? ' nav-more--open' : ''}`} ref={moreRef}>
