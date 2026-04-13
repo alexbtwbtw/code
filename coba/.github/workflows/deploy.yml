@@ -129,6 +129,7 @@ jobs:
         run: npm run build --prefix frontend
         env:
           NODE_ENV: production
+          VITE_BUILD_NUMBER: ${{ github.run_number }}
 
       - name: Sync frontend to S3
         run: |
