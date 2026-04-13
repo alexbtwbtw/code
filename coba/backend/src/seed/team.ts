@@ -2789,4 +2789,23 @@ export async function seedTeam() {
     bio: 'Especialista em gestão de risco e reporting executivo. Supervisiona projetos de transporte e energia em múltiplas regiões.',
     role: 'oversight',
   })
+
+  // ── Membros Financeiros (finance) ─────────────────────────────────────────
+  insertMember.run({
+    name: 'Sofia Andrade',
+    title: 'Directora Financeira',
+    email: 'sofia.andrade@coba.pt',
+    phone: '+351 21 000 9003',
+    bio: 'Responsável pela gestão financeira e controlo orçamental de todos os projetos de infraestrutura. Especialista em análise de custos e relatórios financeiros.',
+    role: 'finance',
+  })
+
+  insertMember.run({
+    name: 'Gonçalo Pires',
+    title: 'Controller Financeiro',
+    email: 'goncalo.pires@coba.pt',
+    phone: '+351 21 000 9004',
+    bio: 'Controller financeiro com experiência em análise de rentabilidade, controlo de custos e reporting financeiro para projetos de engenharia civil.',
+    role: 'finance',
+  })
 }

@@ -21,7 +21,8 @@ import { useFeaturesByProject, useCreateFeature, useDeleteFeature } from '../api
 import { useTeamByProject, useTeamList, useTagProject, useUntagProject, useSuggestMembers } from '../api/team'
 import { useTasksByProject, useCreateTask } from '../api/tasks'
 import { useTimeByProject, useCreateTimeEntry, useDeleteTimeEntry } from '../api/timeEntries'
-import { getCurrentUser } from '../auth'
+import { getCurrentUser, useCurrentUser } from '../auth'
+import { useProjectFinancialSummary, useProjectFixedCosts, useCreateFixedCost, useDeleteFixedCost } from '../api/finance'
 
 interface Props {
   id: number
@@ -71,6 +72,10 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
   const [showTimeForm, setShowTimeForm] = useState(false)
   const [newTime, setNewTime] = useState({ date: '', hours: '', description: '' })
 
+  // Finance state
+  const [showFixedCostForm, setShowFixedCostForm] = useState(false)
+  const [newFixedCost, setNewFixedCost] = useState({ description: '', amount: '', costDate: '', category: 'other', notes: '' })
+
   const aiEnabled = useAiEnabled()
 
   // Queries
@@ -82,6 +87,11 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
   const { data: allMembers } = useTeamList()
   const { data: tasks, isLoading: loadingTasks } = useTasksByProject(id)
   const { data: timeEntries } = useTimeByProject(id)
+  const { data: financeSummary } = useProjectFinancialSummary(id)
+  const { data: fixedCosts } = useProjectFixedCosts(id)
+  const { user: currentUserObj } = useCurrentUser()
+  const isOversight = currentUserObj?.role === 'oversight'
+  const hasFinanceAccess = currentUserObj?.role === 'finance' || currentUserObj?.role === 'oversight'
 
   // Mutations
   const updateProject  = useUpdateProject()
@@ -93,6 +103,8 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
   const deleteFeature  = useDeleteFeature()
   const createTimeEntry = useCreateTimeEntry()
   const deleteTimeEntry = useDeleteTimeEntry()
+  const createFixedCost = useCreateFixedCost()
+  const deleteFixedCost = useDeleteFixedCost()
 
   // ── Edit project ────────────────────────────────────────────────────────────
   function startEditing() {
@@ -541,6 +553,190 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
         })()}
       </section>
 
+      {/* Finance */}
+      <section id="section-finance" className="detail-section">
+        <div className="section-heading-row">
+          <h2 className="detail-section-title">{t('financeTabLabel')}</h2>
+          {isOversight && (
+            <button className="btn-add-geo" onClick={() => setShowFixedCostForm(p => !p)}>
+              {showFixedCostForm ? t('btnCancelEdit') : `+ ${t('financeAddFixedCost')}`}
+            </button>
+          )}
+        </div>
+
+        {/* Financial Summary KPIs */}
+        {financeSummary && (
+          <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: '1rem' }}>
+            <div className="kpi-card kpi-card--blue" style={{ padding: '0.75rem 1rem' }}>
+              <p className="kpi-value" style={{ fontSize: '1.2rem' }}>
+                € {financeSummary.laborCost.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+              <p className="kpi-label">{t('financeLaborCost')}</p>
+            </div>
+            <div className="kpi-card kpi-card--navy" style={{ padding: '0.75rem 1rem' }}>
+              <p className="kpi-value" style={{ fontSize: '1.2rem' }}>
+                € {financeSummary.fixedCostTotal.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+              <p className="kpi-label">{t('financeFixedCosts')}</p>
+            </div>
+            <div className="kpi-card kpi-card--orange" style={{ padding: '0.75rem 1rem' }}>
+              <p className="kpi-value" style={{ fontSize: '1.2rem' }}>
+                € {financeSummary.totalCost.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+              <p className="kpi-label">{t('financeTotalSpend')}</p>
+            </div>
+            {financeSummary.budget != null ? (
+              <div
+                className={`kpi-card ${financeSummary.budgetVariance != null && financeSummary.budgetVariance < 0 ? 'kpi-card--orange' : 'kpi-card--green'}`}
+                style={{ padding: '0.75rem 1rem', borderTopColor: financeSummary.budgetVariance != null && financeSummary.budgetVariance < 0 ? '#dc3545' : undefined }}
+              >
+                <p className="kpi-value" style={{ fontSize: '1.2rem' }}>
+                  {financeSummary.budgetVariance != null ? (
+                    <>{financeSummary.budgetVariance < 0 ? '−' : '+'}€ {Math.abs(financeSummary.budgetVariance).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
+                  ) : '—'}
+                </p>
+                <p className="kpi-label">{t('financeVariance')}</p>
+              </div>
+            ) : (
+              <div className="kpi-card kpi-card--navy" style={{ padding: '0.75rem 1rem' }}>
+                <p className="kpi-value" style={{ fontSize: '1.2rem' }}>—</p>
+                <p className="kpi-label">{t('financeNoBudget')}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* No-rate warning */}
+        {financeSummary?.hasUnratedEntries && (
+          <div className="alert alert--success" style={{ marginBottom: '1rem', background: 'rgba(234,179,8,0.15)', color: '#92400e', borderColor: 'rgba(234,179,8,0.4)' }}>
+            {t('financeNoRateWarning')}: {financeSummary.membersWithNoRate.join(', ')}
+          </div>
+        )}
+
+        {/* Labor breakdown by member */}
+        {financeSummary && financeSummary.laborByMember.length > 0 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+              {t('financeLaborBreakdown')}
+            </h3>
+            <div className="finance-report-table-wrap">
+              <table className="finance-report-table">
+                <thead>
+                  <tr>
+                    <th>{t('colName')}</th>
+                    <th className="finance-report-col-num">{t('timeHours')}</th>
+                    <th className="finance-report-col-num">{t('financeRate')}</th>
+                    <th className="finance-report-col-num">{t('financeLaborCost')}</th>
+                    <th className="finance-report-col-num">{t('financePctTotal')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {financeSummary.laborByMember.map(m => {
+                    const pct = financeSummary.laborCost > 0 ? (m.laborCost / financeSummary.laborCost * 100) : 0
+                    return (
+                      <tr key={m.memberId} className="finance-report-row">
+                        <td className="finance-report-name">{m.memberName}</td>
+                        <td className="finance-report-col-num">{m.hours.toFixed(1)} h</td>
+                        <td className="finance-report-col-num">
+                          {m.hourlyRate != null ? `€ ${m.hourlyRate.toFixed(0)}/h` : <span className="finance-report-na">{t('na')}</span>}
+                        </td>
+                        <td className="finance-report-col-num">€ {m.laborCost.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                        <td className="finance-report-col-num">{pct.toFixed(1)}%</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="finance-report-footer">
+                    <td>{t('financeTotal')}</td>
+                    <td className="finance-report-col-num">
+                      {financeSummary.laborByMember.reduce((s, m) => s + m.hours, 0).toFixed(1)} h
+                    </td>
+                    <td />
+                    <td className="finance-report-col-num">€ {financeSummary.laborCost.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td className="finance-report-col-num">100%</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Add fixed cost form */}
+        {showFixedCostForm && (
+          <form className="task-create-form" onSubmit={ev => {
+            ev.preventDefault()
+            if (!newFixedCost.description.trim() || !newFixedCost.amount || !newFixedCost.costDate) return
+            createFixedCost.mutate({
+              projectId: id,
+              description: newFixedCost.description,
+              amount: parseFloat(newFixedCost.amount),
+              costDate: newFixedCost.costDate,
+              category: newFixedCost.category as 'materials' | 'subcontractor' | 'equipment' | 'travel' | 'permits' | 'survey' | 'software' | 'other',
+              notes: newFixedCost.notes,
+            }, {
+              onSuccess: () => {
+                setNewFixedCost({ description: '', amount: '', costDate: '', category: 'other', notes: '' })
+                setShowFixedCostForm(false)
+              },
+            })
+          }}>
+            <div className="form-grid form-grid--2">
+              <Field label={t('financeFixedCostDesc')} required>
+                <input className="input" value={newFixedCost.description} onChange={e => setNewFixedCost(f => ({ ...f, description: e.target.value }))} />
+              </Field>
+              <Field label={t('financeFixedCostAmount')} required>
+                <input className="input" type="number" min="0" step="0.01" value={newFixedCost.amount} onChange={e => setNewFixedCost(f => ({ ...f, amount: e.target.value }))} />
+              </Field>
+              <Field label={t('financeFixedCostDate')} required>
+                <input className="input" type="date" value={newFixedCost.costDate} onChange={e => setNewFixedCost(f => ({ ...f, costDate: e.target.value }))} />
+              </Field>
+              <Field label={t('financeFixedCostCategory')}>
+                <select className="input" value={newFixedCost.category} onChange={e => setNewFixedCost(f => ({ ...f, category: e.target.value }))}>
+                  {['materials','subcontractor','equipment','travel','permits','survey','software','other'].map(c => (
+                    <option key={c} value={c}>{t((`financeCat${c.charAt(0).toUpperCase()}${c.slice(1)}`) as Parameters<typeof t>[0])}</option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <Field label={t('financeFixedCostNotes')}>
+              <input className="input" value={newFixedCost.notes} onChange={e => setNewFixedCost(f => ({ ...f, notes: e.target.value }))} />
+            </Field>
+            <div className="form-actions">
+              <button type="button" className="btn-cancel" onClick={() => setShowFixedCostForm(false)}>{t('btnCancelEdit')}</button>
+              <button type="submit" className="btn-submit" disabled={createFixedCost.isPending}>
+                {createFixedCost.isPending ? t('btnSubmitting') : t('financeAddFixedCost')}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Fixed costs list */}
+        {!fixedCosts?.length ? (
+          <p className="muted">{t('financeNoEntries')}</p>
+        ) : (
+          <div className="time-list">
+            {fixedCosts.map(cost => (
+              <div key={cost.id} className="time-entry">
+                <span className="time-entry-date">{cost.costDate.slice(0, 10)}</span>
+                <div className="time-entry-meta">
+                  <span className="time-entry-who">
+                    {t((`financeCat${cost.category.charAt(0).toUpperCase()}${cost.category.slice(1)}`) as Parameters<typeof t>[0])}
+                  </span>
+                  <span className="time-entry-desc">{cost.description}</span>
+                </div>
+                <span className="time-entry-hours">€ {cost.amount.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                {isOversight && (
+                  <div className="time-entry-actions">
+                    <button className="btn-untag" onClick={() => deleteFixedCost.mutate({ id: cost.id })} title={t('financeDeleteCost')}>✕</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {project.tags && (
         <section className="detail-section">
           <h2 className="detail-section-title">{t('detailTags')}</h2>
@@ -871,6 +1067,7 @@ export default function ProjectDetail({ id, onNavigate }: Props) {
 const SIDEBAR_SECTIONS = [
   { id: 'section-overview',    labelKey: 'sidebarOverview'    as const },
   { id: 'section-tasks',       labelKey: 'sidebarTasks'       as const },
+  { id: 'section-finance',     labelKey: 'financeSidebarLabel' as const },
   { id: 'section-team',        labelKey: 'sidebarTeam'        as const },
   { id: 'section-structures',  labelKey: 'sidebarStructures'  as const },
   { id: 'section-features',    labelKey: 'sidebarFeatures'    as const },

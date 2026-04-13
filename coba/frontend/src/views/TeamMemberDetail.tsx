@@ -13,6 +13,8 @@ import { useProjectsList } from '../api/projects'
 import { useTasksByMember } from '../api/tasks'
 import { useTimeByMember } from '../api/timeEntries'
 import { useCompanyTeamsByMember } from '../api/companyTeams'
+import { useMemberRates, useMemberCostSummary, useSetMemberRate, useDeleteMemberRate } from '../api/finance'
+import { useCurrentUser } from '../auth'
 
 interface Props {
   id: number
@@ -51,17 +53,29 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
   const [cvUploadError, setCvUploadError] = useState('')
   const [cvUploadSuccess, setCvUploadSuccess] = useState(false)
 
+  // Rate form state
+  const [showRateForm, setShowRateForm] = useState(false)
+  const [newRate, setNewRate] = useState({ hourlyRate: '', effectiveFrom: '', notes: '' })
+
+  const { user: currentUserObj } = useCurrentUser()
+  const isOversight = currentUserObj?.role === 'oversight'
+
   const { data: member, isLoading } = useMemberById(id)
   const { data: allProjects } = useProjectsList({})
   const { data: memberTasks } = useTasksByMember(id)
   const { data: memberTime } = useTimeByMember(id)
   const { data: memberTeams } = useCompanyTeamsByMember(id)
 
-  const updateMember  = useUpdateMember()
-  const addHistory    = useAddHistory()
-  const updateHistory = useUpdateHistory()
-  const deleteHistory = useDeleteHistory()
-  const attachCv      = useAttachCv()
+  const { data: memberRates } = useMemberRates(id)
+  const { data: memberCostSummary } = useMemberCostSummary(id)
+
+  const updateMember   = useUpdateMember()
+  const addHistory     = useAddHistory()
+  const updateHistory  = useUpdateHistory()
+  const deleteHistory  = useDeleteHistory()
+  const attachCv       = useAttachCv()
+  const setMemberRate  = useSetMemberRate()
+  const deleteMemberRate = useDeleteMemberRate()
 
   async function downloadCv(cvId: number, filename: string) {
     const data = await trpcClient.team.getCvData.query({ cvId })
@@ -541,6 +555,135 @@ export default function TeamMemberDetail({ id, onNavigate }: Props) {
           )
         })()}
       </section>
+
+      {/* Rates & Costs (oversight only) */}
+      {isOversight && (
+        <section className="detail-section">
+          <div className="section-heading-row">
+            <h2 className="detail-section-title">{t('financeTabRates')}</h2>
+            <button className="btn-add-geo" onClick={() => setShowRateForm(p => !p)}>
+              {showRateForm ? t('btnCancelEdit') : `+ ${t('financeAddRate')}`}
+            </button>
+          </div>
+
+          {/* Cost summary KPIs */}
+          {memberCostSummary && (memberCostSummary.totalHours > 0 || memberCostSummary.currentRate != null) && (
+            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '1rem' }}>
+              <div className="kpi-card kpi-card--blue" style={{ padding: '0.75rem 1rem' }}>
+                <p className="kpi-value" style={{ fontSize: '1.2rem' }}>
+                  {memberCostSummary.currentRate != null ? `€ ${memberCostSummary.currentRate}/h` : '—'}
+                </p>
+                <p className="kpi-label">{t('financeHourlyRate')}</p>
+              </div>
+              <div className="kpi-card kpi-card--navy" style={{ padding: '0.75rem 1rem' }}>
+                <p className="kpi-value" style={{ fontSize: '1.2rem' }}>{memberCostSummary.totalHours.toFixed(1)} h</p>
+                <p className="kpi-label">{t('timeTotal')}</p>
+              </div>
+              <div className="kpi-card kpi-card--orange" style={{ padding: '0.75rem 1rem' }}>
+                <p className="kpi-value" style={{ fontSize: '1.2rem' }}>
+                  € {memberCostSummary.totalLaborCost.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </p>
+                <p className="kpi-label">{t('financeLaborCost')}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Add rate form */}
+          {showRateForm && (
+            <form className="task-create-form" onSubmit={ev => {
+              ev.preventDefault()
+              if (!newRate.hourlyRate || !newRate.effectiveFrom) return
+              setMemberRate.mutate({
+                memberId: id,
+                hourlyRate: parseFloat(newRate.hourlyRate),
+                effectiveFrom: newRate.effectiveFrom,
+                notes: newRate.notes,
+              }, {
+                onSuccess: () => {
+                  setNewRate({ hourlyRate: '', effectiveFrom: '', notes: '' })
+                  setShowRateForm(false)
+                },
+              })
+            }}>
+              <div className="form-grid form-grid--2">
+                <div>
+                  <label className="field-label">{t('financeHourlyRate')} (EUR)</label>
+                  <input className="input" type="number" min="0" step="0.01" value={newRate.hourlyRate}
+                    onChange={e => setNewRate(f => ({ ...f, hourlyRate: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="field-label">{t('financeEffectiveFrom')}</label>
+                  <input className="input" type="date" value={newRate.effectiveFrom}
+                    onChange={e => setNewRate(f => ({ ...f, effectiveFrom: e.target.value }))} />
+                </div>
+              </div>
+              <div>
+                <label className="field-label">{t('financeFixedCostNotes')}</label>
+                <input className="input" value={newRate.notes}
+                  onChange={e => setNewRate(f => ({ ...f, notes: e.target.value }))} />
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowRateForm(false)}>{t('btnCancelEdit')}</button>
+                <button type="submit" className="btn-submit" disabled={setMemberRate.isPending}>
+                  {setMemberRate.isPending ? t('btnSubmitting') : t('financeAddRate')}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Rate history table */}
+          <h3 style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
+            {t('financeRateHistory')}
+          </h3>
+          {!memberRates?.length ? (
+            <p className="muted">{t('financeNoEntries')}</p>
+          ) : (
+            <div className="time-list">
+              {memberRates.map(rate => (
+                <div key={rate.id} className="time-entry">
+                  <span className="time-entry-date">{rate.effectiveFrom.slice(0, 10)}</span>
+                  <div className="time-entry-meta">
+                    <span className="time-entry-who">€ {rate.hourlyRate}/h</span>
+                    {rate.notes && <span className="time-entry-desc">{rate.notes}</span>}
+                  </div>
+                  <div className="time-entry-actions">
+                    <button className="btn-untag" onClick={() => deleteMemberRate.mutate({ id: rate.id })} title={t('financeDeleteRate')}>✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Cost by project breakdown */}
+          {memberCostSummary && memberCostSummary.byProject.length > 0 && (
+            <div style={{ marginTop: '1rem' }}>
+              <h3 style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                {t('financeByProject')}
+              </h3>
+              <div className="finance-report-table-wrap">
+                <table className="finance-report-table">
+                  <thead>
+                    <tr>
+                      <th>{t('colName')}</th>
+                      <th className="finance-report-col-num">{t('timeHours')}</th>
+                      <th className="finance-report-col-num">{t('financeLaborCost')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {memberCostSummary.byProject.map(p => (
+                      <tr key={p.projectId} className="finance-report-row">
+                        <td className="finance-report-name">{p.projectName}</td>
+                        <td className="finance-report-col-num">{p.hours.toFixed(1)} h</td>
+                        <td className="finance-report-col-num">€ {p.laborCost.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="detail-back">
         <button className="btn-back" onClick={() => onNavigate({ view: 'team' })}>&larr; {t('navTeam')}</button>

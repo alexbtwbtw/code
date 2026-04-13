@@ -253,6 +253,7 @@ db.exec(`
     member_id    INTEGER NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
     date         TEXT    NOT NULL,
     hours        REAL    NOT NULL CHECK(hours > 0),
+    hourly_rate  REAL    DEFAULT NULL,
     description  TEXT    NOT NULL DEFAULT '',
     created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
   );
@@ -269,4 +270,31 @@ db.exec(`
     member_id INTEGER NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
     PRIMARY KEY (team_id, member_id)
   );
+
+  CREATE TABLE IF NOT EXISTS member_rates (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_member_id INTEGER NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
+    hourly_rate    REAL    NOT NULL CHECK(hourly_rate >= 0),
+    effective_from TEXT    NOT NULL DEFAULT (date('now')),
+    notes          TEXT    NOT NULL DEFAULT '',
+    created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_member_rates_member_effective
+    ON member_rates(team_member_id, effective_from DESC);
+
+  CREATE TABLE IF NOT EXISTS project_fixed_costs (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    description TEXT    NOT NULL,
+    amount      REAL    NOT NULL CHECK(amount >= 0),
+    cost_date   TEXT    NOT NULL,
+    category    TEXT    NOT NULL DEFAULT 'other',
+    notes       TEXT    NOT NULL DEFAULT '',
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_project_fixed_costs_project
+    ON project_fixed_costs(project_id, cost_date DESC);
 `)

@@ -11,11 +11,11 @@ Each agent must update their section when they start, change, or finish a task.
 
 | Agent | Status | Working On | Last Updated |
 |-------|--------|------------|--------------|
-| Features | Idle | Admin Panel: Wipe action + redesign complete | 2026-04-13 18:46 |
-| Architecture & Docs | Idle | — | 2026-04-13 18:28 |
+| Features | Idle | Finance tracking system fully implemented (schema, service, router, seed, frontend tabs + FinancialReport view) | 2026-04-13 19:25 |
+| Architecture & Docs | Idle | Finance tracking design | 2026-04-13 19:08 |
 | UI | Idle | Nav rework complete | 2026-04-13 18:48 |
 | Seed Data | Idle | Fixed pt.member_id → pt.team_member_id in report query | 2026-04-13 18:46 |
-| Reporting | Idle | Time Report promoted to primary nav; view redesigned with hero, KPIs, styled tables, underreporting warning | 2026-04-13 19:07 |
+| Reporting | Idle | FinancialReport view built: KPI row, date filter, projects cost table (sortable), category breakdown, monthly trend; nav + routing wired | 2026-04-13 19:20 |
 | Testing | Idle | Fixed setup.ts jest-dom/vitest import; 107 frontend + 286 backend tests pass | 2026-04-13 19:02 |
 | AWS Migration | Idle | Decommission guide written | 2026-04-13 18:28 |
 | Security | Idle | Audit complete | 2026-04-13 18:30 |
@@ -256,7 +256,7 @@ Owns the Reports view and all backend aggregate/stats procedures. Adds new tabs,
 - [ ] **P4** Add geo/structure portfolio stats: add `getPortfolioGeoStats()` to `backend/src/services/projects.ts` returning total borehole, trial pit, and structure counts; expose as `projects.geoStats` tRPC procedure; render as additional KPI cards in the Summary tab.
 - [ ] **P4** Add all remaining missing i18n keys to `frontend/src/i18n/en.ts` and `pt.ts`: `reportsTabTime`, `reportsExpandOpen`, `reportsExpandClose`, `reportsDoneOf`, `reportsInProgressTitle`, `reportsInProgressEmpty`, `tableByBudget`, `reportsTeamWorkload`, `reportsTeamTaskLoad`, `reportsTeamProjectCount`, `reportsTeamHours`, `reportsTeamOverdue`.
 
-### Testing Agent
+### Testing Agent — Idle (2026-04-13 19:29)
 Owns backend unit tests (Vitest), frontend component tests (RTL), and E2E tests (Playwright). Responsible for CI workflow setup.
 
 #### Findings Summary (audited 2026-04-13 18:27)
@@ -338,6 +338,16 @@ Owns backend unit tests (Vitest), frontend component tests (RTL), and E2E tests 
 
 - [x] **P4 — E2E: `e2e/tests/timeReport.spec.ts`** (new file)
   Done: navigate by nav, direct URL, data/no-data check, KPI grid visible, section headings for by-project/by-member/underreporting, graceful seed data check, no JS errors.
+
+- [x] **P0 — Fix `resetDb()` to include `project_fixed_costs` and `member_rates`**
+  File: `backend/src/__tests__/setup.ts`
+  Done: Added DELETE statements for new finance tables in FK-safe order (fixed costs and rates before their parent tables).
+
+- [x] **P1 — `backend/src/__tests__/services/finance.test.ts`** (new file)
+  Done: 26 tests covering setMemberRate, getMemberRates (ordering, isolation), getCurrentRate (date picking, null cases), deleteMemberRate, createFixedCost (all fields), getFixedCostsByProject (ordering), updateFixedCost (partial updates, preserve fields, throws on missing), deleteFixedCost, getProjectFinancialSummary (laborCost, fixedCostTotal, totalCost, budgetVariance, hasUnratedEntries, null budget), getMemberCostSummary (totalHours/totalLaborCost, currentRate, no entries), getCompanyFinancials (totals, date range filter, byCategory grouping).
+
+- [x] **P2 — `backend/src/__tests__/schemas/finance.test.ts`** (new file)
+  Done: 27 tests covering FixedCostCategoryEnum (all 8 valid values, rejects unknown/empty/case-mismatch), SetMemberRateSchema (required memberId+hourlyRate, effectiveFrom non-empty, nonnegative rate, integer id, notes default), CreateFixedCostSchema (required projectId+description+amount+costDate, nonnegative amount, category default, notes default, invalid category rejects), UpdateFixedCostSchema (optional fields, id required, rejects invalid category/negative amount).
 
 - [ ] **P4 — E2E: `e2e/tests/addProject.spec.ts`** (not implemented — deferred)
 - [ ] **P4 — E2E: `e2e/tests/reports.spec.ts`** (not implemented — deferred)

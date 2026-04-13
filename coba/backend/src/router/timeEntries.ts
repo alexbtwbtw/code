@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { router, publicProcedure } from '../trpc'
 import { db } from '../db'
+import { getCurrentRate } from '../services/finance'
 
 interface RawTimeEntry {
   id: number
@@ -82,10 +83,14 @@ export const timeEntriesRouter = router({
       description: z.string().default(''),
     }))
     .mutation(({ input }) => {
+      // Snapshot the member's current rate at the entry date
+      const rateRecord = getCurrentRate(input.memberId, input.date)
+      const snapshotRate = rateRecord?.hourlyRate ?? null
+
       const result = db.prepare(`
-        INSERT INTO time_entries (project_id, member_id, date, hours, description)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(input.projectId, input.memberId, input.date, input.hours, input.description)
+        INSERT INTO time_entries (project_id, member_id, date, hours, hourly_rate, description)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(input.projectId, input.memberId, input.date, input.hours, snapshotRate, input.description)
       const row = db.prepare(`
         SELECT te.*, tm.name as member_name
         FROM time_entries te

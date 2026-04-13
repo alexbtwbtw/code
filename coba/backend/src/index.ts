@@ -4,6 +4,7 @@ import { logger } from 'hono/logger'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { appRouter } from './router'
+import type { AppContext } from './trpc'
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
 import { db } from './db'
@@ -60,7 +61,11 @@ app.all('/trpc/*', (c) =>
     endpoint: '/trpc',
     req: c.req.raw,
     router: appRouter,
-    createContext: () => ({}),
+    // TODO: Replace with verified JWT/Cognito claims when real auth is implemented.
+    // For now, trust the x-user-role header sent by the frontend dev switcher.
+    createContext: ({ req }): AppContext => ({
+      userRole: req.headers.get('x-user-role') ?? null,
+    }),
   })
 )
 

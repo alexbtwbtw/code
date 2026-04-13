@@ -7,7 +7,7 @@ export type CurrentUser = {
   name: string
   title: string
   email: string
-  role: 'user' | 'oversight'
+  role: 'user' | 'finance' | 'oversight'
 }
 
 const LOCAL_STORAGE_KEY = 'coba_current_user'

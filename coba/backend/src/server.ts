@@ -7,6 +7,7 @@ import { seedRequirements } from './seed/requirements'
 import { seedTasks } from './seed/tasks'
 import { seedCompanyTeams } from './seed/companyTeams'
 import { seedTimeEntries } from './seed/timeEntries'
+import { seedFinance } from './seed/finance'
 
 import { serve } from '@hono/node-server'
 import app from './index'
@@ -32,6 +33,7 @@ if (projectCount === 0) {
       seedTasks()
       seedCompanyTeams()
       seedTimeEntries()
+      seedFinance()
       startServer()
     })
     .catch(err => {

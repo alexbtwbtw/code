@@ -12,6 +12,7 @@ export type Page =
   | { view: 'admin' }
   | { view: 'company-teams' }
   | { view: 'time-report' }
+  | { view: 'finance-report' }
 
 // ── URL ↔ Page mapping ──────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ export function pageToPath(page: Page): string {
     case 'admin':            return '/admin'
     case 'company-teams':    return '/company-teams'
     case 'time-report':      return '/time-report'
+    case 'finance-report':   return '/finance'
   }
 }
 
@@ -45,6 +47,7 @@ export function pathToPage(path: string): Page {
   if (s === '/admin')         return { view: 'admin' }
   if (s === '/company-teams') return { view: 'company-teams' }
   if (s === '/time-report')   return { view: 'time-report' }
+  if (s === '/finance')       return { view: 'finance-report' }
 
   let m: RegExpMatchArray | null
 

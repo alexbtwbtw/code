@@ -36,6 +36,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
     : (page.view === 'add') ? 'more'
     : (page.view === 'requirements') ? 'more'
     : (page.view === 'company-teams') ? 'more'
+    : (page.view === 'finance-report') ? 'finance-report'
     : page.view as string
 
   // Is any "more" item active?
@@ -66,6 +67,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
             <NavBtn active={activeTab === 'team'}    label={t('navTeam')}    onClick={() => navigate({ view: 'team' })} />
             <NavBtn active={activeTab === 'reports'} label={t('navReports')} onClick={() => navigate({ view: 'reports' })} />
             <NavBtn active={activeTab === 'time-report'} label={t('timeReportNav')} onClick={() => navigate({ view: 'time-report' })} />
+            <NavBtn active={activeTab === 'finance-report'} label={t('navFinance')} onClick={() => navigate({ view: 'finance-report' })} />
 
             {/* "More" dropdown for secondary items */}
             <div className={`nav-more${moreOpen ? ' nav-more--open' : ''}`} ref={moreRef}>

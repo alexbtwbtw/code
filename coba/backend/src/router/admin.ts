@@ -6,12 +6,15 @@ import { seedRequirements } from '../seed/requirements'
 import { seedTasks } from '../seed/tasks'
 import { seedCompanyTeams } from '../seed/companyTeams'
 import { seedTimeEntries } from '../seed/timeEntries'
+import { seedFinance } from '../seed/finance'
 
 export const adminRouter = router({
   reseed: publicProcedure
     .mutation(async () => {
       // Delete all rows in reverse dependency order
       db.exec(`
+        DELETE FROM project_fixed_costs;
+        DELETE FROM member_rates;
         DELETE FROM company_team_members;
         DELETE FROM company_teams;
         DELETE FROM time_entries;
@@ -44,6 +47,7 @@ export const adminRouter = router({
         seedTasks()
         seedCompanyTeams()
         seedTimeEntries()
+        seedFinance()
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
         throw new Error(`Reseed failed: ${msg}`)
@@ -55,6 +59,8 @@ export const adminRouter = router({
   wipe: publicProcedure
     .mutation(() => {
       db.exec(`
+        DELETE FROM project_fixed_costs;
+        DELETE FROM member_rates;
         DELETE FROM company_team_members;
         DELETE FROM company_teams;
         DELETE FROM time_entries;

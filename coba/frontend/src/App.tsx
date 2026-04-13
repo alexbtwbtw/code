@@ -12,6 +12,7 @@ import TaskDetail from './views/TaskDetail'
 import CompanyTeams from './views/CompanyTeams'
 import AdminPanel from './views/AdminPanel'
 import TimeReport from './views/TimeReport'
+import FinancialReport from './views/FinancialReport'
 import { type Page, pageToPath, pathToPage } from './types/pages'
 
 export type { Page }
@@ -58,6 +59,7 @@ export default function App() {
       {page.view === 'company-teams'    && <CompanyTeams />}
       {page.view === 'admin'            && <AdminPanel />}
       {page.view === 'time-report'      && <TimeReport />}
+      {page.view === 'finance-report'   && <FinancialReport />}
     </Layout>
   )
 }
