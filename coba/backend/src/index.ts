@@ -268,47 +268,47 @@ app.get('/api/engineering/:id/dxf', async (c) => {
   if (!buf) return c.json({ error: 'File not found' }, 404)
 
   const { spawnSync } = await import('child_process')
-  const { mkdtempSync, writeFileSync, readFileSync: readFS, readdirSync, mkdirSync, rmSync } = await import('fs')
+  const { mkdtempSync, mkdirSync, writeFileSync, readFileSync: readFS, rmSync } = await import('fs')
   const { tmpdir } = await import('os')
   const { join } = await import('path')
 
-  const baseDir  = mkdtempSync(join(tmpdir(), 'dwg2dxf-'))
-  const inDir    = join(baseDir, 'in')
-  const outDir   = join(baseDir, 'out')
+  const baseDir = mkdtempSync(join(tmpdir(), 'dwg2dxf-'))
+  const inDir   = join(baseDir, 'in')
+  const outDir  = join(baseDir, 'out')
 
   try {
     mkdirSync(inDir)
     mkdirSync(outDir)
     writeFileSync(join(inDir, 'file.dwg'), buf)
 
-    // Try the Linux/EC2 executable name; on Windows the same binary is typically
-    // on PATH as ODAFileConverter or ODAFileConverter.exe — spawnSync resolves
-    // the .exe suffix automatically on Windows when it is on PATH.
+    // Use dwg2dxf (libredwg-tools) — headless CLI, no Qt/X11 required.
+    // Output file is written next to the input by default, so we use outDir.
+    const dwgPath = join(inDir, 'file.dwg')
+    const dxfPath = join(outDir, 'file.dxf')
     const result = spawnSync(
-      'ODAFileConverter',
-      [inDir, outDir, 'ACAD', 'DXF', '0', '1'],
+      'dwg2dxf',
+      [dwgPath, '-o', dxfPath],
       {
         timeout: 30_000,
         env: { ...process.env, PATH: `${process.env.PATH ?? ''}:/usr/bin:/usr/local/bin` },
       },
     )
 
-    if (result.error || result.status !== 0) {
-      // Distinguish "not found" (ENOENT) from other failures
-      if (result.error && (result.error as NodeJS.ErrnoException).code === 'ENOENT') {
-        return c.json({ error: 'oda_not_installed' }, 503)
+    if (result.error) {
+      if ((result.error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return c.json({ error: 'converter_not_installed' }, 503)
       }
-      return c.json({ error: 'oda_not_installed' }, 503)
+      return c.json({ error: 'conversion_failed' }, 503)
     }
 
-    // Find the output .dxf file (ODA names it after the input, e.g. file.dxf)
-    const outFiles = readdirSync(outDir)
-    const dxfFile  = outFiles.find(f => f.toLowerCase().endsWith('.dxf'))
-    if (!dxfFile) {
-      return c.json({ error: 'oda_not_installed' }, 503)
+    // dwg2dxf exits non-zero for non-fatal warnings (e.g. error code 64) —
+    // check for the output file rather than relying solely on exit code.
+    let dxfContent: string
+    try {
+      dxfContent = readFS(dxfPath, 'utf8')
+    } catch {
+      return c.json({ error: 'conversion_failed' }, 503)
     }
-
-    const dxfContent = readFS(join(outDir, dxfFile), 'utf8')
 
     return new Response(dxfContent, {
       status: 200,

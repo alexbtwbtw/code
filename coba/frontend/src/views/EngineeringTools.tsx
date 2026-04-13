@@ -277,10 +277,10 @@ async function renderDwgToCanvas(
 //
 // Fetches DXF text from the backend conversion endpoint (/api/engineering/:id/dxf)
 // and renders it with the dxf-viewer Three.js-based WebGL viewer.
-// If the backend returns 503 { error: 'oda_not_installed' } we show a friendly
-// "ODA not installed" message rather than a generic error.
+// If the backend returns 503 { error: 'converter_not_installed' } we show a friendly
+// "converter not installed" message rather than a generic error.
 
-type ViewerStatus = 'loading' | 'ok' | 'oda_not_installed' | 'error'
+type ViewerStatus = 'loading' | 'ok' | 'converter_not_installed' | 'error'
 
 function DwgViewerPane({ id }: { id: number }) {
   const { t } = useTranslation()
@@ -311,8 +311,8 @@ function DwgViewerPane({ id }: { id: number }) {
         if (res.status === 503) {
           let body: { error?: string } = {}
           try { body = await res.json() as { error?: string } } catch { /* ignore */ }
-          if (body.error === 'oda_not_installed') {
-            setStatus('oda_not_installed')
+          if (body.error === 'converter_not_installed' || body.error === 'oda_not_installed') {
+            setStatus('converter_not_installed')
             return
           }
           setStatus('error')
@@ -381,7 +381,7 @@ function DwgViewerPane({ id }: { id: number }) {
     )
   }
 
-  if (status === 'oda_not_installed') {
+  if (status === 'converter_not_installed') {
     return (
       <div className="eng-viewer-placeholder eng-viewer-placeholder--error">
         <div className="eng-viewer-error-body">
