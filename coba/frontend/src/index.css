@@ -150,6 +150,16 @@ input, select, textarea { font: inherit; }
 /* ── Main ──────────────────────────────────────────────────────────────────── */
 .main { flex: 1; max-width: 1280px; width: 100%; margin: 0 auto; padding: 36px 28px 60px; }
 
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+.app-footer {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 28px;
+  font-size: 11px; color: var(--text-lt);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  letter-spacing: 0.03em;
+}
+.app-footer-sep { opacity: 0.4; }
+
 /* ── Shared: status pills ──────────────────────────────────────────────────── */
 .status-pill {
   display: inline-flex; align-items: center;

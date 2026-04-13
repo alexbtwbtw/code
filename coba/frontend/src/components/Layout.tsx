@@ -212,6 +212,17 @@ export default function Layout({ page, onNavigate, children }: Props) {
       <main className="main">
         {children}
       </main>
+
+      {/* Footer */}
+      <footer className="app-footer">
+        <span>COBA Portal</span>
+        <span className="app-footer-sep">·</span>
+        <span>
+          {import.meta.env.VITE_BUILD_NUMBER
+            ? `Build #${import.meta.env.VITE_BUILD_NUMBER}`
+            : 'dev'}
+        </span>
+      </footer>
     </div>
   )
 }

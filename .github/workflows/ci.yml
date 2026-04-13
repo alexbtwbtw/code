@@ -71,3 +71,5 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_BUILD_NUMBER: ${{ github.run_number }}
