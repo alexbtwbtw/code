@@ -336,13 +336,15 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
       fd.append('file', file)
       const res = await fetch('/api/engineering/upload', { method: 'POST', body: fd, headers })
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        setError((body as { error?: string }).error ?? t('dwgOnlyDwg'))
+        const text = await res.text().catch(() => '')
+        let msg = text
+        try { msg = (JSON.parse(text) as { error?: string }).error ?? text } catch { /* raw text */ }
+        setError(msg || `Upload failed (HTTP ${res.status})`)
         return
       }
       onUploaded()
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('dwgOnlyDwg'))
+      setError(e instanceof Error ? e.message : 'Upload failed')
     } finally {
       setUploading(false)
     }
@@ -374,7 +376,6 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
         <input
           ref={inputRef}
           type="file"
-          accept=".dwg"
           style={{ display: 'none' }}
           onChange={(e) => handleFiles(e.target.files)}
         />
