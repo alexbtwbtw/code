@@ -158,7 +158,7 @@ export const timeEntriesRouter = router({
           tm.name AS member_name,
           COUNT(DISTINCT pt.project_id) AS project_count
         FROM team_members tm
-        JOIN project_team pt ON pt.member_id = tm.id
+        JOIN project_team pt ON pt.team_member_id = tm.id
         WHERE NOT EXISTS (
           SELECT 1 FROM time_entries te
           WHERE te.member_id = tm.id

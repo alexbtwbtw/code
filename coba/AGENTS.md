@@ -5,14 +5,16 @@ Each agent must update their section when they start, change, or finish a task.
 
 **Format rule:** The `Last updated` field must always include both date AND time in `YYYY-MM-DD HH:MM` format (24h). **Always get the real current time by running `date +"%Y-%m-%d %H:%M"` (bash) before writing — never guess or hardcode a time.**
 
+**Git rules:** The `.gitignore` lives at `D:\code\.gitignore` (one level above the project root) and also at `D:\code\coba\.gitignore`. Both exclude `.env` and `backend/.env`. **Never commit any `.env` file.** Always run `git status` before committing to verify no secrets are staged.
+
 ## At a Glance
 
 | Agent | Status | Working On | Last Updated |
 |-------|--------|------------|--------------|
-| Features | Idle | Audit complete — task list ready | 2026-04-13 18:27 |
+| Features | Idle | Admin Panel: Wipe action + redesign complete | 2026-04-13 18:46 |
 | Architecture & Docs | Idle | — | 2026-04-13 18:28 |
 | UI | In Progress | Implementing UI fixes (P0–P3) | 2026-04-13 |
-| Seed Data | Idle | Time entry reseed fix complete | 2026-04-13 |
+| Seed Data | Idle | Fixed pt.member_id → pt.team_member_id in report query | 2026-04-13 18:46 |
 | Reporting | Idle | Audit complete — task list ready | 2026-04-13 18:27 |
 | Testing | Idle | Full test suite implemented (P0–P4 complete) | 2026-04-13 18:42 |
 | AWS Migration | Idle | Decommission guide written | 2026-04-13 18:28 |
@@ -181,6 +183,28 @@ Top issues found:
 
 ### Seed Data Agent
 Owns the quality and realism of all seed data across all 16 database tables. Ensures demo data exercises every feature and edge case.
+
+#### Findings Summary (audited 2026-04-13 18:46)
+
+**Root cause of time entry display failure:**
+
+The bug was in `backend/src/router/timeEntries.ts` in the `report` procedure's `underreportingRows` query (line 161). It joined `project_team` with `pt.member_id = tm.id`, but the DDL column is `team_member_id` (not `member_id`). SQLite raises "no such column: pt.member_id", which caused the entire `report` tRPC procedure to throw an error. The frontend `useTimeReport()` hook received an error response, leaving `data` undefined, so all three sections (byProject, byMember, underreporting) rendered empty or showed no data.
+
+**Fix applied:**
+- `backend/src/router/timeEntries.ts` line 161: changed `pt.member_id` → `pt.team_member_id`
+
+**Other checks — all clear:**
+- `admin.ts` reseed mutation: calls `seedTimeEntries()` last, inside a try/catch that surfaces errors — correct order, no silent swallowing
+- `seed/timeEntries.ts`: INSERT columns (`project_id`, `member_id`, `date`, `hours`, `description`) match DDL exactly; exported as `db.transaction()` — correct
+- `db/schema.ts` `time_entries` DDL: uses `member_id` (confirmed)
+- `seed/projects.ts`: 34 projects seeded (IDs 1–34); all project IDs used in timeEntries.ts (2, 3, 5, 7, 8, 10, 11, 13, 14, 17, 19, 22, 24, 26, 29) are valid
+- `seed/team.ts`: 30 members seeded (IDs 1–30); all member IDs used in timeEntries.ts (max 29) are valid
+- `byProject` and `byMember` router queries: correct SQL, no issues
+- `frontend/src/views/TimeReport.tsx`: correctly uses `useTimeReport()`, handles empty data gracefully
+- `frontend/src/api/timeEntries.ts`: hooks set up correctly
+- `frontend/src/views/AdminPanel.tsx`: `qc.invalidateQueries()` invalidates all cached queries — correct
+
+**Status:** Idle
 
 ### Reporting Agent
 Owns the Reports view and all backend aggregate/stats procedures. Adds new tabs, charts, and data summaries to give project portfolio visibility.
