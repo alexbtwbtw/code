@@ -169,7 +169,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
           >
             {lang === 'pt' ? 'EN' : 'PT'}
           </button>
-          {import.meta.env.DEV && <UserSwitcher />}
+          <UserSwitcher />
         </div>
       </header>
 
