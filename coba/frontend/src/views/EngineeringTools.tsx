@@ -350,12 +350,7 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
 
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return
-    const file = files[0]
-    if (!file.name.toLowerCase().endsWith('.dwg')) {
-      setError(t('dwgOnlyDwg'))
-      return
-    }
-    void doUpload(file)
+    void doUpload(files[0])
   }
 
   function onDrop(e: React.DragEvent) {
