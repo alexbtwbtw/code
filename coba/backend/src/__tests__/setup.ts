@@ -26,6 +26,9 @@ export function resetDb() {
     DELETE FROM requirement_assignments;
     DELETE FROM requirements;
     DELETE FROM requirement_books;
+    DELETE FROM time_entries;
+    DELETE FROM company_team_members;
+    DELETE FROM company_teams;
     DELETE FROM projects;
     DELETE FROM team_members;
   `)
