@@ -327,16 +327,26 @@ db.exec(`
 `)
 
 // ── Migrations ───────────────────────────────────────────────────────────────
-// ALTER TABLE ADD COLUMN fails if the column already exists, so we ignore the
-// error. This allows the schema to evolve without wiping persistent databases.
+// Each statement is run independently and errors are silently ignored — this
+// handles both "column already exists" and "column doesn't exist yet" cases,
+// allowing the schema to evolve without wiping persistent databases.
 const migrations: string[] = [
+  // Added in simplification pass: rename version→dwg_version, add new columns
+  `ALTER TABLE dwg_files ADD COLUMN dwg_version  TEXT`,
   `ALTER TABLE dwg_files ADD COLUMN display_name TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE dwg_files ADD COLUMN notes        TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE dwg_files ADD COLUMN custom_date  TEXT`,
+  // Remove old conversion-pipeline columns (no-op in SQLite — DROP COLUMN
+  // requires SQLite ≥3.35; we leave them in place as harmless dead columns)
 ]
 for (const sql of migrations) {
-  try { db.exec(sql) } catch { /* column already exists — safe to ignore */ }
+  try { db.exec(sql) } catch { /* already exists or not supported — safe to ignore */ }
 }
+
+// Back-fill dwg_version from legacy 'version' column if it exists
+try {
+  db.exec(`UPDATE dwg_files SET dwg_version = version WHERE dwg_version IS NULL AND version IS NOT NULL`)
+} catch { /* 'version' column doesn't exist on fresh installs — ignore */ }
 
 // Back-fill display_name from file_name for rows created before this migration
 db.exec(`UPDATE dwg_files SET display_name = file_name WHERE display_name = ''`)
