@@ -11,8 +11,10 @@ export default function AdminPanel() {
 
   const [reseedConfirm, setReseedConfirm] = useState(false)
   const [wipeConfirm, setWipeConfirm] = useState(false)
+  const [schemaConfirm, setSchemaConfirm] = useState(false)
   const [reseedMsg, setReseedMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [wipeMsg, setWipeMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [schemaMsg, setSchemaMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const isAdmin = user?.role === 'admin' || user?.role === 'oversight'
 
@@ -39,6 +41,20 @@ export default function AdminPanel() {
     onError: () => {
       setWipeMsg({ type: 'error', text: t('adminWipeError') })
       setWipeConfirm(false)
+    },
+  })
+
+  const schemaMutation = useMutation({
+    mutationFn: () => trpcClient.admin.resetSchema.mutate(),
+    onSuccess: () => {
+      qc.invalidateQueries()
+      setSchemaMsg({ type: 'success', text: t('adminSchemaSuccess') })
+      setSchemaConfirm(false)
+    },
+    onError: (e: unknown) => {
+      const msg = e instanceof Error ? e.message : t('adminSchemaError')
+      setSchemaMsg({ type: 'error', text: msg })
+      setSchemaConfirm(false)
     },
   })
 
@@ -170,6 +186,54 @@ export default function AdminPanel() {
                 disabled={wipeMutation.isPending}
               >
                 ✕ {t('adminWipe')}
+              </button>
+            )}
+          </div>
+
+          {/* ── Schema reset card (danger zone) ── */}
+          <div className="admin-card admin-card--danger">
+            <div className="admin-card-header">
+              <span className="admin-card-icon admin-card-icon--red">⚠</span>
+              <div>
+                <span className="admin-danger-badge">{t('adminDangerZone')}</span>
+                <h2 className="admin-card-title">{t('adminSchemaReset')}</h2>
+              </div>
+            </div>
+            <p className="admin-card-desc">{t('adminSchemaResetDesc')}</p>
+
+            {schemaMsg && (
+              <div className={`admin-feedback admin-feedback--${schemaMsg.type}`}>
+                {schemaMsg.text}
+              </div>
+            )}
+
+            {schemaConfirm ? (
+              <div className="admin-confirm-row">
+                <span className="admin-confirm-warning admin-confirm-warning--red">⚠ {t('adminSchemaConfirm')}</span>
+                <div className="admin-confirm-btns">
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => { setSchemaMsg(null); schemaMutation.mutate() }}
+                    disabled={schemaMutation.isPending}
+                  >
+                    {schemaMutation.isPending ? '…' : t('adminConfirmBtn')}
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setSchemaConfirm(false)}
+                    disabled={schemaMutation.isPending}
+                  >
+                    {t('adminCancelBtn')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="btn btn-danger admin-action-btn"
+                onClick={() => setSchemaConfirm(true)}
+                disabled={schemaMutation.isPending}
+              >
+                ⚠ {t('adminSchemaReset')}
               </button>
             )}
           </div>

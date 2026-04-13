@@ -1,6 +1,6 @@
 import { db } from './client'
 
-db.exec(`
+const SCHEMA_DDL = `
   CREATE TABLE IF NOT EXISTS projects (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     ref_code        TEXT    NOT NULL UNIQUE,
@@ -324,29 +324,56 @@ db.exec(`
     changes    TEXT,
     created_at TEXT    NOT NULL DEFAULT (datetime('now'))
   );
-`)
+`
+
+// Run DDL on startup
+db.exec(SCHEMA_DDL)
+
+// ── Schema reset (callable from admin router) ─────────────────────────────────
+export function resetSchema() {
+  // Disable FK enforcement so we can drop in any order
+  db.exec('PRAGMA foreign_keys = OFF')
+  try {
+    // Drop every user table
+    const tables = (db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`).all() as { name: string }[])
+      .map(r => r.name)
+    for (const t of tables) {
+      db.exec(`DROP TABLE IF EXISTS "${t}"`)
+    }
+    db.exec('DELETE FROM sqlite_sequence')
+  } catch { /* sqlite_sequence may not exist yet */ }
+  db.exec('PRAGMA foreign_keys = ON')
+
+  // Recreate all tables from the current DDL
+  db.exec(SCHEMA_DDL)
+
+  // Re-run migrations (idempotent — errors are ignored)
+  runMigrations()
+}
 
 // ── Migrations ───────────────────────────────────────────────────────────────
 // Each statement is run independently and errors are silently ignored — this
 // handles both "column already exists" and "column doesn't exist yet" cases,
 // allowing the schema to evolve without wiping persistent databases.
-const migrations: string[] = [
-  // Added in simplification pass: rename version→dwg_version, add new columns
-  `ALTER TABLE dwg_files ADD COLUMN dwg_version  TEXT`,
-  `ALTER TABLE dwg_files ADD COLUMN display_name TEXT NOT NULL DEFAULT ''`,
-  `ALTER TABLE dwg_files ADD COLUMN notes        TEXT NOT NULL DEFAULT ''`,
-  `ALTER TABLE dwg_files ADD COLUMN custom_date  TEXT`,
-  // Remove old conversion-pipeline columns (no-op in SQLite — DROP COLUMN
-  // requires SQLite ≥3.35; we leave them in place as harmless dead columns)
-]
-for (const sql of migrations) {
-  try { db.exec(sql) } catch { /* already exists or not supported — safe to ignore */ }
+function runMigrations() {
+  const alterStatements = [
+    // Added in simplification pass: rename version→dwg_version, add new columns
+    `ALTER TABLE dwg_files ADD COLUMN dwg_version  TEXT`,
+    `ALTER TABLE dwg_files ADD COLUMN display_name TEXT NOT NULL DEFAULT ''`,
+    `ALTER TABLE dwg_files ADD COLUMN notes        TEXT NOT NULL DEFAULT ''`,
+    `ALTER TABLE dwg_files ADD COLUMN custom_date  TEXT`,
+  ]
+  for (const sql of alterStatements) {
+    try { db.exec(sql) } catch { /* already exists or not supported — safe to ignore */ }
+  }
+
+  // Back-fill dwg_version from legacy 'version' column if it exists
+  try {
+    db.exec(`UPDATE dwg_files SET dwg_version = version WHERE dwg_version IS NULL AND version IS NOT NULL`)
+  } catch { /* 'version' column doesn't exist on fresh installs — ignore */ }
+
+  // Back-fill display_name from file_name for rows created before this migration
+  db.exec(`UPDATE dwg_files SET display_name = file_name WHERE display_name = ''`)
 }
 
-// Back-fill dwg_version from legacy 'version' column if it exists
-try {
-  db.exec(`UPDATE dwg_files SET dwg_version = version WHERE dwg_version IS NULL AND version IS NOT NULL`)
-} catch { /* 'version' column doesn't exist on fresh installs — ignore */ }
-
-// Back-fill display_name from file_name for rows created before this migration
-db.exec(`UPDATE dwg_files SET display_name = file_name WHERE display_name = ''`)
+runMigrations()

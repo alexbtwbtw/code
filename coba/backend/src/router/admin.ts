@@ -1,5 +1,6 @@
 import { router, adminProcedure, oversightProcedure } from '../trpc'
 import { db } from '../db'
+import { resetSchema } from '../db/schema'
 import { seedProjects } from '../seed/projects'
 import { seedTeam } from '../seed/team'
 import { seedRequirements } from '../seed/requirements'
@@ -63,6 +64,25 @@ export const adminRouter = router({
     .mutation(() => {
       db.exec(WIPE_SQL)
       return { success: true }
+    }),
+
+  resetSchema: oversightProcedure
+    .mutation(async () => {
+      resetSchema()
+      // Re-seed after full schema reset so the app isn't empty
+      try {
+        seedProjects()
+        await seedTeam()
+        seedRequirements()
+        seedTasks()
+        seedCompanyTeams()
+        seedTimeEntries()
+        seedFinance()
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        throw new Error(`Schema reset succeeded but re-seed failed: ${msg}`)
+      }
+      return { ok: true, message: 'Schema dropped, recreated, and re-seeded successfully' }
     }),
 
   getAuditLog: adminProcedure
