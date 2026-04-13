@@ -37,8 +37,8 @@ beforeEach(() => {
 
   createObjectURLSpy = vi.fn().mockReturnValue('blob:http://localhost/fake-url')
   revokeObjectURLSpy = vi.fn()
-  URL.createObjectURL = createObjectURLSpy
-  URL.revokeObjectURL = revokeObjectURLSpy
+  URL.createObjectURL = createObjectURLSpy as typeof URL.createObjectURL
+  URL.revokeObjectURL = revokeObjectURLSpy as typeof URL.revokeObjectURL
 })
 
 afterEach(() => {

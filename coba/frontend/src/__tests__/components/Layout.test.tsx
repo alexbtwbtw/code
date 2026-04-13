@@ -18,11 +18,12 @@ vi.mock('../../auth', () => ({
 // ── Test helpers ──────────────────────────────────────────────────────────────
 
 function renderLayout(page: Page, onNavigate = vi.fn()) {
+  const children = createElement('div', null, 'content')
   return render(
     createElement(
       LanguageProvider,
       null,
-      createElement(Layout, { page, onNavigate }, createElement('div', null, 'content'))
+      createElement(Layout, { page, onNavigate, children })
     )
   )
 }
@@ -42,7 +43,7 @@ describe('Layout', () => {
   it('renders nav buttons in Portuguese by default', () => {
     renderLayout({ view: 'home' })
     // Portuguese nav labels
-    expect(screen.getByText('Pesquisar Projetos')).toBeInTheDocument()
+    expect(screen.getByText('Projetos')).toBeInTheDocument()
     expect(screen.getByText('Equipa')).toBeInTheDocument()
     expect(screen.getByText('Relatórios')).toBeInTheDocument()
   })
@@ -57,7 +58,7 @@ describe('Layout', () => {
     const langBtn = screen.getByRole('button', { name: 'EN' })
     fireEvent.click(langBtn)
     // Now in English
-    expect(screen.getByText('Search Projects')).toBeInTheDocument()
+    expect(screen.getByText('Projects')).toBeInTheDocument()
     // Button now shows "PT"
     expect(screen.getByRole('button', { name: 'PT' })).toBeInTheDocument()
   })
@@ -65,7 +66,7 @@ describe('Layout', () => {
   it('clicking Search nav button calls onNavigate with search page', () => {
     const onNavigate = vi.fn()
     renderLayout({ view: 'home' }, onNavigate)
-    fireEvent.click(screen.getByText('Pesquisar Projetos'))
+    fireEvent.click(screen.getByText('Projetos'))
     expect(onNavigate).toHaveBeenCalledWith({ view: 'search' })
   })
 

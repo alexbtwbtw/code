@@ -13,10 +13,10 @@ Each agent must update their section when they start, change, or finish a task.
 |-------|--------|------------|--------------|
 | Features | Idle | Admin Panel: Wipe action + redesign complete | 2026-04-13 18:46 |
 | Architecture & Docs | Idle | — | 2026-04-13 18:28 |
-| UI | In Progress | Implementing UI fixes (P0–P3) | 2026-04-13 |
+| UI | Idle | Nav rework complete | 2026-04-13 18:48 |
 | Seed Data | Idle | Fixed pt.member_id → pt.team_member_id in report query | 2026-04-13 18:46 |
 | Reporting | Idle | Audit complete — task list ready | 2026-04-13 18:27 |
-| Testing | Idle | Full test suite implemented (P0–P4 complete) | 2026-04-13 18:42 |
+| Testing | Idle | Fixed 4 TS build errors in test files; build passes clean | 2026-04-13 18:48 |
 | AWS Migration | Idle | Decommission guide written | 2026-04-13 18:28 |
 | Security | Idle | Audit complete | 2026-04-13 18:30 |
 

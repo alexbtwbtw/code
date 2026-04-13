@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { en } from '../i18n/en'
 import { pt } from '../i18n/pt'
 import { renderHook, act } from '@testing-library/react'
