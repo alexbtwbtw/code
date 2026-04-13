@@ -118,7 +118,6 @@ type DwgFile = {
   fileName: string
   displayName: string
   notes: string
-  customDate: string | null
   dwgVersion: string | null
   fileSize: number
   uploadedAt: string
@@ -274,76 +273,121 @@ async function renderDwgToCanvas(
   }
 }
 
-// ── DWG Viewer ────────────────────────────────────────────────────────────────
+// ── DWG Viewer (dxf-viewer / WebGL) ──────────────────────────────────────────
+//
+// Fetches DXF text from the backend conversion endpoint (/api/engineering/:id/dxf)
+// and renders it with the dxf-viewer Three.js-based WebGL viewer.
+// If the backend returns 503 { error: 'oda_not_installed' } we show a friendly
+// "ODA not installed" message rather than a generic error.
+
+type ViewerStatus = 'loading' | 'ok' | 'oda_not_installed' | 'error'
 
 function DwgViewerPane({ id }: { id: number }) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
-  // Sanitized SVG is stored in state so it can be injected after React renders
-  // the eng-svg-container div (containerRef is null while status === 'loading').
-  const [svgContent, setSvgContent] = useState<string>('')
+  const [status, setStatus] = useState<ViewerStatus>('loading')
 
-  // ── Async WASM render effect ──────────────────────────────────────────────
-  // Fetches the DWG, runs the WASM renderer, and stores the sanitized SVG in
-  // state. Does NOT touch the DOM directly — DOM injection is handled by the
-  // separate injection effect below (which runs after React has committed the
-  // eng-svg-container div to the DOM and containerRef is populated).
   useEffect(() => {
     let cancelled = false
     setStatus('loading')
-    setSvgContent('')
+
+    // Destroy any previous viewer that may have appended a canvas to the container.
+    // We track it via a closure-scoped variable so the cleanup function can call Destroy().
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let viewerInstance: any = null
 
     ;(async () => {
       try {
-        // Fetch raw DWG bytes (with auth headers — endpoint requires authentication)
-        const arrayBuffer = await fetchDwgBytes(id)
+        // Fetch DXF content from the backend ODA conversion endpoint
+        const user = getCurrentUser()
+        const headers: HeadersInit = user
+          ? { 'x-user-role': user.role, 'x-user-id': String(user.id), 'x-user-name': user.name }
+          : {}
+
+        const res = await fetch(`/api/engineering/${id}/dxf`, { headers })
+
         if (cancelled) return
 
-        // readDwgToDatabase uses the raw WASM module so it can inspect
-        // result.error and throw a descriptive message instead of silently
-        // continuing with partial data (which would crash downstream and
-        // expose raw "error code: 64" messages to the user).
-        const { libredwg, db } = await readDwgToDatabase(arrayBuffer)
-        if (cancelled) return
-
-        const rawSvg = libredwg.dwg_to_svg(db)
-        // Sanitize the WASM-rendered SVG before DOM insertion to prevent XSS
-        // from maliciously crafted DWG files (see sanitizeSvg above).
-        const safeSvg = sanitizeSvg(rawSvg)
-
-        if (!cancelled) {
-          setSvgContent(safeSvg)
-          setStatus('ok')
+        if (res.status === 503) {
+          let body: { error?: string } = {}
+          try { body = await res.json() as { error?: string } } catch { /* ignore */ }
+          if (body.error === 'oda_not_installed') {
+            setStatus('oda_not_installed')
+            return
+          }
+          setStatus('error')
+          return
         }
+
+        if (!res.ok) {
+          setStatus('error')
+          return
+        }
+
+        const dxfText = await res.text()
+        if (cancelled) return
+
+        // Wait until the container div is in the DOM
+        if (!containerRef.current) {
+          setStatus('error')
+          return
+        }
+
+        // Build a blob URL so DxfViewer can fetch it (its Load() API expects a URL)
+        const blob    = new Blob([dxfText], { type: 'text/plain' })
+        const blobUrl = URL.createObjectURL(blob)
+
+        try {
+          const { DxfViewer } = await import('dxf-viewer')
+          const three = await import('three')
+          if (cancelled) { URL.revokeObjectURL(blobUrl); return }
+
+          // Clear any previously mounted canvas from the container
+          containerRef.current.innerHTML = ''
+
+          const viewer = new DxfViewer(containerRef.current, {
+            autoResize: true,
+            clearColor: new three.Color('#1a2236'),
+            clearAlpha: 1,
+            antialias: true,
+          })
+          viewerInstance = viewer
+
+          await viewer.Load({ url: blobUrl, fonts: null, workerFactory: null })
+        } finally {
+          URL.revokeObjectURL(blobUrl)
+        }
+
+        if (!cancelled) setStatus('ok')
       } catch (err) {
-        console.warn('DWG render error:', err)
+        console.warn('DXF viewer error:', err)
         if (!cancelled) setStatus('error')
       }
     })()
 
-    return () => { cancelled = true }
-  }, [id])
-
-  // ── SVG injection effect ──────────────────────────────────────────────────
-  // Runs after status becomes 'ok' and React commits the eng-svg-container div.
-  // At this point containerRef.current is populated and we can safely set innerHTML.
-  useEffect(() => {
-    if (status !== 'ok' || !svgContent || !containerRef.current) return
-    containerRef.current.innerHTML = svgContent
-    // Make the embedded SVG fill the container
-    const svgEl = containerRef.current.querySelector('svg')
-    if (svgEl) {
-      svgEl.style.width = '100%'
-      svgEl.style.height = '100%'
+    return () => {
+      cancelled = true
+      // Destroy the Three.js renderer to free WebGL context and memory
+      try { viewerInstance?.Destroy?.() } catch { /* ignore */ }
     }
-  }, [status, svgContent])
+  }, [id])
 
   if (status === 'loading') {
     return (
       <div className="eng-viewer-placeholder">
         <span className="eng-drop-spinner" />
         <span>{t('loading')}</span>
+      </div>
+    )
+  }
+
+  if (status === 'oda_not_installed') {
+    return (
+      <div className="eng-viewer-placeholder eng-viewer-placeholder--error">
+        <div className="eng-viewer-error-body">
+          <span className="eng-viewer-error-icon">⚠</span>
+          <span className="eng-viewer-error-title">{t('dwgOdaNotInstalled')}</span>
+        </div>
       </div>
     )
   }
@@ -360,187 +404,12 @@ function DwgViewerPane({ id }: { id: number }) {
     )
   }
 
+  // status === 'ok' — container already has the canvas mounted by DxfViewer
   return (
     <div
       ref={containerRef}
       className="eng-svg-container"
     />
-  )
-}
-
-// ── DWG date-patching helpers ─────────────────────────────────────────────────
-
-type DateCandidate = { offset: number; date: string; julian: number }
-
-function fmtIso(iso: string): string {
-  try { return new Date(iso).toLocaleString() } catch { return iso }
-}
-
-// ── Dates in File panel ───────────────────────────────────────────────────────
-
-function DatesInFilePanel({ fileId }: { fileId: number }) {
-  const { t } = useTranslation()
-  const [scanning, setScanning]     = useState(false)
-  const [candidates, setCandidates] = useState<DateCandidate[] | null>(null)
-  const [scanError, setScanError]   = useState<string | null>(null)
-  const [newDate, setNewDate]       = useState('')
-  const [patching, setPatching]     = useState(false)
-  const [patchMsg, setPatchMsg]     = useState<{ ok: boolean; text: string } | null>(null)
-
-  async function handleScan() {
-    setScanning(true)
-    setScanError(null)
-    setCandidates(null)
-    setPatchMsg(null)
-    try {
-      const user = getCurrentUser()
-      const headers: HeadersInit = user
-        ? { 'x-user-role': user.role, 'x-user-id': String(user.id), 'x-user-name': user.name }
-        : {}
-      const res = await fetch(`/api/engineering/${fileId}/dates`, { headers })
-      if (!res.ok) {
-        const txt = await res.text().catch(() => '')
-        let msg = txt
-        try { msg = (JSON.parse(txt) as { error?: string }).error ?? txt } catch { /* raw */ }
-        setScanError(msg || `Scan failed (HTTP ${res.status})`)
-        return
-      }
-      const data = (await res.json()) as { candidates: DateCandidate[] }
-      setCandidates(data.candidates)
-    } catch (e) {
-      setScanError(e instanceof Error ? e.message : 'Scan failed')
-    } finally {
-      setScanning(false)
-    }
-  }
-
-  async function handlePatch() {
-    if (!candidates || candidates.length === 0 || !newDate) return
-    setPatching(true)
-    setPatchMsg(null)
-    try {
-      const user = getCurrentUser()
-      const headers: HeadersInit = user
-        ? {
-            'x-user-role': user.role,
-            'x-user-id': String(user.id),
-            'x-user-name': user.name,
-            'Content-Type': 'application/json',
-          }
-        : { 'Content-Type': 'application/json' }
-      const offsets = candidates.map(c => c.offset)
-      const res = await fetch(`/api/engineering/${fileId}/patch-dates`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ offsets, newDate }),
-      })
-      if (!res.ok) {
-        const txt = await res.text().catch(() => '')
-        let msg = txt
-        try { msg = (JSON.parse(txt) as { error?: string }).error ?? txt } catch { /* raw */ }
-        setPatchMsg({ ok: false, text: `${t('dwgPatchError')}: ${msg}` })
-        return
-      }
-      setPatchMsg({ ok: true, text: t('dwgPatchSuccess') })
-      // Re-scan to show updated dates
-      void handleScan()
-    } catch (e) {
-      setPatchMsg({ ok: false, text: e instanceof Error ? e.message : t('dwgPatchError') })
-    } finally {
-      setPatching(false)
-    }
-  }
-
-  return (
-    <div className="eng-meta-section">
-      <p className="eng-meta-section-title">{t('dwgDatesInFile')}</p>
-
-      <button
-        className="btn eng-save-btn"
-        onClick={() => { void handleScan() }}
-        disabled={scanning}
-        style={{ marginBottom: '0.75rem' }}
-      >
-        {scanning ? '…' : t('dwgScanDates')}
-      </button>
-
-      {scanError && (
-        <p className="eng-error" style={{ marginBottom: '0.5rem' }}>{scanError}</p>
-      )}
-
-      {candidates !== null && candidates.length === 0 && (
-        <p className="eng-meta-value" style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-          {t('dwgNoDatesFound')}
-        </p>
-      )}
-
-      {candidates !== null && candidates.length > 0 && (
-        <>
-          <p className="eng-meta-value" style={{ marginBottom: '0.5rem' }}>
-            {t('dwgFoundDates').replace('{n}', String(candidates.length))}
-          </p>
-
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '0.75rem', fontSize: '0.8rem' }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left', padding: '2px 6px', color: 'var(--color-text-muted)' }}>Offset</th>
-                <th style={{ textAlign: 'left', padding: '2px 6px', color: 'var(--color-text-muted)' }}>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {candidates.map(c => (
-                <tr key={c.offset}>
-                  <td style={{ padding: '2px 6px', fontFamily: 'monospace' }}>{c.offset}</td>
-                  <td style={{ padding: '2px 6px' }}>{fmtIso(c.date)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="eng-meta-field">
-            <label className="eng-field-label">{t('dwgPatchDate')}</label>
-            <input
-              className="eng-input"
-              type="date"
-              value={newDate}
-              onChange={e => setNewDate(e.target.value)}
-            />
-          </div>
-
-          {newDate && (
-            <p className="eng-patch-warning" style={{
-              background: 'rgba(220,120,0,0.12)',
-              border: '1px solid rgba(220,120,0,0.4)',
-              borderRadius: '4px',
-              padding: '0.5rem 0.75rem',
-              fontSize: '0.8rem',
-              color: 'var(--color-text-muted)',
-              marginBottom: '0.5rem',
-            }}>
-              ⚠ {t('dwgPatchWarning')}
-            </p>
-          )}
-
-          <button
-            className="btn eng-save-btn"
-            onClick={() => { void handlePatch() }}
-            disabled={patching || !newDate}
-          >
-            {patching ? '…' : t('dwgPatchFile')}
-          </button>
-
-          {patchMsg && (
-            <p style={{
-              marginTop: '0.5rem',
-              color: patchMsg.ok ? 'var(--color-success, #4caf50)' : 'var(--color-error, #f44)',
-              fontSize: '0.85rem',
-            }}>
-              {patchMsg.text}
-            </p>
-          )}
-        </>
-      )}
-    </div>
   )
 }
 
@@ -552,7 +421,6 @@ function MetadataPanel({ file }: { file: DwgFile }) {
 
   const [displayName, setDisplayName] = useState(file.displayName)
   const [notes, setNotes]             = useState(file.notes)
-  const [customDate, setCustomDate]   = useState(file.customDate ?? '')
   const [saved, setSaved]             = useState(false)
 
   function handleSave() {
@@ -561,7 +429,6 @@ function MetadataPanel({ file }: { file: DwgFile }) {
         id: file.id,
         displayName,
         notes,
-        customDate: customDate || null,
       },
       {
         onSuccess: () => {
@@ -612,16 +479,6 @@ function MetadataPanel({ file }: { file: DwgFile }) {
         </div>
 
         <div className="eng-meta-field">
-          <label className="eng-field-label">{t('dwgDrawingDate')}</label>
-          <input
-            className="eng-input"
-            type="date"
-            value={customDate}
-            onChange={e => setCustomDate(e.target.value)}
-          />
-        </div>
-
-        <div className="eng-meta-field">
           <label className="eng-field-label">{t('dwgNotes')}</label>
           <textarea
             className="eng-textarea"
@@ -640,8 +497,6 @@ function MetadataPanel({ file }: { file: DwgFile }) {
         </button>
       </div>
 
-      {/* Dates in File section */}
-      <DatesInFilePanel fileId={file.id} />
     </div>
   )
 }

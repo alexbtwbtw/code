@@ -8,7 +8,6 @@ interface RawDwgFile {
   file_name: string
   display_name: string
   notes: string
-  custom_date: string | null
   dwg_version: string | null
   file_size: number
   uploaded_at: string
@@ -21,7 +20,6 @@ function mapDwgFile(row: RawDwgFile) {
     fileName:    row.file_name,
     displayName: row.display_name,
     notes:       row.notes,
-    customDate:  row.custom_date,
     dwgVersion:  row.dwg_version,
     fileSize:    row.file_size,
     uploadedAt:  row.uploaded_at,
@@ -29,7 +27,7 @@ function mapDwgFile(row: RawDwgFile) {
 }
 
 const LIST_SQL = `
-  SELECT id, project_id, file_name, display_name, notes, custom_date, dwg_version, file_size, uploaded_at
+  SELECT id, project_id, file_name, display_name, notes, dwg_version, file_size, uploaded_at
   FROM dwg_files
   ORDER BY uploaded_at DESC
 `
@@ -44,7 +42,7 @@ export const engineeringRouter = router({
     .input(z.object({ projectId: z.number().int() }))
     .query(({ input }) => {
       const rows = db.prepare(`
-        SELECT id, project_id, file_name, display_name, notes, custom_date, dwg_version, file_size, uploaded_at
+        SELECT id, project_id, file_name, display_name, notes, dwg_version, file_size, uploaded_at
         FROM dwg_files
         WHERE project_id = ?
         ORDER BY uploaded_at DESC
@@ -57,7 +55,6 @@ export const engineeringRouter = router({
       id:          z.number().int(),
       displayName: z.string().min(1).optional(),
       notes:       z.string().optional(),
-      customDate:  z.string().nullable().optional(),
     }))
     .mutation(({ input }) => {
       const sets: string[] = []
@@ -65,7 +62,6 @@ export const engineeringRouter = router({
 
       if (input.displayName !== undefined) { sets.push('display_name = ?'); vals.push(input.displayName) }
       if (input.notes       !== undefined) { sets.push('notes = ?');        vals.push(input.notes) }
-      if (input.customDate  !== undefined) { sets.push('custom_date = ?');  vals.push(input.customDate) }
 
       if (sets.length === 0) return { success: true }
 

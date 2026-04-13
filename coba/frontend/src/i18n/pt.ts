@@ -584,7 +584,6 @@ export const pt: Record<TranslationKey, string> = {
   dwgDropHint: 'Formato AutoCAD DWG',
   dwgNotes: 'Notas',
   dwgDisplayName: 'Nome de Exibição',
-  dwgDrawingDate: 'Data do Desenho',
   dwgSave: 'Guardar',
   dwgSaved: 'Guardado',
   dwgPreviewUnavailable: 'Pré-visualização indisponível para este ficheiro',
@@ -613,17 +612,7 @@ export const pt: Record<TranslationKey, string> = {
   dwgEntityIdentical: 'Ficheiros são idênticos ao nível das entidades',
   dwgEntitySummary: '{a} entidades em A · +{added} adicionadas · -{removed} removidas · {unchanged} sem alterações',
   dwgEntityMore: 'e mais {n}...',
-
-  // DWG date patching
-  dwgDatesInFile: 'Datas no Ficheiro',
-  dwgScanDates: 'Procurar Datas no Ficheiro',
-  dwgFoundDates: 'Encontrado(s) {n} campo(s) de data no cabeçalho',
-  dwgNoDatesFound: 'Nenhum campo de data encontrado neste ficheiro',
-  dwgPatchDate: 'Atualizar Todas as Datas Para',
-  dwgPatchFile: 'Escrever no Ficheiro',
-  dwgPatchSuccess: 'Datas atualizadas no ficheiro com sucesso',
-  dwgPatchError: 'Falha ao atualizar o ficheiro',
-  dwgPatchWarning: 'Isto modifica o ficheiro DWG armazenado. O original não pode ser recuperado após a alteração.',
+  dwgOdaNotInstalled: 'Pré-visualização indisponível — ODA File Converter não está instalado no servidor',
 
   // Misc
   optional: '(opcional)',

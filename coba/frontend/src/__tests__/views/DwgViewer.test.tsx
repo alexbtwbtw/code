@@ -114,7 +114,6 @@ const sampleFiles = [
     fileName: 'test.dwg',
     displayName: 'Test DWG',
     notes: '',
-    customDate: null,
     dwgVersion: 'AC1024',
     fileSize: 145408,
     uploadedAt: '2025-01-10T10:00:00',

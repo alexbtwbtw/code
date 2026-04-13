@@ -97,7 +97,7 @@ describe('engineering.byProject', () => {
 // ── engineering.update ────────────────────────────────────────────────────────
 
 describe('engineering.update', () => {
-  it('updates displayName, notes, and customDate for authed user', async () => {
+  it('updates displayName and notes for authed user', async () => {
     const id = insertDwgFile({ fileName: 'update-test.dwg' })
 
     const caller = engineeringRouter.createCaller(authedCtx())
@@ -105,29 +105,15 @@ describe('engineering.update', () => {
       id,
       displayName: 'My Drawing',
       notes: 'Updated notes',
-      customDate: '2025-06-15',
     })
 
     expect(result).toEqual({ success: true })
 
     // Verify DB was updated
-    const row = db.prepare(`SELECT display_name, notes, custom_date FROM dwg_files WHERE id = ?`).get(id) as
-      { display_name: string; notes: string; custom_date: string }
+    const row = db.prepare(`SELECT display_name, notes FROM dwg_files WHERE id = ?`).get(id) as
+      { display_name: string; notes: string }
     expect(row.display_name).toBe('My Drawing')
     expect(row.notes).toBe('Updated notes')
-    expect(row.custom_date).toBe('2025-06-15')
-  })
-
-  it('clears customDate when set to null', async () => {
-    const id = insertDwgFile({ fileName: 'nullable-date.dwg' })
-    db.prepare(`UPDATE dwg_files SET custom_date = '2024-01-01' WHERE id = ?`).run(id)
-
-    const caller = engineeringRouter.createCaller(authedCtx())
-    await caller.update({ id, customDate: null })
-
-    const row = db.prepare(`SELECT custom_date FROM dwg_files WHERE id = ?`).get(id) as
-      { custom_date: string | null }
-    expect(row.custom_date).toBeNull()
   })
 
   it('throws UNAUTHORIZED when called with no auth context', async () => {

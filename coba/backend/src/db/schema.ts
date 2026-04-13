@@ -304,7 +304,6 @@ const SCHEMA_DDL = `
     file_name     TEXT NOT NULL,
     display_name  TEXT NOT NULL,
     notes         TEXT NOT NULL DEFAULT '',
-    custom_date   TEXT,
     original_dwg  BLOB NOT NULL,
     dwg_version   TEXT,
     file_size     INTEGER NOT NULL,
@@ -361,7 +360,6 @@ function runMigrations() {
     `ALTER TABLE dwg_files ADD COLUMN dwg_version  TEXT`,
     `ALTER TABLE dwg_files ADD COLUMN display_name TEXT NOT NULL DEFAULT ''`,
     `ALTER TABLE dwg_files ADD COLUMN notes        TEXT NOT NULL DEFAULT ''`,
-    `ALTER TABLE dwg_files ADD COLUMN custom_date  TEXT`,
   ]
   for (const sql of alterStatements) {
     try { db.exec(sql) } catch { /* already exists or not supported — safe to ignore */ }

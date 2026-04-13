@@ -582,7 +582,6 @@ export const en = {
   dwgDropHint: 'AutoCAD DWG format',
   dwgNotes: 'Notes',
   dwgDisplayName: 'Display Name',
-  dwgDrawingDate: 'Drawing Date',
   dwgSave: 'Save',
   dwgSaved: 'Saved',
   dwgPreviewUnavailable: 'Preview unavailable for this file',
@@ -611,17 +610,7 @@ export const en = {
   dwgEntityIdentical: 'Files are identical at entity level',
   dwgEntitySummary: '{a} entities in A · +{added} added · -{removed} removed · {unchanged} unchanged',
   dwgEntityMore: 'and {n} more...',
-
-  // DWG date patching
-  dwgDatesInFile: 'Dates in File',
-  dwgScanDates: 'Scan File for Dates',
-  dwgFoundDates: 'Found {n} date field(s) in file header',
-  dwgNoDatesFound: 'No date fields found in this file',
-  dwgPatchDate: 'Update All Dates To',
-  dwgPatchFile: 'Write to File',
-  dwgPatchSuccess: 'Dates updated in file successfully',
-  dwgPatchError: 'Failed to patch file',
-  dwgPatchWarning: 'This modifies the stored DWG binary. The original cannot be recovered after patching.',
+  dwgOdaNotInstalled: 'Preview unavailable — ODA File Converter not installed on server',
 
   // Misc
   optional: '(optional)',
