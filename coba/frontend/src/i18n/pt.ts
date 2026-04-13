@@ -3,9 +3,10 @@ import type { TranslationKey } from './en'
 export const pt: Record<TranslationKey, string> = {
   // Nav
   appName: 'Portal COBA',
-  navSearch: 'Pesquisar Projetos',
+  navSearch: 'Projetos',
   navAdd: 'Adicionar Projeto',
   navReports: 'Relatórios',
+  navMore: 'Mais',
 
   // Search
   searchTitle: 'Pesquisar Projetos',
@@ -486,11 +487,21 @@ export const pt: Record<TranslationKey, string> = {
   // Admin panel
   adminNav: 'Admin',
   adminTitle: 'Painel de Administração',
+  adminSubtitle: 'Gerir o estado da base de dados e os dados da aplicação.',
   adminReseed: 'Re-inicializar Base de Dados',
+  adminReseedDesc: 'Apaga todos os dados actuais e substitui-os por um conjunto de demonstração com projectos, membros, tarefas e registos de tempo.',
   adminReseedConfirm: 'Isto irá apagar TODOS os dados e re-inicializar. Tem a certeza?',
   adminReseedSuccess: 'Base de dados re-inicializada com sucesso.',
   adminReseedError: 'Falha ao re-inicializar.',
   adminKey: 'Chave de Admin',
+  adminWipe: 'Apagar Todos os Dados',
+  adminWipeDesc: 'Elimina permanentemente todos os dados de todas as tabelas. A base de dados ficará completamente vazia — sem dados de demonstração.',
+  adminWipeConfirm: 'Esta acção não pode ser desfeita. Todos os dados serão eliminados permanentemente.',
+  adminWipeSuccess: 'Todos os dados apagados com sucesso.',
+  adminWipeError: 'Falha ao apagar os dados.',
+  adminConfirmBtn: 'Confirmar',
+  adminCancelBtn: 'Cancelar',
+  adminDangerZone: 'Zona de Perigo',
 
   // Misc
   optional: '(opcional)',

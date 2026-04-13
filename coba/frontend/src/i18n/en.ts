@@ -1,9 +1,10 @@
 export const en = {
   // Nav
   appName: 'COBA Portal',
-  navSearch: 'Search Projects',
+  navSearch: 'Projects',
   navAdd: 'Add Project',
   navReports: 'Reports',
+  navMore: 'More',
 
   // Search
   searchTitle: 'Search Projects',
@@ -484,11 +485,21 @@ export const en = {
   // Admin panel
   adminNav: 'Admin',
   adminTitle: 'Admin Panel',
+  adminSubtitle: 'Manage database state and application data.',
   adminReseed: 'Re-seed Database',
+  adminReseedDesc: 'Deletes all current data and replaces it with a fresh set of demo projects, team members, tasks and time entries.',
   adminReseedConfirm: 'This will delete ALL data and re-seed. Are you sure?',
   adminReseedSuccess: 'Database re-seeded successfully.',
   adminReseedError: 'Re-seed failed.',
   adminKey: 'Admin Key',
+  adminWipe: 'Wipe All Data',
+  adminWipeDesc: 'Permanently deletes all data from every table. The database will be left completely empty — no seed data will be inserted.',
+  adminWipeConfirm: 'This cannot be undone. All data will be permanently deleted.',
+  adminWipeSuccess: 'All data wiped successfully.',
+  adminWipeError: 'Wipe failed.',
+  adminConfirmBtn: 'Confirm',
+  adminCancelBtn: 'Cancel',
+  adminDangerZone: 'Danger Zone',
 
   // Misc
   optional: '(optional)',

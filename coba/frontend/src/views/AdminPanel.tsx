@@ -8,24 +8,35 @@ export default function AdminPanel() {
   const { t } = useTranslation()
   const { user } = useCurrentUser()
   const qc = useQueryClient()
-  const [confirmed, setConfirmed] = useState(false)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const [reseedConfirm, setReseedConfirm] = useState(false)
+  const [wipeConfirm, setWipeConfirm] = useState(false)
+  const [reseedMsg, setReseedMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [wipeMsg, setWipeMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const reseedMutation = useMutation({
     mutationFn: () => trpcClient.admin.reseed.mutate(),
     onSuccess: () => {
-      // Invalidate every cached query so all views fetch fresh data from the
-      // newly-seeded database (avoids stale 30 s cache showing empty results).
       qc.invalidateQueries()
-      setSuccessMsg(t('adminReseedSuccess'))
-      setErrorMsg(null)
-      setConfirmed(false)
+      setReseedMsg({ type: 'success', text: t('adminReseedSuccess') })
+      setReseedConfirm(false)
     },
     onError: () => {
-      setErrorMsg(t('adminReseedError'))
-      setSuccessMsg(null)
-      setConfirmed(false)
+      setReseedMsg({ type: 'error', text: t('adminReseedError') })
+      setReseedConfirm(false)
+    },
+  })
+
+  const wipeMutation = useMutation({
+    mutationFn: () => trpcClient.admin.wipe.mutate(),
+    onSuccess: () => {
+      qc.invalidateQueries()
+      setWipeMsg({ type: 'success', text: t('adminWipeSuccess') })
+      setWipeConfirm(false)
+    },
+    onError: () => {
+      setWipeMsg({ type: 'error', text: t('adminWipeError') })
+      setWipeConfirm(false)
     },
   })
 
@@ -34,60 +45,127 @@ export default function AdminPanel() {
   }
 
   function handleReseedClick() {
-    if (!confirmed) {
-      setConfirmed(true)
-      return
-    }
-    setSuccessMsg(null)
-    setErrorMsg(null)
+    if (!reseedConfirm) { setReseedConfirm(true); return }
+    setReseedMsg(null)
     reseedMutation.mutate()
   }
 
+  function handleWipeClick() {
+    if (!wipeConfirm) { setWipeConfirm(true); return }
+    setWipeMsg(null)
+    wipeMutation.mutate()
+  }
+
   return (
-    <div className="container" style={{ maxWidth: 600, margin: '2rem auto' }}>
-      <h1 className="page-title">{t('adminTitle')}</h1>
+    <div className="admin-panel">
 
-      <div className="card" style={{ padding: '2rem', marginTop: '1.5rem' }}>
-        {confirmed && (
-          <p style={{ color: 'var(--color-warning, #f59e0b)', marginBottom: '1rem', fontWeight: 500 }}>
-            {t('adminReseedConfirm')}
-          </p>
-        )}
+      {/* Page header */}
+      <div className="admin-hero">
+        <div className="admin-hero-icon">⚙</div>
+        <div>
+          <h1 className="admin-hero-title">{t('adminTitle')}</h1>
+          <p className="admin-hero-sub">{t('adminSubtitle')}</p>
+        </div>
+      </div>
 
-        {successMsg && (
-          <p style={{ color: 'var(--color-success, #22c55e)', marginBottom: '1rem' }}>
-            {successMsg}
-          </p>
-        )}
+      {/* Action cards */}
+      <div className="admin-cards">
 
-        {errorMsg && (
-          <p style={{ color: 'var(--color-danger, #ef4444)', marginBottom: '1rem' }}>
-            {errorMsg}
-          </p>
-        )}
+        {/* ── Reseed card ── */}
+        <div className="admin-card">
+          <div className="admin-card-header">
+            <span className="admin-card-icon admin-card-icon--amber">↺</span>
+            <div>
+              <h2 className="admin-card-title">{t('adminReseed')}</h2>
+            </div>
+          </div>
+          <p className="admin-card-desc">{t('adminReseedDesc')}</p>
 
-        <button
-          className="btn btn-danger"
-          onClick={handleReseedClick}
-          disabled={reseedMutation.isPending}
-          style={{ minWidth: 220 }}
-        >
-          {reseedMutation.isPending
-            ? '…'
-            : confirmed
-              ? t('adminReseedConfirm').slice(0, 30) + ' — ' + t('adminReseed')
-              : t('adminReseed')}
-        </button>
+          {reseedMsg && (
+            <div className={`admin-feedback admin-feedback--${reseedMsg.type}`}>
+              {reseedMsg.text}
+            </div>
+          )}
 
-        {confirmed && (
-          <button
-            className="btn btn-secondary"
-            onClick={() => setConfirmed(false)}
-            style={{ marginLeft: '1rem' }}
-          >
-            {t('btnCancelEdit')}
-          </button>
-        )}
+          {reseedConfirm ? (
+            <div className="admin-confirm-row">
+              <span className="admin-confirm-warning">⚠ {t('adminReseedConfirm')}</span>
+              <div className="admin-confirm-btns">
+                <button
+                  className="btn btn-danger"
+                  onClick={handleReseedClick}
+                  disabled={reseedMutation.isPending}
+                >
+                  {reseedMutation.isPending ? '…' : t('adminConfirmBtn')}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setReseedConfirm(false)}
+                  disabled={reseedMutation.isPending}
+                >
+                  {t('adminCancelBtn')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="btn btn-secondary admin-action-btn"
+              onClick={handleReseedClick}
+              disabled={reseedMutation.isPending}
+            >
+              ↺ {t('adminReseed')}
+            </button>
+          )}
+        </div>
+
+        {/* ── Wipe card (danger zone) ── */}
+        <div className="admin-card admin-card--danger">
+          <div className="admin-card-header">
+            <span className="admin-card-icon admin-card-icon--red">✕</span>
+            <div>
+              <span className="admin-danger-badge">{t('adminDangerZone')}</span>
+              <h2 className="admin-card-title">{t('adminWipe')}</h2>
+            </div>
+          </div>
+          <p className="admin-card-desc">{t('adminWipeDesc')}</p>
+
+          {wipeMsg && (
+            <div className={`admin-feedback admin-feedback--${wipeMsg.type}`}>
+              {wipeMsg.text}
+            </div>
+          )}
+
+          {wipeConfirm ? (
+            <div className="admin-confirm-row">
+              <span className="admin-confirm-warning admin-confirm-warning--red">⚠ {t('adminWipeConfirm')}</span>
+              <div className="admin-confirm-btns">
+                <button
+                  className="btn btn-danger"
+                  onClick={handleWipeClick}
+                  disabled={wipeMutation.isPending}
+                >
+                  {wipeMutation.isPending ? '…' : t('adminConfirmBtn')}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setWipeConfirm(false)}
+                  disabled={wipeMutation.isPending}
+                >
+                  {t('adminCancelBtn')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="btn btn-danger admin-action-btn"
+              onClick={handleWipeClick}
+              disabled={wipeMutation.isPending}
+            >
+              ✕ {t('adminWipe')}
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   )
