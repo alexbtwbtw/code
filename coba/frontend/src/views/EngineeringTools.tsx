@@ -1,7 +1,113 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from '../i18n/context'
-import { useDwgFiles, useUpdateDwgFile, useDeleteDwgFile, downloadDwg } from '../api/engineering'
-import { useCurrentUser } from '../auth'
+import { useDwgFiles, useUpdateDwgFile, useDeleteDwgFile, downloadDwg, fetchDwgBytes } from '../api/engineering'
+import { useCurrentUser, getCurrentUser } from '../auth'
+
+// ── SVG Sanitizer ─────────────────────────────────────────────────────────────
+//
+// The WASM DWG renderer produces SVG from a binary format it parses in a WASM
+// sandbox. If a maliciously crafted DWG embeds script payloads in metadata
+// strings (layer names, entity text, etc.), those strings could end up in the
+// SVG output. Inserting that SVG via innerHTML without sanitization would give
+// the malicious content a direct path to XSS.
+//
+// We use a lightweight allowlist-based sanitizer rather than a heavy library
+// (DOMPurify) so there is no extra bundle dependency. The sanitizer:
+//   1. Parses the SVG in an off-screen DOMParser (no script execution occurs).
+//   2. Walks every element and removes any that are not on the SVG shape
+//      allowlist (e.g. <script>, <foreignObject>, <use> with external refs).
+//   3. Removes every attribute that is not on the per-element allowlist and
+//      strips any attribute whose value begins with "javascript:".
+//
+// Risk residual (Low): A sufficiently sophisticated attacker could in theory
+// craft a DWG whose metadata exploits a browser HTML-parser quirk to bypass
+// this sanitizer. For an internal engineering tool this risk is acceptable.
+// If the app ever becomes internet-facing, replace with DOMPurify.
+
+const SVG_ELEMENTS_ALLOWLIST = new Set([
+  'svg', 'g', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon',
+  'path', 'text', 'tspan', 'defs', 'symbol', 'use', 'linearGradient',
+  'radialGradient', 'stop', 'clipPath', 'mask', 'pattern', 'marker',
+  'title', 'desc',
+])
+
+const SVG_ATTRS_ALLOWLIST = new Set([
+  'id', 'class', 'style', 'fill', 'stroke', 'stroke-width', 'stroke-dasharray',
+  'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'opacity',
+  'fill-opacity', 'stroke-opacity', 'transform', 'x', 'y', 'x1', 'y1', 'x2', 'y2',
+  'cx', 'cy', 'r', 'rx', 'ry', 'width', 'height', 'd', 'points',
+  'viewBox', 'preserveAspectRatio', 'xmlns', 'version', 'font-size',
+  'font-family', 'text-anchor', 'dominant-baseline', 'clip-path',
+  'marker-start', 'marker-mid', 'marker-end',
+  'gradientUnits', 'gradientTransform', 'spreadMethod',
+  'x1', 'y1', 'x2', 'y2', 'fx', 'fy',
+  'offset', 'stop-color', 'stop-opacity',
+  'patternUnits', 'patternTransform', 'patternContentUnits',
+  'clipPathUnits', 'maskUnits', 'maskContentUnits',
+  'markerWidth', 'markerHeight', 'markerUnits', 'orient', 'refX', 'refY',
+  'href',   // allowed only with non-external refs (enforced below)
+  'xlink:href',
+])
+
+function sanitizeSvg(svgString: string): string {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(svgString, 'image/svg+xml')
+
+  // DOMParser signals parse errors with a <parsererror> root
+  if (doc.documentElement.tagName === 'parsererror') {
+    return ''
+  }
+
+  const root = doc.documentElement
+
+  function walkNode(node: Element) {
+    const tag = node.tagName.toLowerCase().replace(/^svg:/, '')
+
+    // Remove disallowed elements entirely (including <script>, <foreignObject>, etc.)
+    if (!SVG_ELEMENTS_ALLOWLIST.has(tag)) {
+      node.parentNode?.removeChild(node)
+      return
+    }
+
+    // Sanitize attributes
+    const attrsToRemove: string[] = []
+    for (const attr of Array.from(node.attributes)) {
+      const name  = attr.name.toLowerCase()
+      const value = attr.value.toLowerCase().trim()
+
+      // Strip all event handlers (onclick, onload, …)
+      if (name.startsWith('on')) { attrsToRemove.push(attr.name); continue }
+
+      // Strip javascript: URIs
+      if (value.replace(/\s/g, '').startsWith('javascript:')) {
+        attrsToRemove.push(attr.name); continue
+      }
+
+      // Strip data: URIs (can embed scripts in some contexts)
+      if (value.replace(/\s/g, '').startsWith('data:')) {
+        attrsToRemove.push(attr.name); continue
+      }
+
+      // For href / xlink:href, allow only same-document fragment references (#id)
+      if ((name === 'href' || name === 'xlink:href') && !attr.value.startsWith('#')) {
+        attrsToRemove.push(attr.name); continue
+      }
+
+      // Strip attributes not on the allowlist
+      if (!SVG_ATTRS_ALLOWLIST.has(name)) {
+        attrsToRemove.push(attr.name)
+      }
+    }
+    attrsToRemove.forEach(a => node.removeAttribute(a))
+
+    // Recurse into children (collect first to avoid live-NodeList mutation issues)
+    Array.from(node.children).forEach(walkNode)
+  }
+
+  walkNode(root)
+
+  return new XMLSerializer().serializeToString(root)
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -42,10 +148,8 @@ function DwgViewerPane({ id }: { id: number }) {
 
     ;(async () => {
       try {
-        // Fetch raw DWG bytes
-        const response = await fetch(`/api/engineering/${id}/dwg`)
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        const arrayBuffer = await response.arrayBuffer()
+        // Fetch raw DWG bytes (with auth headers — endpoint requires authentication)
+        const arrayBuffer = await fetchDwgBytes(id)
 
         // Dynamically import to avoid bundler issues with WASM
         const { LibreDwg, Dwg_File_Type } = await import('@mlightcad/libredwg-web')
@@ -63,7 +167,9 @@ function DwgViewerPane({ id }: { id: number }) {
         const svg = libredwg.dwg_to_svg(db)
 
         if (!cancelled && containerRef.current) {
-          containerRef.current.innerHTML = svg
+          // Sanitize the WASM-rendered SVG before DOM insertion to prevent XSS
+          // from maliciously crafted DWG files (see sanitizeSvg above).
+          containerRef.current.innerHTML = sanitizeSvg(svg)
           // Make the embedded SVG responsive
           const svgEl = containerRef.current.querySelector('svg')
           if (svgEl) {
@@ -93,7 +199,11 @@ function DwgViewerPane({ id }: { id: number }) {
   if (status === 'error') {
     return (
       <div className="eng-viewer-placeholder eng-viewer-placeholder--error">
-        <span>⚠ {t('dwgPreviewUnavailable')}</span>
+        <div className="eng-viewer-error-body">
+          <span className="eng-viewer-error-icon">⚠</span>
+          <span className="eng-viewer-error-title">{t('dwgPreviewUnavailable')}</span>
+          <span className="eng-viewer-error-hint">{t('dwgPreviewUnavailableHint')}</span>
+        </div>
       </div>
     )
   }
@@ -162,35 +272,43 @@ function MetadataPanel({ file }: { file: DwgFile }) {
 
       {/* Editable fields */}
       <div className="eng-meta-section">
-        <label className="eng-field-label">{t('dwgDisplayName')}</label>
-        <input
-          className="eng-input"
-          value={displayName}
-          onChange={e => setDisplayName(e.target.value)}
-        />
+        <p className="eng-meta-section-title">{t('dwgEditInfo')}</p>
 
-        <label className="eng-field-label">{t('dwgDrawingDate')}</label>
-        <input
-          className="eng-input"
-          type="date"
-          value={customDate}
-          onChange={e => setCustomDate(e.target.value)}
-        />
+        <div className="eng-meta-field">
+          <label className="eng-field-label">{t('dwgDisplayName')}</label>
+          <input
+            className="eng-input"
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+          />
+        </div>
 
-        <label className="eng-field-label">{t('dwgNotes')}</label>
-        <textarea
-          className="eng-textarea"
-          rows={4}
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-        />
+        <div className="eng-meta-field">
+          <label className="eng-field-label">{t('dwgDrawingDate')}</label>
+          <input
+            className="eng-input"
+            type="date"
+            value={customDate}
+            onChange={e => setCustomDate(e.target.value)}
+          />
+        </div>
+
+        <div className="eng-meta-field">
+          <label className="eng-field-label">{t('dwgNotes')}</label>
+          <textarea
+            className="eng-textarea"
+            rows={3}
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+          />
+        </div>
 
         <button
-          className="btn btn-primary eng-save-btn"
+          className={`btn eng-save-btn${saved ? ' eng-save-btn--saved' : ''}`}
           onClick={handleSave}
-          disabled={updateMutation.isPending}
+          disabled={updateMutation.isPending || saved}
         >
-          {saved ? '✓' : t('dwgSave')}
+          {saved ? `✓ ${t('dwgSaved')}` : t('dwgSave')}
         </button>
       </div>
     </div>
@@ -210,17 +328,21 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
     setError(null)
     setUploading(true)
     try {
+      const user = getCurrentUser()
+      const headers: HeadersInit = user
+        ? { 'x-user-role': user.role, 'x-user-id': String(user.id), 'x-user-name': user.name }
+        : {}
       const fd = new FormData()
       fd.append('file', file)
-      const res = await fetch('/api/engineering/upload', { method: 'POST', body: fd })
+      const res = await fetch('/api/engineering/upload', { method: 'POST', body: fd, headers })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        setError((body as { error?: string }).error ?? 'Upload failed')
+        setError((body as { error?: string }).error ?? t('dwgOnlyDwg'))
         return
       }
       onUploaded()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed')
+      setError(e instanceof Error ? e.message : t('dwgOnlyDwg'))
     } finally {
       setUploading(false)
     }
@@ -230,7 +352,7 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
     if (!files || files.length === 0) return
     const file = files[0]
     if (!file.name.toLowerCase().endsWith('.dwg')) {
-      setError('Only .dwg files are accepted')
+      setError(t('dwgOnlyDwg'))
       return
     }
     void doUpload(file)
@@ -243,7 +365,7 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
   }
 
   return (
-    <div>
+    <div className="eng-upload-wrap">
       <div
         className={`eng-drop-zone${dragging ? ' eng-drop-zone--drag' : ''}${uploading ? ' eng-drop-zone--uploading' : ''}`}
         onDrop={onDrop}
@@ -270,6 +392,7 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
           <div className="eng-drop-inner">
             <span className="eng-drop-icon">⬆</span>
             <span className="eng-drop-label">{t('dwgDrop')}</span>
+            <span className="eng-drop-hint">{t('dwgDropHint')}</span>
           </div>
         )}
       </div>
@@ -288,7 +411,7 @@ export default function EngineeringTools() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   function handleDelete(id: number) {
-    if (!confirm('Delete this file?')) return
+    if (!confirm(t('dwgDeleteConfirm'))) return
     deleteMutation.mutate({ id }, {
       onSuccess: () => {
         if (selectedId === id) setSelectedId(null)
@@ -310,61 +433,86 @@ export default function EngineeringTools() {
       <UploadArea onUploaded={() => { void refetch() }} />
 
       {/* ── File list ── */}
-      <div className="eng-file-list">
-        {isLoading && <p className="muted">{t('loading')}</p>}
-        {!isLoading && files.length === 0 && (
-          <p className="muted">{t('dwgNoFiles')}</p>
+      <section className="time-report-section">
+        <div className="time-report-section-header">
+          <h2 className="time-report-section-title">{t('dwgFiles')}</h2>
+          {files.length > 0 && (
+            <span className="time-report-section-count">{files.length}</span>
+          )}
+        </div>
+
+        {isLoading && (
+          <div className="time-report-empty">
+            <span className="eng-drop-spinner" />
+            <span>{t('loading')}</span>
+          </div>
         )}
-        {files.map((file: DwgFile) => (
-          <div key={file.id}>
-            <div
-              className={`eng-file-row${selectedId === file.id ? ' eng-file-row--selected' : ''}`}
-              onClick={() => setSelectedId(selectedId === file.id ? null : file.id)}
-            >
-              <div className="eng-file-info">
-                <span className="eng-file-name">{file.displayName}</span>
-                <span className="eng-file-meta">
-                  {file.dwgVersion && (
-                    <span className="eng-version-badge">AC {file.dwgVersion}</span>
-                  )}
-                  <span>{fmtSize(file.fileSize)}</span>
-                  <span>{fmtDate(file.uploadedAt)}</span>
-                </span>
-              </div>
-              <div className="eng-file-actions">
-                <button
-                  className="eng-download-btn"
-                  onClick={(e) => { e.stopPropagation(); downloadDwg(file.id, file.fileName) }}
-                  title={t('dwgDownload')}
+
+        {!isLoading && files.length === 0 && (
+          <div className="time-report-empty">
+            <span className="time-report-empty-icon">📐</span>
+            <div>
+              <p>{t('dwgNoFiles')}</p>
+              <p className="eng-empty-hint">{t('dwgNoFilesHint')}</p>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && files.length > 0 && (
+          <div className="eng-file-list">
+            {files.map((file: DwgFile) => (
+              <div key={file.id} className="eng-file-entry">
+                <div
+                  className={`eng-file-row${selectedId === file.id ? ' eng-file-row--selected' : ''}`}
+                  onClick={() => setSelectedId(selectedId === file.id ? null : file.id)}
                 >
-                  {t('dwgDownload')}
-                </button>
-                {user && (
-                  <button
-                    className="eng-delete-btn"
-                    onClick={(e) => { e.stopPropagation(); handleDelete(file.id) }}
-                    title={t('dwgDelete')}
-                  >
-                    ✕
-                  </button>
+                  <div className="eng-file-info">
+                    <span className="eng-file-name">{file.displayName}</span>
+                    <span className="eng-file-meta">
+                      {file.dwgVersion && (
+                        <span className="eng-version-badge">AC {file.dwgVersion}</span>
+                      )}
+                      <span>{fmtSize(file.fileSize)}</span>
+                      <span>{fmtDate(file.uploadedAt)}</span>
+                    </span>
+                  </div>
+                  <div className="eng-file-actions">
+                    <button
+                      className="eng-download-btn"
+                      onClick={(e) => { e.stopPropagation(); void downloadDwg(file.id, file.fileName) }}
+                      title={t('dwgDownload')}
+                    >
+                      {t('dwgDownload')}
+                    </button>
+                    {user && (
+                      <button
+                        className="eng-delete-btn"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(file.id) }}
+                        title={t('dwgDelete')}
+                        aria-label={t('dwgDelete')}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Inline expanded view ── */}
+                {selectedId === file.id && (
+                  <div className="eng-expanded">
+                    <div className="eng-viewer-col">
+                      <DwgViewerPane id={file.id} />
+                    </div>
+                    <div className="eng-meta-col">
+                      <MetadataPanel key={file.id} file={file} />
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-
-            {/* ── Inline expanded view ── */}
-            {selectedId === file.id && (
-              <div className="eng-expanded">
-                <div className="eng-viewer-col">
-                  <DwgViewerPane id={file.id} />
-                </div>
-                <div className="eng-meta-col">
-                  <MetadataPanel key={file.id} file={file} />
-                </div>
-              </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+        )}
+      </section>
     </div>
   )
 }

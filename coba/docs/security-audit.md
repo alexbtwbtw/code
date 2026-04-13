@@ -544,3 +544,133 @@ const t = initTRPC.create({
 - [ ] **Run Semgrep SAST in CI** — see `docs/security-tools.md`
 - [ ] **Install Socket.dev GitHub App** for supply chain monitoring
 - [ ] **Run OWASP ZAP baseline scan** against local dev server after security headers are added
+
+---
+
+## Engineering Tooling Security Audit (addendum, 2026-04-13)
+
+**Scope:** `backend/src/index.ts` (engineering endpoints), `backend/src/router/engineering.ts`, `frontend/src/views/EngineeringTools.tsx`
+
+---
+
+### ENG-1 — CRITICAL (FIXED): No authentication on download endpoints
+
+**Severity:** Critical
+**Files:** `backend/src/index.ts` — `GET /api/engineering/:id/download`, `GET /api/engineering/:id/dwg`
+**Status:** Fixed in commit "Security: harden Engineering Tooling endpoints"
+
+**Description:** Both download endpoints were fully unauthenticated HTTP routes. Any HTTP client with network access could retrieve any stored DWG binary by iterating sequential integer IDs (`/api/engineering/1/download`, `/api/engineering/2/download`, etc.). No session, cookie, or token was required.
+
+**Fix applied:** Added `requireRole(c)` guard to both endpoints. The guard reads the `x-user-role` header (same trust model as the tRPC `createContext`) and returns HTTP 401 if absent. The frontend `downloadDwg()` helper and the WASM viewer `fetch` call were updated to include `x-user-role`, `x-user-id`, and `x-user-name` headers derived from `getCurrentUser()`. The upload endpoint was also gated the same way.
+
+---
+
+### ENG-2 — HIGH (FIXED): Filename not sanitized before DB storage
+
+**Severity:** High
+**File:** `backend/src/index.ts` — `POST /api/engineering/upload` (line ~120 pre-fix)
+**Status:** Fixed
+
+**Description:** The raw `file.name` from the multipart upload was stored directly in the `file_name` and `display_name` DB columns without sanitization. A filename containing `"` or `\r\n` could inject HTTP header content when later used in `Content-Disposition`. A filename of `../../etc/passwd` (while not a path traversal risk here since it's stored in SQLite, not the filesystem) would be stored verbatim and could mislead administrators or trigger header injection.
+
+**Fix applied:** Added `sanitizeFileName()` which restricts to `[a-zA-Z0-9._-]`, truncates to 200 chars, and falls back to `upload.dwg` for empty results. The sanitized name is stored in the DB. The download endpoint also re-sanitizes defensively for pre-existing rows.
+
+---
+
+### ENG-3 — HIGH (FIXED): SVG innerHTML XSS from WASM renderer output
+
+**Severity:** High
+**File:** `frontend/src/views/EngineeringTools.tsx` — `DwgViewerPane` component
+**Status:** Fixed
+
+**Description:** The WASM DWG renderer (`@mlightcad/libredwg-web`) converts the DWG binary to SVG and the frontend inserted it directly via `containerRef.current.innerHTML = svg`. A maliciously crafted DWG file could embed script payloads in entity metadata (layer names, block attributes, text entities). These would appear as SVG text content or SVG attribute values in the renderer output. Setting them via `innerHTML` without sanitization gives them a direct path to XSS execution in the user's browser.
+
+**Fix applied:** Implemented `sanitizeSvg()` — a lightweight allowlist-based DOM sanitizer that:
+1. Parses the SVG string via `DOMParser` (no script execution during parsing).
+2. Removes any element not on the SVG shape allowlist (blocks `<script>`, `<foreignObject>`, `<iframe>`, etc.).
+3. Strips all `on*` event handler attributes.
+4. Strips `javascript:` and `data:` URIs from all attribute values.
+5. Restricts `href` / `xlink:href` to same-document fragment references only (`#id`).
+6. Removes any attribute not on the SVG attribute allowlist.
+
+The sanitized string is then set as `innerHTML`. No external dependency (DOMPurify) was added; the inline sanitizer is sufficient for an internal app.
+
+**Residual risk (Low):** A sufficiently sophisticated attacker exploiting a browser HTML-parser quirk could theoretically bypass this sanitizer. If the app becomes internet-facing, replace with DOMPurify.
+
+---
+
+### ENG-4 — HIGH (FIXED): Size check after body is fully buffered into memory
+
+**Severity:** High
+**File:** `backend/src/index.ts` — `POST /api/engineering/upload`
+**Status:** Fixed
+
+**Description:** The original code called `file.arrayBuffer()` (which reads the entire multipart body into memory) and only then checked `buf.length > DWG_MAX_BYTES`. A 500 MB upload would be fully loaded into the Node process heap before being rejected, enabling a trivial memory-exhaustion DoS.
+
+**Fix applied:** Added an early gate that reads the `Content-Length` request header before calling `formData()`. If `Content-Length` exceeds 50 MB, the request is rejected immediately with HTTP 413. The post-buffering check is retained as the definitive gate (since `Content-Length` can be spoofed). Two-layer protection: early rejection for honest clients, hard rejection after buffering for adversarial ones.
+
+---
+
+### ENG-5 — MEDIUM (FIXED): ID not validated as positive integer
+
+**Severity:** Medium
+**File:** `backend/src/index.ts` — `GET /api/engineering/:id/download`, `GET /api/engineering/:id/dwg`
+**Status:** Fixed
+
+**Description:** `parseInt(c.req.param('id'), 10)` returns non-NaN for negative integers. Passing `id = -1` to the parameterised SQL query is safe (returns no rows), but is semantically invalid and constitutes unnecessary attack surface.
+
+**Fix applied:** Both endpoints now check `isNaN(id) || id <= 0` and return HTTP 400.
+
+---
+
+### ENG-6 — MEDIUM: Magic-byte check is necessary but not sufficient
+
+**Severity:** Medium
+**File:** `backend/src/index.ts` — `POST /api/engineering/upload`
+**Status:** Documented (not fully mitigated in code — acceptable for internal app)
+
+**Description:** The upload endpoint checks that the first 2 bytes are `"AC"`. An attacker can craft a file that begins with `AC1032` (valid DWG magic) but contains a malicious payload in the body. Such a file would pass the magic check and be stored. The WASM renderer (`@mlightcad/libredwg-web`) provides a second layer of validation when the file is opened in the viewer — a non-DWG payload would fail to parse. However, the stored binary is served back via the download endpoint, meaning the payload could be retrieved by the uploader. Since uploads require authentication, this risk is limited to authenticated insiders.
+
+**Recommended additional mitigations:**
+1. Validate the full DWG file structure server-side (not just magic bytes) using a server-side DWG parser if available.
+2. Store uploaded files in a dedicated S3 bucket with server-side ClamAV scanning (already planned for the AWS deployment).
+3. Restrict downloads to the user who uploaded the file if strict data isolation is required.
+
+---
+
+### ENG-7 — LOW: WASM sandbox for DWG parsing
+
+**Severity:** Low
+**File:** `frontend/src/views/EngineeringTools.tsx` — `DwgViewerPane`
+**Status:** Documented (no code change required)
+
+**Description:** The `@mlightcad/libredwg-web` WASM module parses the DWG binary in a WebAssembly sandbox. A maliciously crafted DWG binary could exploit a parser vulnerability in the libredwg C code (compiled to WASM). WebAssembly sandboxing limits the blast radius — the WASM module cannot access the DOM directly or make network requests — but a memory-corruption exploit within the WASM linear memory could in theory lead to undefined behaviour in the WASM runtime.
+
+**Risk assessment:** Very low for an internal engineering tool. libredwg is a mature open-source library. The WASM sandbox provides meaningful isolation. Monitor libredwg releases for security patches and update `@mlightcad/libredwg-web` when new versions are released.
+
+---
+
+### ENG-8 — LOW: tRPC engineering router uses publicProcedure for list/byProject
+
+**Severity:** Low
+**File:** `backend/src/router/engineering.ts` — `list`, `byProject` procedures
+**Status:** Documented (acceptable for current internal deployment)
+
+**Description:** The tRPC `list` and `byProject` procedures use `publicProcedure`, meaning they return DWG file metadata (filename, size, version, upload date) to unauthenticated tRPC callers. The actual binary is protected by ENG-1 (download endpoints require auth), but metadata enumeration is possible. For an internal app this is low risk.
+
+**Recommended fix:** Switch `list` and `byProject` to `authedProcedure` when the full auth rollout is complete (see Finding 1.1 in the main audit).
+
+---
+
+### Engineering Tooling Remediation Status
+
+| ID    | Severity | Description                                 | Status  |
+|-------|----------|---------------------------------------------|---------|
+| ENG-1 | Critical | Unauthenticated download endpoints          | Fixed   |
+| ENG-2 | High     | Unsanitized filename in DB and headers      | Fixed   |
+| ENG-3 | High     | SVG innerHTML XSS from WASM output          | Fixed   |
+| ENG-4 | High     | Size check after full body buffering        | Fixed   |
+| ENG-5 | Medium   | ID not validated as positive integer        | Fixed   |
+| ENG-6 | Medium   | Magic-byte check insufficient               | Documented |
+| ENG-7 | Low      | WASM DWG parsing attack surface             | Documented |
+| ENG-8 | Low      | publicProcedure on list/byProject           | Documented |

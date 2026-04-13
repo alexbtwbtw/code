@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { trpc } from '../trpc'
+import { getCurrentUser } from '../auth'
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
@@ -29,17 +30,58 @@ export function useDeleteDwgFile() {
   })
 }
 
+// ── Auth headers helper ───────────────────────────────────────────────────────
+
+/**
+ * Build the auth headers that the engineering REST endpoints require.
+ * These mirror the headers sent by the tRPC client (see trpc.ts).
+ */
+function authHeaders(): HeadersInit {
+  const user = getCurrentUser()
+  if (!user) return {}
+  return {
+    'x-user-role': user.role,
+    'x-user-id':   String(user.id),
+    'x-user-name': user.name,
+  }
+}
+
 // ── Download helper ───────────────────────────────────────────────────────────
 
 /**
- * Triggers a browser download of the original DWG binary from the backend
- * raw endpoint `/api/engineering/:id/download`.
+ * Fetches the DWG binary with auth headers and triggers a browser download.
+ * Using fetch (rather than a bare <a> link) is required because the backend
+ * download endpoint now requires the x-user-role header for authentication.
  */
-export function downloadDwg(id: number, fileName: string) {
-  const a = document.createElement('a')
-  a.href = `/api/engineering/${id}/download`
-  a.download = fileName
+export async function downloadDwg(id: number, fileName: string): Promise<void> {
+  const res = await fetch(`/api/engineering/${id}/download`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) {
+    console.error(`DWG download failed: HTTP ${res.status}`)
+    return
+  }
+  const blob = await res.blob()
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download  = fileName
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+// ── Fetch DWG bytes for WASM viewer ──────────────────────────────────────────
+
+/**
+ * Fetches the raw DWG bytes for the WASM renderer with auth headers.
+ * The /api/engineering/:id/dwg endpoint requires authentication.
+ */
+export async function fetchDwgBytes(id: number): Promise<ArrayBuffer> {
+  const res = await fetch(`/api/engineering/${id}/dwg`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.arrayBuffer()
 }
