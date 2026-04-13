@@ -42,6 +42,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
     : (page.view === 'add') ? 'more'
     : (page.view === 'requirements') ? 'more'
     : (page.view === 'company-teams') ? 'more'
+    : (page.view === 'engineering') ? 'more'
     : (page.view === 'finance-report') ? 'reports'
     : (page.view === 'time-report') ? 'reports'
     : (page.view === 'reports') ? 'reports'
@@ -141,6 +142,11 @@ export default function Layout({ page, onNavigate, children }: Props) {
                     label={t('companyTeamsNav')}
                     active={page.view === 'company-teams'}
                     onClick={() => navigate({ view: 'company-teams' })}
+                  />
+                  <DropdownBtn
+                    label={t('navEngineering')}
+                    active={page.view === 'engineering'}
+                    onClick={() => navigate({ view: 'engineering' })}
                   />
                 </div>
               )}

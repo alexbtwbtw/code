@@ -298,6 +298,22 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_project_fixed_costs_project
     ON project_fixed_costs(project_id, cost_date DESC);
 
+  CREATE TABLE IF NOT EXISTS dwg_files (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id   INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+    file_name    TEXT NOT NULL,
+    original_dwg BLOB NOT NULL,
+    dxf_content  TEXT,
+    version      TEXT,
+    status       TEXT NOT NULL DEFAULT 'pending',
+    error_msg    TEXT,
+    file_size    INTEGER NOT NULL,
+    uploaded_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_dwg_files_project
+    ON dwg_files(project_id);
+
   CREATE TABLE IF NOT EXISTS audit_log (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER,
