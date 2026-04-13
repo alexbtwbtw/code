@@ -603,6 +603,17 @@ export const pt: Record<TranslationKey, string> = {
   dwgCompareRendering: 'A processar ficheiros...',
   dwgCompareNoFiles: 'Carregue pelo menos dois ficheiros DWG para comparar',
 
+  // DWG date patching
+  dwgDatesInFile: 'Datas no Ficheiro',
+  dwgScanDates: 'Procurar Datas no Ficheiro',
+  dwgFoundDates: 'Encontrado(s) {n} campo(s) de data no cabeçalho',
+  dwgNoDatesFound: 'Nenhum campo de data encontrado neste ficheiro',
+  dwgPatchDate: 'Atualizar Todas as Datas Para',
+  dwgPatchFile: 'Escrever no Ficheiro',
+  dwgPatchSuccess: 'Datas atualizadas no ficheiro com sucesso',
+  dwgPatchError: 'Falha ao atualizar o ficheiro',
+  dwgPatchWarning: 'Isto modifica o ficheiro DWG armazenado. O original não pode ser recuperado após a alteração.',
+
   // Misc
   optional: '(opcional)',
   na: 'N/D',

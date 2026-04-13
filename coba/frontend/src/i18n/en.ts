@@ -601,6 +601,17 @@ export const en = {
   dwgCompareRendering: 'Rendering files...',
   dwgCompareNoFiles: 'Upload at least two DWG files to compare',
 
+  // DWG date patching
+  dwgDatesInFile: 'Dates in File',
+  dwgScanDates: 'Scan File for Dates',
+  dwgFoundDates: 'Found {n} date field(s) in file header',
+  dwgNoDatesFound: 'No date fields found in this file',
+  dwgPatchDate: 'Update All Dates To',
+  dwgPatchFile: 'Write to File',
+  dwgPatchSuccess: 'Dates updated in file successfully',
+  dwgPatchError: 'Failed to patch file',
+  dwgPatchWarning: 'This modifies the stored DWG binary. The original cannot be recovered after patching.',
+
   // Misc
   optional: '(optional)',
   na: 'N/A',

@@ -275,6 +275,182 @@ function DwgViewerPane({ id }: { id: number }) {
   )
 }
 
+// ── DWG date-patching helpers ─────────────────────────────────────────────────
+
+type DateCandidate = { offset: number; date: string; julian: number }
+
+function fmtIso(iso: string): string {
+  try { return new Date(iso).toLocaleString() } catch { return iso }
+}
+
+// ── Dates in File panel ───────────────────────────────────────────────────────
+
+function DatesInFilePanel({ fileId }: { fileId: number }) {
+  const { t } = useTranslation()
+  const [scanning, setScanning]     = useState(false)
+  const [candidates, setCandidates] = useState<DateCandidate[] | null>(null)
+  const [scanError, setScanError]   = useState<string | null>(null)
+  const [newDate, setNewDate]       = useState('')
+  const [patching, setPatching]     = useState(false)
+  const [patchMsg, setPatchMsg]     = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function handleScan() {
+    setScanning(true)
+    setScanError(null)
+    setCandidates(null)
+    setPatchMsg(null)
+    try {
+      const user = getCurrentUser()
+      const headers: HeadersInit = user
+        ? { 'x-user-role': user.role, 'x-user-id': String(user.id), 'x-user-name': user.name }
+        : {}
+      const res = await fetch(`/api/engineering/${fileId}/dates`, { headers })
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '')
+        let msg = txt
+        try { msg = (JSON.parse(txt) as { error?: string }).error ?? txt } catch { /* raw */ }
+        setScanError(msg || `Scan failed (HTTP ${res.status})`)
+        return
+      }
+      const data = (await res.json()) as { candidates: DateCandidate[] }
+      setCandidates(data.candidates)
+    } catch (e) {
+      setScanError(e instanceof Error ? e.message : 'Scan failed')
+    } finally {
+      setScanning(false)
+    }
+  }
+
+  async function handlePatch() {
+    if (!candidates || candidates.length === 0 || !newDate) return
+    setPatching(true)
+    setPatchMsg(null)
+    try {
+      const user = getCurrentUser()
+      const headers: HeadersInit = user
+        ? {
+            'x-user-role': user.role,
+            'x-user-id': String(user.id),
+            'x-user-name': user.name,
+            'Content-Type': 'application/json',
+          }
+        : { 'Content-Type': 'application/json' }
+      const offsets = candidates.map(c => c.offset)
+      const res = await fetch(`/api/engineering/${fileId}/patch-dates`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ offsets, newDate }),
+      })
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '')
+        let msg = txt
+        try { msg = (JSON.parse(txt) as { error?: string }).error ?? txt } catch { /* raw */ }
+        setPatchMsg({ ok: false, text: `${t('dwgPatchError')}: ${msg}` })
+        return
+      }
+      setPatchMsg({ ok: true, text: t('dwgPatchSuccess') })
+      // Re-scan to show updated dates
+      void handleScan()
+    } catch (e) {
+      setPatchMsg({ ok: false, text: e instanceof Error ? e.message : t('dwgPatchError') })
+    } finally {
+      setPatching(false)
+    }
+  }
+
+  return (
+    <div className="eng-meta-section">
+      <p className="eng-meta-section-title">{t('dwgDatesInFile')}</p>
+
+      <button
+        className="btn eng-save-btn"
+        onClick={() => { void handleScan() }}
+        disabled={scanning}
+        style={{ marginBottom: '0.75rem' }}
+      >
+        {scanning ? '…' : t('dwgScanDates')}
+      </button>
+
+      {scanError && (
+        <p className="eng-error" style={{ marginBottom: '0.5rem' }}>{scanError}</p>
+      )}
+
+      {candidates !== null && candidates.length === 0 && (
+        <p className="eng-meta-value" style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+          {t('dwgNoDatesFound')}
+        </p>
+      )}
+
+      {candidates !== null && candidates.length > 0 && (
+        <>
+          <p className="eng-meta-value" style={{ marginBottom: '0.5rem' }}>
+            {t('dwgFoundDates').replace('{n}', String(candidates.length))}
+          </p>
+
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '0.75rem', fontSize: '0.8rem' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', padding: '2px 6px', color: 'var(--color-text-muted)' }}>Offset</th>
+                <th style={{ textAlign: 'left', padding: '2px 6px', color: 'var(--color-text-muted)' }}>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {candidates.map(c => (
+                <tr key={c.offset}>
+                  <td style={{ padding: '2px 6px', fontFamily: 'monospace' }}>{c.offset}</td>
+                  <td style={{ padding: '2px 6px' }}>{fmtIso(c.date)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="eng-meta-field">
+            <label className="eng-field-label">{t('dwgPatchDate')}</label>
+            <input
+              className="eng-input"
+              type="date"
+              value={newDate}
+              onChange={e => setNewDate(e.target.value)}
+            />
+          </div>
+
+          {newDate && (
+            <p className="eng-patch-warning" style={{
+              background: 'rgba(220,120,0,0.12)',
+              border: '1px solid rgba(220,120,0,0.4)',
+              borderRadius: '4px',
+              padding: '0.5rem 0.75rem',
+              fontSize: '0.8rem',
+              color: 'var(--color-text-muted)',
+              marginBottom: '0.5rem',
+            }}>
+              ⚠ {t('dwgPatchWarning')}
+            </p>
+          )}
+
+          <button
+            className="btn eng-save-btn"
+            onClick={() => { void handlePatch() }}
+            disabled={patching || !newDate}
+          >
+            {patching ? '…' : t('dwgPatchFile')}
+          </button>
+
+          {patchMsg && (
+            <p style={{
+              marginTop: '0.5rem',
+              color: patchMsg.ok ? 'var(--color-success, #4caf50)' : 'var(--color-error, #f44)',
+              fontSize: '0.85rem',
+            }}>
+              {patchMsg.text}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── Metadata + Edit panel ─────────────────────────────────────────────────────
 
 function MetadataPanel({ file }: { file: DwgFile }) {
@@ -370,6 +546,9 @@ function MetadataPanel({ file }: { file: DwgFile }) {
           {saved ? `✓ ${t('dwgSaved')}` : t('dwgSave')}
         </button>
       </div>
+
+      {/* Dates in File section */}
+      <DatesInFilePanel fileId={file.id} />
     </div>
   )
 }

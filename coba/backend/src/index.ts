@@ -239,6 +239,188 @@ app.get('/api/engineering/:id/dwg', (c) => {
   })
 })
 
+// ── Engineering: DWG date scanning ───────────────────────────────────────────
+
+const JD_MIN = 2444239.5  // Jan 1 1980
+const JD_MAX = 2469807.5  // Dec 31 2050
+
+function dateToJulian(date: Date): number {
+  return date.getTime() / 86400000 + 2440587.5
+}
+
+function julianToDate(jd: number): Date {
+  return new Date((jd - 2440587.5) * 86400000)
+}
+
+function findDateCandidates(buf: Buffer): { offset: number; julian: number; date: Date }[] {
+  const results: { offset: number; julian: number; date: Date }[] = []
+  for (let i = 0; i <= buf.length - 8; i++) {
+    const val = buf.readDoubleLE(i)
+    if (val >= JD_MIN && val <= JD_MAX && Number.isFinite(val)) {
+      results.push({ offset: i, julian: val, date: julianToDate(val) })
+    }
+  }
+  return results
+}
+
+/**
+ * Group candidates within 512 bytes of each other; return the largest group.
+ */
+function groupCandidates(
+  candidates: { offset: number; julian: number; date: Date }[],
+): { offset: number; julian: number; date: Date }[] {
+  if (candidates.length === 0) return []
+
+  // Sort by offset
+  const sorted = [...candidates].sort((a, b) => a.offset - b.offset)
+
+  let bestGroup: typeof sorted = []
+  let current: typeof sorted = [sorted[0]]
+
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i].offset - sorted[i - 1].offset <= 512) {
+      current.push(sorted[i])
+    } else {
+      if (current.length > bestGroup.length) bestGroup = current
+      current = [sorted[i]]
+    }
+  }
+  if (current.length > bestGroup.length) bestGroup = current
+
+  return bestGroup
+}
+
+/**
+ * Read the original_dwg buffer from the DB for a given id.
+ * Returns null if not found.
+ */
+function readDwgBuffer(id: number): Buffer | null {
+  const row = db.prepare(`SELECT original_dwg FROM dwg_files WHERE id = ?`).get(id) as
+    { original_dwg: Buffer | string } | undefined
+  if (!row) return null
+  const rawData = row.original_dwg as unknown as Buffer | string
+  return Buffer.isBuffer(rawData)
+    ? Buffer.from(rawData.buffer.slice(rawData.byteOffset, rawData.byteOffset + rawData.byteLength) as ArrayBuffer)
+    : Buffer.from(rawData as string, 'binary')
+}
+
+app.get('/api/engineering/:id/dates', (c) => {
+  const authErr = requireRole(c)
+  if (authErr) return authErr
+
+  const id = parseInt(c.req.param('id'), 10)
+  if (isNaN(id) || id <= 0) return c.json({ error: 'Invalid id' }, 400)
+
+  const buf = readDwgBuffer(id)
+  if (!buf) return c.json({ error: 'File not found' }, 404)
+
+  // Validate magic bytes
+  if (buf.length < 6 || buf.subarray(0, 2).toString('ascii') !== 'AC') {
+    return c.json({ error: 'Invalid DWG file (magic bytes mismatch)' }, 400)
+  }
+
+  const allCandidates = findDateCandidates(buf)
+  const group = groupCandidates(allCandidates)
+
+  const candidates = group.map(cand => ({
+    offset: cand.offset,
+    date: cand.date.toISOString(),
+    julian: cand.julian,
+  }))
+
+  return c.json({ candidates })
+})
+
+app.post('/api/engineering/:id/patch-dates', async (c) => {
+  const authErr = requireRole(c)
+  if (authErr) return authErr
+
+  const id = parseInt(c.req.param('id'), 10)
+  if (isNaN(id) || id <= 0) return c.json({ error: 'Invalid id' }, 400)
+
+  let body: { offsets?: unknown; newDate?: unknown }
+  try {
+    body = await c.req.json() as { offsets?: unknown; newDate?: unknown }
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const { offsets, newDate } = body
+
+  // Validate offsets
+  if (!Array.isArray(offsets) || offsets.length === 0) {
+    return c.json({ error: 'offsets must be a non-empty array' }, 400)
+  }
+  for (const o of offsets) {
+    if (typeof o !== 'number' || !Number.isInteger(o) || o < 0) {
+      return c.json({ error: 'Each offset must be a non-negative integer' }, 400)
+    }
+  }
+
+  // Validate newDate
+  if (typeof newDate !== 'string' || !newDate) {
+    return c.json({ error: 'newDate must be a non-empty string' }, 400)
+  }
+  const parsedDate = new Date(newDate)
+  if (isNaN(parsedDate.getTime())) {
+    return c.json({ error: 'newDate is not a valid date' }, 400)
+  }
+  const newJulian = dateToJulian(parsedDate)
+  if (newJulian < JD_MIN || newJulian > JD_MAX) {
+    return c.json({ error: 'newDate must be in range 1980–2050' }, 400)
+  }
+
+  const buf = readDwgBuffer(id)
+  if (!buf) return c.json({ error: 'File not found' }, 404)
+
+  // Validate magic bytes
+  if (buf.length < 6 || buf.subarray(0, 2).toString('ascii') !== 'AC') {
+    return c.json({ error: 'Invalid DWG file (magic bytes mismatch)' }, 400)
+  }
+
+  // Validate all offsets are within file bounds
+  for (const o of offsets as number[]) {
+    if (o + 8 > buf.length) {
+      return c.json({ error: `Offset ${o} is out of file bounds (file size: ${buf.length})` }, 400)
+    }
+  }
+
+  // Work on a COPY of the buffer — never mutate the original
+  const patched = Buffer.from(buf)
+
+  for (const o of offsets as number[]) {
+    patched.writeDoubleLE(newJulian, o)
+  }
+
+  // Post-patch validations
+  // 1. Magic bytes still valid
+  if (patched.subarray(0, 2).toString('ascii') !== 'AC') {
+    return c.json({ error: 'Patch corrupted the file header (magic bytes)' }, 500)
+  }
+
+  // 2. File size unchanged
+  if (patched.length !== buf.length) {
+    return c.json({ error: 'Patch changed file size unexpectedly' }, 500)
+  }
+
+  // 3. Re-read each offset and confirm it decodes to the expected Julian date (within 0.001 tolerance)
+  for (const o of offsets as number[]) {
+    const readBack = patched.readDoubleLE(o)
+    if (Math.abs(readBack - newJulian) > 0.001) {
+      return c.json({ error: `Verification failed at offset ${o}: expected ${newJulian}, got ${readBack}` }, 500)
+    }
+  }
+
+  // Save patched buffer back to DB
+  db.prepare(`UPDATE dwg_files SET original_dwg = ? WHERE id = ?`).run(patched, id)
+
+  return c.json({
+    success: true,
+    patchedOffsets: offsets,
+    newJulian,
+  })
+})
+
 app.all('/trpc/*', (c) =>
   fetchRequestHandler({
     endpoint: '/trpc',
