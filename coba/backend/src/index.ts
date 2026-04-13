@@ -5,10 +5,8 @@ import { serveStatic } from '@hono/node-server/serve-static'
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { appRouter } from './router'
 import type { AppContext } from './trpc'
-import { readFileSync, existsSync, writeFileSync, mkdirSync, rmSync, mkdtempSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import path from 'path'
-import { tmpdir } from 'os'
-import { spawn } from 'child_process'
 import { db } from './db'
 
 // ── DWG helpers ────────────────────────────────────────────────────────────────
@@ -23,56 +21,18 @@ function detectDwgVersion(buf: Buffer): string | null {
   if (!header.startsWith('AC')) return null
   const code = header.slice(2)
   const versionMap: Record<string, string> = {
+    '1006': 'R10',
+    '1009': 'R12',
+    '1012': 'R13',
+    '1014': 'R14',
     '1015': '2000',
     '1018': '2004',
     '1021': '2007',
     '1024': '2010',
     '1027': '2013',
     '1032': '2018+',
-    '1006': 'R10',
-    '1009': 'R11/R12',
-    '1012': 'R13',
-    '1014': 'R14',
   }
   return versionMap[code] ?? `AC${code}`
-}
-
-/**
- * Convert DWG bytes to DXF text using ODA File Converter CLI.
- * Returns the DXF string on success or throws on failure.
- */
-async function convertDwgToDxf(dwgBuffer: Buffer): Promise<string> {
-  const tempDir = mkdtempSync(path.join(tmpdir(), 'dwg-'))
-  const inputPath = path.join(tempDir, 'input.dwg')
-  const outputDir = path.join(tempDir, 'out')
-  mkdirSync(outputDir)
-  writeFileSync(inputPath, dwgBuffer)
-
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const proc = spawn(
-        'ODAFileConverter',
-        [tempDir, outputDir, 'ACAD2018', 'DXF', '0', '1'],
-        {
-          env: {
-            ...process.env,
-            PATH: `${process.env.PATH};C:\\Program Files\\ODA\\ODAFileConverter`,
-          },
-        },
-      )
-      proc.on('close', (code) => {
-        if (code === 0) resolve()
-        else reject(new Error(`ODA converter exited with code ${code}`))
-      })
-      proc.on('error', reject)
-    })
-
-    const dxfPath = path.join(outputDir, 'input.dxf')
-    const dxfContent = readFileSync(dxfPath, 'utf8')
-    return dxfContent
-  } finally {
-    rmSync(tempDir, { recursive: true, force: true })
-  }
 }
 
 const app = new Hono()
@@ -150,33 +110,19 @@ app.post('/api/engineering/upload', async (c) => {
     return c.json({ error: 'Invalid DWG file (magic bytes mismatch)' }, 400)
   }
 
-  const version = detectDwgVersion(buf)
+  const dwgVersion = detectDwgVersion(buf)
   const projectIdRaw = formData.get('projectId')
   const projectId = projectIdRaw ? parseInt(String(projectIdRaw), 10) : null
 
-  // Insert as pending
   const result = db.prepare(`
-    INSERT INTO dwg_files (project_id, file_name, original_dwg, version, status, file_size)
-    VALUES (?, ?, ?, ?, 'pending', ?)
-  `).run(projectId ?? null, fileName, buf, version, buf.length)
+    INSERT INTO dwg_files (project_id, file_name, display_name, original_dwg, dwg_version, file_size)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(projectId ?? null, fileName, fileName, buf, dwgVersion, buf.length)
 
   const id = Number(result.lastInsertRowid)
+  const row = db.prepare(`SELECT uploaded_at FROM dwg_files WHERE id = ?`).get(id) as { uploaded_at: string }
 
-  // Trigger async conversion — does not block the response
-  ;(async () => {
-    db.prepare(`UPDATE dwg_files SET status = 'converting' WHERE id = ?`).run(id)
-    try {
-      const dxfContent = await convertDwgToDxf(buf)
-      db.prepare(`UPDATE dwg_files SET status = 'ready', dxf_content = ? WHERE id = ?`).run(dxfContent, id)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err)
-      const isNotInstalled = msg.includes('ENOENT') || msg.includes('not found') || msg.includes('spawn')
-      const errorMsg = isNotInstalled ? 'ODA File Converter not installed' : msg
-      db.prepare(`UPDATE dwg_files SET status = 'failed', error_msg = ? WHERE id = ?`).run(errorMsg, id)
-    }
-  })().catch(() => {/* already handled above */})
-
-  return c.json({ id, fileName, version, status: 'pending' }, 201)
+  return c.json({ id, fileName, dwgVersion, fileSize: buf.length, uploadedAt: row.uploaded_at }, 201)
 })
 
 // ── Engineering: DWG download ──────────────────────────────────────────────────
@@ -200,6 +146,29 @@ app.get('/api/engineering/:id/download', (c) => {
     headers: {
       'Content-Type': 'application/octet-stream',
       'Content-Disposition': `attachment; filename="${safeName}"`,
+      'Content-Length': String(buf.length),
+    },
+  })
+})
+
+// ── Engineering: serve raw DWG bytes for WASM viewer ──────────────────────────
+app.get('/api/engineering/:id/dwg', (c) => {
+  const id = parseInt(c.req.param('id'), 10)
+  if (isNaN(id)) return c.json({ error: 'Invalid id' }, 400)
+
+  const row = db.prepare(`SELECT original_dwg FROM dwg_files WHERE id = ?`).get(id) as
+    { original_dwg: Buffer } | undefined
+  if (!row) return c.json({ error: 'File not found' }, 404)
+
+  const rawData = row.original_dwg as unknown as Buffer | string
+  const buf: Buffer<ArrayBuffer> = Buffer.isBuffer(rawData)
+    ? Buffer.from(rawData.buffer.slice(rawData.byteOffset, rawData.byteOffset + rawData.byteLength) as ArrayBuffer)
+    : Buffer.from(rawData as string, 'binary')
+
+  return new Response(buf, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/octet-stream',
       'Content-Length': String(buf.length),
     },
   })

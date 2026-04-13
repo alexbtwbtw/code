@@ -9,6 +9,9 @@ export default defineConfig({
       '@backend': path.resolve(__dirname, '../backend/src'),
     },
   },
+  optimizeDeps: {
+    exclude: ['@mlightcad/libredwg-web'],
+  },
   server: {
     proxy: {
       '/api': 'http://localhost:3000',

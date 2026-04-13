@@ -11,14 +11,15 @@ export function useDwgFilesByProject(projectId: number) {
   return useQuery(trpc.engineering.byProject.queryOptions({ projectId }))
 }
 
-export function useGetDxf(id: number | null) {
-  return useQuery({
-    ...trpc.engineering.getDxf.queryOptions({ id: id ?? 0 }),
-    enabled: id != null,
+// ── Mutations ─────────────────────────────────────────────────────────────────
+
+export function useUpdateDwgFile() {
+  const qc = useQueryClient()
+  return useMutation({
+    ...trpc.engineering.update.mutationOptions(),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: [['engineering']] }) },
   })
 }
-
-// ── Mutations ─────────────────────────────────────────────────────────────────
 
 export function useDeleteDwgFile() {
   const qc = useQueryClient()

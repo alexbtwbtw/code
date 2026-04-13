@@ -2425,3 +2425,130 @@ div.tagged-project-row:hover { border-color: var(--border); }
 }
 
 .eng-files-tab { display: flex; flex-direction: column; }
+
+/* Expanded inline viewer + metadata */
+.eng-expanded {
+  display: flex;
+  gap: 16px;
+  margin-top: 2px;
+  padding: 16px;
+  background: var(--panel, rgba(255,255,255,0.02));
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+
+.eng-viewer-col {
+  flex: 3;
+  min-width: 0;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.eng-meta-col {
+  flex: 2;
+  min-width: 240px;
+  max-width: 340px;
+}
+
+.eng-svg-container {
+  flex: 1;
+  min-height: 400px;
+  background: #0d1520;
+  border-radius: 8px;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eng-svg-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Metadata panel */
+.eng-meta-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eng-meta-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.eng-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eng-meta-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-md);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.eng-meta-value {
+  font-size: 13px;
+  color: var(--text-lt);
+}
+
+.eng-version-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(74,144,217,0.15);
+  color: var(--accent);
+}
+
+.eng-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-md);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+.eng-input {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--input-bg, rgba(255,255,255,0.05));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-lt);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.eng-input:focus { outline: none; border-color: var(--accent); }
+
+.eng-textarea {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--input-bg, rgba(255,255,255,0.05));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-lt);
+  font-size: 13px;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.eng-textarea:focus { outline: none; border-color: var(--accent); }
+
+.eng-save-btn { margin-top: 4px; width: 100%; }

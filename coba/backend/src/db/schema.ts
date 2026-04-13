@@ -299,16 +299,16 @@ db.exec(`
     ON project_fixed_costs(project_id, cost_date DESC);
 
   CREATE TABLE IF NOT EXISTS dwg_files (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id   INTEGER REFERENCES projects(id) ON DELETE SET NULL,
-    file_name    TEXT NOT NULL,
-    original_dwg BLOB NOT NULL,
-    dxf_content  TEXT,
-    version      TEXT,
-    status       TEXT NOT NULL DEFAULT 'pending',
-    error_msg    TEXT,
-    file_size    INTEGER NOT NULL,
-    uploaded_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id    INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+    file_name     TEXT NOT NULL,
+    display_name  TEXT NOT NULL,
+    notes         TEXT NOT NULL DEFAULT '',
+    custom_date   TEXT,
+    original_dwg  BLOB NOT NULL,
+    dwg_version   TEXT,
+    file_size     INTEGER NOT NULL,
+    uploaded_at   TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
   CREATE INDEX IF NOT EXISTS idx_dwg_files_project

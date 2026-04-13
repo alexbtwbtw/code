@@ -6,34 +6,37 @@ interface RawDwgFile {
   id: number
   project_id: number | null
   file_name: string
-  dxf_content: string | null
-  version: string | null
-  status: string
-  error_msg: string | null
+  display_name: string
+  notes: string
+  custom_date: string | null
+  dwg_version: string | null
   file_size: number
   uploaded_at: string
 }
 
 function mapDwgFile(row: RawDwgFile) {
   return {
-    id:         row.id,
-    projectId:  row.project_id,
-    fileName:   row.file_name,
-    version:    row.version,
-    status:     row.status,
-    errorMsg:   row.error_msg,
-    fileSize:   row.file_size,
-    uploadedAt: row.uploaded_at,
+    id:          row.id,
+    projectId:   row.project_id,
+    fileName:    row.file_name,
+    displayName: row.display_name,
+    notes:       row.notes,
+    customDate:  row.custom_date,
+    dwgVersion:  row.dwg_version,
+    fileSize:    row.file_size,
+    uploadedAt:  row.uploaded_at,
   }
 }
 
+const LIST_SQL = `
+  SELECT id, project_id, file_name, display_name, notes, custom_date, dwg_version, file_size, uploaded_at
+  FROM dwg_files
+  ORDER BY uploaded_at DESC
+`
+
 export const engineeringRouter = router({
   list: publicProcedure.query(() => {
-    const rows = db.prepare(`
-      SELECT id, project_id, file_name, dxf_content, version, status, error_msg, file_size, uploaded_at
-      FROM dwg_files
-      ORDER BY uploaded_at DESC
-    `).all() as RawDwgFile[]
+    const rows = db.prepare(LIST_SQL).all() as RawDwgFile[]
     return rows.map(mapDwgFile)
   }),
 
@@ -41,7 +44,7 @@ export const engineeringRouter = router({
     .input(z.object({ projectId: z.number().int() }))
     .query(({ input }) => {
       const rows = db.prepare(`
-        SELECT id, project_id, file_name, dxf_content, version, status, error_msg, file_size, uploaded_at
+        SELECT id, project_id, file_name, display_name, notes, custom_date, dwg_version, file_size, uploaded_at
         FROM dwg_files
         WHERE project_id = ?
         ORDER BY uploaded_at DESC
@@ -49,18 +52,26 @@ export const engineeringRouter = router({
       return rows.map(mapDwgFile)
     }),
 
-  getDxf: publicProcedure
-    .input(z.object({ id: z.number().int() }))
-    .query(({ input }) => {
-      const row = db.prepare(`
-        SELECT dxf_content, status, error_msg FROM dwg_files WHERE id = ?
-      `).get(input.id) as { dxf_content: string | null; status: string; error_msg: string | null } | undefined
-      if (!row) return null
-      return {
-        dxfContent: row.dxf_content,
-        status:     row.status,
-        errorMsg:   row.error_msg,
-      }
+  update: authedProcedure
+    .input(z.object({
+      id:          z.number().int(),
+      displayName: z.string().min(1).optional(),
+      notes:       z.string().optional(),
+      customDate:  z.string().nullable().optional(),
+    }))
+    .mutation(({ input }) => {
+      const sets: string[] = []
+      const vals: unknown[] = []
+
+      if (input.displayName !== undefined) { sets.push('display_name = ?'); vals.push(input.displayName) }
+      if (input.notes       !== undefined) { sets.push('notes = ?');        vals.push(input.notes) }
+      if (input.customDate  !== undefined) { sets.push('custom_date = ?');  vals.push(input.customDate) }
+
+      if (sets.length === 0) return { success: true }
+
+      vals.push(input.id)
+      db.prepare(`UPDATE dwg_files SET ${sets.join(', ')} WHERE id = ?`).run(...vals)
+      return { success: true }
     }),
 
   delete: authedProcedure

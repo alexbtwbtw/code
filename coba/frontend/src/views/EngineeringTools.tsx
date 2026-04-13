@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from '../i18n/context'
-import { useDwgFiles, useDeleteDwgFile, useGetDxf, downloadDwg } from '../api/engineering'
+import { useDwgFiles, useUpdateDwgFile, useDeleteDwgFile, downloadDwg } from '../api/engineering'
 import { useCurrentUser } from '../auth'
-import { DxfViewer } from 'dxf-viewer'
-import * as THREE from 'three'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -11,73 +9,192 @@ type DwgFile = {
   id: number
   projectId: number | null
   fileName: string
-  version: string | null
-  status: string
-  errorMsg: string | null
+  displayName: string
+  notes: string
+  customDate: string | null
+  dwgVersion: string | null
   fileSize: number
   uploadedAt: string
 }
 
-// ── DXF Viewer component ───────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-function DxfViewerPane({ dxfContent }: { dxfContent: string }) {
+function fmtSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${bytes} B`
+}
+
+function fmtDate(iso: string): string {
+  try { return new Date(iso).toLocaleDateString() } catch { return iso }
+}
+
+// ── DWG Viewer ────────────────────────────────────────────────────────────────
+
+function DwgViewerPane({ id }: { id: number }) {
+  const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
-  const viewerRef = useRef<InstanceType<typeof DxfViewer> | null>(null)
+  const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
 
   useEffect(() => {
-    if (!containerRef.current) return
+    let cancelled = false
+    setStatus('loading')
 
-    // Create viewer
-    const viewer = new DxfViewer(containerRef.current, {
-      autoResize: true,
-      clearColor: new THREE.Color(0x1a2340),
-      clearAlpha: 1,
-      antialias: true,
-      blackWhiteInversion: false,
-    })
-    viewerRef.current = viewer
+    ;(async () => {
+      try {
+        // Fetch raw DWG bytes
+        const response = await fetch(`/api/engineering/${id}/dwg`)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const arrayBuffer = await response.arrayBuffer()
 
-    // Load DXF from a blob URL
-    const blob = new Blob([dxfContent], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
+        // Dynamically import to avoid bundler issues with WASM
+        const { LibreDwg, Dwg_File_Type } = await import('@mlightcad/libredwg-web')
+        if (cancelled) return
 
-    viewer.Load({ url, fonts: null, workerFactory: null }).catch((err: unknown) => {
-      console.error('DXF load error', err)
-    }).finally(() => {
-      URL.revokeObjectURL(url)
-    })
+        const libredwg = await LibreDwg.create()
+        if (cancelled) return
 
-    return () => {
-      viewer.Destroy()
-      viewerRef.current = null
-    }
-  }, [dxfContent])
+        const dataPtr = libredwg.dwg_read_data(arrayBuffer, Dwg_File_Type.DWG)
+        if (dataPtr == null) throw new Error('Failed to read DWG data')
+
+        const db = libredwg.convert(dataPtr)
+        libredwg.dwg_free(dataPtr)
+
+        const svg = libredwg.dwg_to_svg(db)
+
+        if (!cancelled && containerRef.current) {
+          containerRef.current.innerHTML = svg
+          // Make the embedded SVG responsive
+          const svgEl = containerRef.current.querySelector('svg')
+          if (svgEl) {
+            svgEl.style.width = '100%'
+            svgEl.style.height = '100%'
+          }
+          setStatus('ok')
+        }
+      } catch (err) {
+        console.warn('DWG render error:', err)
+        if (!cancelled) setStatus('error')
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [id])
+
+  if (status === 'loading') {
+    return (
+      <div className="eng-viewer-placeholder">
+        <span className="eng-drop-spinner" />
+        <span>{t('loading')}</span>
+      </div>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="eng-viewer-placeholder eng-viewer-placeholder--error">
+        <span>⚠ {t('dwgPreviewUnavailable')}</span>
+      </div>
+    )
+  }
 
   return (
     <div
       ref={containerRef}
-      style={{ width: '100%', height: '500px', borderRadius: '8px', overflow: 'hidden' }}
+      className="eng-svg-container"
     />
   )
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+// ── Metadata + Edit panel ─────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: string }) {
+function MetadataPanel({ file }: { file: DwgFile }) {
   const { t } = useTranslation()
-  const label =
-    status === 'ready'      ? t('dwgReady')
-    : status === 'converting' ? t('dwgConverting')
-    : status === 'failed'     ? t('dwgFailed')
-    : t('dwgPending')
+  const updateMutation = useUpdateDwgFile()
 
-  const cls =
-    status === 'ready'      ? 'eng-badge eng-badge--ready'
-    : status === 'converting' ? 'eng-badge eng-badge--converting'
-    : status === 'failed'     ? 'eng-badge eng-badge--failed'
-    : 'eng-badge eng-badge--pending'
+  const [displayName, setDisplayName] = useState(file.displayName)
+  const [notes, setNotes]             = useState(file.notes)
+  const [customDate, setCustomDate]   = useState(file.customDate ?? '')
+  const [saved, setSaved]             = useState(false)
 
-  return <span className={cls}>{label}</span>
+  function handleSave() {
+    updateMutation.mutate(
+      {
+        id: file.id,
+        displayName,
+        notes,
+        customDate: customDate || null,
+      },
+      {
+        onSuccess: () => {
+          setSaved(true)
+          setTimeout(() => setSaved(false), 2000)
+        },
+      },
+    )
+  }
+
+  return (
+    <div className="eng-meta-panel">
+      {/* Read-only info */}
+      <div className="eng-meta-section">
+        <div className="eng-meta-row">
+          <span className="eng-meta-label">{t('dwgFileName')}</span>
+          <span className="eng-meta-value">{file.fileName}</span>
+        </div>
+        {file.dwgVersion && (
+          <div className="eng-meta-row">
+            <span className="eng-meta-label">{t('dwgVersion')}</span>
+            <span className="eng-meta-value">
+              <span className="eng-version-badge">AutoCAD {file.dwgVersion}</span>
+            </span>
+          </div>
+        )}
+        <div className="eng-meta-row">
+          <span className="eng-meta-label">{t('dwgFileSize')}</span>
+          <span className="eng-meta-value">{fmtSize(file.fileSize)}</span>
+        </div>
+        <div className="eng-meta-row">
+          <span className="eng-meta-label">{t('dwgUploadedAt')}</span>
+          <span className="eng-meta-value">{fmtDate(file.uploadedAt)}</span>
+        </div>
+      </div>
+
+      {/* Editable fields */}
+      <div className="eng-meta-section">
+        <label className="eng-field-label">{t('dwgDisplayName')}</label>
+        <input
+          className="eng-input"
+          value={displayName}
+          onChange={e => setDisplayName(e.target.value)}
+        />
+
+        <label className="eng-field-label">{t('dwgDrawingDate')}</label>
+        <input
+          className="eng-input"
+          type="date"
+          value={customDate}
+          onChange={e => setCustomDate(e.target.value)}
+        />
+
+        <label className="eng-field-label">{t('dwgNotes')}</label>
+        <textarea
+          className="eng-textarea"
+          rows={4}
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+        />
+
+        <button
+          className="btn btn-primary eng-save-btn"
+          onClick={handleSave}
+          disabled={updateMutation.isPending}
+        >
+          {saved ? '✓' : t('dwgSave')}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 // ── Upload area ───────────────────────────────────────────────────────────────
@@ -95,7 +212,6 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
     try {
       const fd = new FormData()
       fd.append('file', file)
-
       const res = await fetch('/api/engineering/upload', { method: 'POST', body: fd })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -117,7 +233,7 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
       setError('Only .dwg files are accepted')
       return
     }
-    doUpload(file)
+    void doUpload(file)
   }
 
   function onDrop(e: React.DragEvent) {
@@ -126,20 +242,13 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
     handleFiles(e.dataTransfer.files)
   }
 
-  function onDragOver(e: React.DragEvent) {
-    e.preventDefault()
-    setDragging(true)
-  }
-
-  function onDragLeave() { setDragging(false) }
-
   return (
     <div>
       <div
         className={`eng-drop-zone${dragging ? ' eng-drop-zone--drag' : ''}${uploading ? ' eng-drop-zone--uploading' : ''}`}
         onDrop={onDrop}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
         onClick={() => !uploading && inputRef.current?.click()}
         role="button"
         tabIndex={0}
@@ -160,166 +269,13 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
         ) : (
           <div className="eng-drop-inner">
             <span className="eng-drop-icon">⬆</span>
-            <span className="eng-drop-label">{t('dropDwgHere')}</span>
+            <span className="eng-drop-label">{t('dwgDrop')}</span>
           </div>
         )}
       </div>
       {error && <p className="eng-error">{error}</p>}
     </div>
   )
-}
-
-// ── Viewer panel (selected file) ──────────────────────────────────────────────
-
-function ViewerPanel({ file }: { file: DwgFile }) {
-  const { t } = useTranslation()
-  const { data, isLoading } = useGetDxf(file.status === 'ready' ? file.id : null)
-
-  if (file.status === 'converting' || file.status === 'pending') {
-    return (
-      <div className="eng-viewer-placeholder">
-        <span className="eng-drop-spinner" />
-        <span>{t('dwgConverting')}</span>
-      </div>
-    )
-  }
-
-  if (file.status === 'failed') {
-    const msg = file.errorMsg?.includes('ODA File Converter not installed')
-      ? t('noOdaConverter')
-      : (file.errorMsg ?? t('dwgFailed'))
-    return (
-      <div className="eng-viewer-placeholder eng-viewer-placeholder--error">
-        <span>⚠ {msg}</span>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="eng-viewer-placeholder">
-        <span className="eng-drop-spinner" />
-        <span>{t('loading')}</span>
-      </div>
-    )
-  }
-
-  if (!data?.dxfContent) {
-    return (
-      <div className="eng-viewer-placeholder">
-        <span>{t('dwgFailed')}</span>
-      </div>
-    )
-  }
-
-  return <DxfViewerPane dxfContent={data.dxfContent} />
-}
-
-// ── Compare tab ───────────────────────────────────────────────────────────────
-
-function CompareTab({ files }: { files: DwgFile[] }) {
-  const { t } = useTranslation()
-  const readyFiles = files.filter(f => f.status === 'ready')
-  const [fileAId, setFileAId] = useState<number | null>(null)
-  const [fileBId, setFileBId] = useState<number | null>(null)
-  const [comparing, setComparing] = useState(false)
-  const [showCompare, setShowCompare] = useState(false)
-
-  const fileA = readyFiles.find(f => f.id === fileAId) ?? null
-  const fileB = readyFiles.find(f => f.id === fileBId) ?? null
-
-  function handleCompare() {
-    if (!fileA || !fileB) return
-    setComparing(true)
-    // Simulate async (in reality dxf-viewer loads async)
-    setTimeout(() => {
-      setComparing(false)
-      setShowCompare(true)
-    }, 500)
-  }
-
-  return (
-    <div className="eng-compare">
-      <div className="eng-compare-controls">
-        <div className="eng-compare-select">
-          <label className="eng-label">{t('selectFileA')}</label>
-          <select
-            className="eng-select"
-            value={fileAId ?? ''}
-            onChange={e => { setFileAId(Number(e.target.value) || null); setShowCompare(false) }}
-          >
-            <option value="">{t('selectFileA')}</option>
-            {readyFiles.map(f => (
-              <option key={f.id} value={f.id}>{f.fileName}</option>
-            ))}
-          </select>
-        </div>
-        <div className="eng-compare-select">
-          <label className="eng-label">{t('selectFileB')}</label>
-          <select
-            className="eng-select"
-            value={fileBId ?? ''}
-            onChange={e => { setFileBId(Number(e.target.value) || null); setShowCompare(false) }}
-          >
-            <option value="">{t('selectFileB')}</option>
-            {readyFiles.map(f => (
-              <option key={f.id} value={f.id}>{f.fileName}</option>
-            ))}
-          </select>
-        </div>
-        <button
-          className="btn btn-primary"
-          disabled={!fileAId || !fileBId || fileAId === fileBId || comparing}
-          onClick={handleCompare}
-        >
-          {comparing ? '…' : t('compareBtn')}
-        </button>
-      </div>
-
-      {readyFiles.length === 0 && (
-        <p className="muted">{t('dwgPending')}</p>
-      )}
-
-      {showCompare && fileA && fileB && (
-        <div className="eng-compare-panels">
-          <div className="eng-compare-panel">
-            <div className="eng-compare-panel-label">{fileA.fileName}</div>
-            <ComparePane fileId={fileA.id} />
-          </div>
-          <div className="eng-compare-panel eng-compare-panel--mid">
-            <div className="eng-compare-panel-label">Diff</div>
-            <div className="eng-viewer-placeholder">
-              <span className="muted">Side-by-side diff</span>
-            </div>
-          </div>
-          <div className="eng-compare-panel">
-            <div className="eng-compare-panel-label">{fileB.fileName}</div>
-            <ComparePane fileId={fileB.id} />
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ComparePane({ fileId }: { fileId: number }) {
-  const { t } = useTranslation()
-  const { data, isLoading } = useGetDxf(fileId)
-
-  if (isLoading) {
-    return (
-      <div className="eng-viewer-placeholder">
-        <span className="eng-drop-spinner" />
-        <span>{t('loading')}</span>
-      </div>
-    )
-  }
-
-  if (!data?.dxfContent) {
-    return <div className="eng-viewer-placeholder"><span>{t('dwgFailed')}</span></div>
-  }
-
-  return <DxfViewerPane dxfContent={data.dxfContent} />
 }
 
 // ── Main view ─────────────────────────────────────────────────────────────────
@@ -329,18 +285,7 @@ export default function EngineeringTools() {
   const { user } = useCurrentUser()
   const { data: files = [], isLoading, refetch } = useDwgFiles()
   const deleteMutation = useDeleteDwgFile()
-  const [tab, setTab] = useState<'files' | 'compare'>('files')
   const [selectedId, setSelectedId] = useState<number | null>(null)
-
-  // Poll while any file is converting or pending
-  useEffect(() => {
-    const hasPending = files.some(f => f.status === 'converting' || f.status === 'pending')
-    if (!hasPending) return
-    const timer = setInterval(() => { refetch() }, 2000)
-    return () => clearInterval(timer)
-  }, [files, refetch])
-
-  const selectedFile = files.find(f => f.id === selectedId) ?? null
 
   function handleDelete(id: number) {
     if (!confirm('Delete this file?')) return
@@ -361,85 +306,65 @@ export default function EngineeringTools() {
         </div>
       </div>
 
-      {/* ── Tabs ── */}
-      <div className="eng-tabs">
-        <button
-          className={`eng-tab${tab === 'files' ? ' eng-tab--active' : ''}`}
-          onClick={() => setTab('files')}
-        >
-          {t('dwgFiles')}
-        </button>
-        <button
-          className={`eng-tab${tab === 'compare' ? ' eng-tab--active' : ''}`}
-          onClick={() => setTab('compare')}
-        >
-          {t('compareDwg')}
-        </button>
-      </div>
+      {/* ── Upload area ── */}
+      <UploadArea onUploaded={() => { void refetch() }} />
 
-      {/* ── Files tab ── */}
-      {tab === 'files' && (
-        <div className="eng-files-tab">
-          <UploadArea onUploaded={() => { refetch() }} />
-
-          <div className="eng-file-list">
-            {isLoading && <p className="muted">{t('loading')}</p>}
-            {!isLoading && files.length === 0 && (
-              <p className="muted">{t('dwgPending')}</p>
-            )}
-            {files.map(file => (
-              <div
-                key={file.id}
-                className={`eng-file-row${selectedId === file.id ? ' eng-file-row--selected' : ''}`}
-                onClick={() => setSelectedId(selectedId === file.id ? null : file.id)}
-              >
-                <div className="eng-file-info">
-                  <span className="eng-file-name">{file.fileName}</span>
-                  <span className="eng-file-meta">
-                    {file.version && <span>{t('dwgVersion')}: {file.version}</span>}
-                    <span>{(file.fileSize / 1024).toFixed(1)} KB</span>
-                  </span>
-                </div>
-                <div className="eng-file-actions">
-                  <StatusBadge status={file.status} />
-                  <button
-                    className="eng-download-btn"
-                    onClick={(e) => { e.stopPropagation(); downloadDwg(file.id, file.fileName) }}
-                    title={t('dwgDownload')}
-                  >
-                    {t('dwgDownload')}
-                  </button>
-                  {user && (
-                    <button
-                      className="eng-delete-btn"
-                      onClick={(e) => { e.stopPropagation(); handleDelete(file.id) }}
-                      title="Delete"
-                    >
-                      ✕
-                    </button>
+      {/* ── File list ── */}
+      <div className="eng-file-list">
+        {isLoading && <p className="muted">{t('loading')}</p>}
+        {!isLoading && files.length === 0 && (
+          <p className="muted">{t('dwgNoFiles')}</p>
+        )}
+        {files.map((file: DwgFile) => (
+          <div key={file.id}>
+            <div
+              className={`eng-file-row${selectedId === file.id ? ' eng-file-row--selected' : ''}`}
+              onClick={() => setSelectedId(selectedId === file.id ? null : file.id)}
+            >
+              <div className="eng-file-info">
+                <span className="eng-file-name">{file.displayName}</span>
+                <span className="eng-file-meta">
+                  {file.dwgVersion && (
+                    <span className="eng-version-badge">AC {file.dwgVersion}</span>
                   )}
+                  <span>{fmtSize(file.fileSize)}</span>
+                  <span>{fmtDate(file.uploadedAt)}</span>
+                </span>
+              </div>
+              <div className="eng-file-actions">
+                <button
+                  className="eng-download-btn"
+                  onClick={(e) => { e.stopPropagation(); downloadDwg(file.id, file.fileName) }}
+                  title={t('dwgDownload')}
+                >
+                  {t('dwgDownload')}
+                </button>
+                {user && (
+                  <button
+                    className="eng-delete-btn"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(file.id) }}
+                    title={t('dwgDelete')}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* ── Inline expanded view ── */}
+            {selectedId === file.id && (
+              <div className="eng-expanded">
+                <div className="eng-viewer-col">
+                  <DwgViewerPane id={file.id} />
+                </div>
+                <div className="eng-meta-col">
+                  <MetadataPanel key={file.id} file={file} />
                 </div>
               </div>
-            ))}
+            )}
           </div>
-
-          {/* ── Inline DXF viewer ── */}
-          {selectedFile && (
-            <div className="eng-viewer-wrap">
-              <div className="eng-viewer-header">
-                <span className="eng-viewer-filename">{selectedFile.fileName}</span>
-                <StatusBadge status={selectedFile.status} />
-              </div>
-              <ViewerPanel file={selectedFile} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Compare tab ── */}
-      {tab === 'compare' && (
-        <CompareTab files={files} />
-      )}
+        ))}
+      </div>
     </div>
   )
 }
