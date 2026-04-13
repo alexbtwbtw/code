@@ -2386,3 +2386,68 @@ div.tagged-project-row:hover { border-color: var(--border); }
 .eng-save-btn:hover:not(:disabled) { background: var(--orange-hov); border-color: var(--orange-hov); }
 .eng-save-btn:disabled { opacity: 0.6; cursor: default; }
 .eng-save-btn--saved { background: var(--green); border-color: var(--green); }
+
+/* ── Engineering Compare tab ──────────────────────────────────────────────── */
+
+/* Tab row */
+.eng-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+.eng-tab {
+  padding: 9px 20px; font-size: 14px; font-weight: 500; cursor: pointer;
+  background: none; border: none; color: var(--text-lt);
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.eng-tab:hover { color: var(--text-md); }
+.eng-tab--active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 600; }
+
+/* Compare selector row */
+.eng-compare-selectors {
+  display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+  padding: 16px; background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-sm); margin-bottom: 20px;
+}
+.eng-compare-selectors label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+.eng-compare-selectors select {
+  padding: 7px 10px; background: var(--off); border: 1px solid var(--border);
+  border-radius: var(--r-sm); color: var(--text-dk); font-size: 13px; cursor: pointer;
+}
+.eng-compare-selectors select:focus { outline: none; border-color: var(--orange); }
+
+/* Three-panel diff display */
+.eng-compare-panels {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px;
+}
+.eng-compare-panel {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  min-width: 0;
+}
+.eng-compare-label {
+  font-size: 11px; font-weight: 700; color: var(--navy);
+  text-transform: uppercase; letter-spacing: 0.5px; text-align: center;
+}
+.eng-compare-canvas {
+  max-width: 100%; border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--navy-dk); display: block;
+}
+.eng-compare-summary {
+  text-align: center; font-size: 13px; font-weight: 500;
+  padding: 10px; margin-top: 4px; border-radius: var(--r-sm);
+  background: var(--off); color: var(--text-md);
+}
+.eng-compare-summary--identical { color: var(--green); }
+.eng-compare-summary--diff { color: var(--amber); }
+.eng-compare-summary--error { color: var(--red); }
+
+/* Loading state for compare */
+.eng-compare-loading {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  min-height: 200px; color: var(--text-lt); font-size: 14px;
+}
+
+/* Info message (same file, not enough files) */
+.eng-compare-info {
+  padding: 32px; text-align: center; color: var(--text-lt); font-size: 14px;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--r-sm);
+}

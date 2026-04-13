@@ -590,6 +590,16 @@ export const en = {
   dwgOnlyDwg: 'Only .dwg files are accepted.',
   dwgDeleteConfirm: 'Delete this file?',
   dwgEditInfo: 'Edit Info',
+  dwgCompare: 'Compare Files',
+  dwgCompareTab: 'Compare',
+  dwgCompareFileA: 'File A',
+  dwgCompareFileB: 'File B',
+  dwgCompareBtn: 'Compare',
+  dwgCompareSame: 'Select two different files to compare',
+  dwgCompareResult: '{n} pixels differ ({pct}%)',
+  dwgCompareIdentical: 'Files are identical',
+  dwgCompareRendering: 'Rendering files...',
+  dwgCompareNoFiles: 'Upload at least two DWG files to compare',
 
   // Misc
   optional: '(optional)',

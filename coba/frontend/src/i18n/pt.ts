@@ -592,6 +592,16 @@ export const pt: Record<TranslationKey, string> = {
   dwgOnlyDwg: 'Apenas ficheiros .dwg são aceites.',
   dwgDeleteConfirm: 'Eliminar este ficheiro?',
   dwgEditInfo: 'Editar Info',
+  dwgCompare: 'Comparar Ficheiros',
+  dwgCompareTab: 'Comparar',
+  dwgCompareFileA: 'Ficheiro A',
+  dwgCompareFileB: 'Ficheiro B',
+  dwgCompareBtn: 'Comparar',
+  dwgCompareSame: 'Selecione dois ficheiros diferentes para comparar',
+  dwgCompareResult: '{n} píxeis diferentes ({pct}%)',
+  dwgCompareIdentical: 'Ficheiros são idênticos',
+  dwgCompareRendering: 'A processar ficheiros...',
+  dwgCompareNoFiles: 'Carregue pelo menos dois ficheiros DWG para comparar',
 
   // Misc
   optional: '(opcional)',
