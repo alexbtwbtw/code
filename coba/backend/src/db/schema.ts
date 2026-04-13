@@ -325,3 +325,18 @@ db.exec(`
     created_at TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 `)
+
+// ── Migrations ───────────────────────────────────────────────────────────────
+// ALTER TABLE ADD COLUMN fails if the column already exists, so we ignore the
+// error. This allows the schema to evolve without wiping persistent databases.
+const migrations: string[] = [
+  `ALTER TABLE dwg_files ADD COLUMN display_name TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE dwg_files ADD COLUMN notes        TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE dwg_files ADD COLUMN custom_date  TEXT`,
+]
+for (const sql of migrations) {
+  try { db.exec(sql) } catch { /* column already exists — safe to ignore */ }
+}
+
+// Back-fill display_name from file_name for rows created before this migration
+db.exec(`UPDATE dwg_files SET display_name = file_name WHERE display_name = ''`)
