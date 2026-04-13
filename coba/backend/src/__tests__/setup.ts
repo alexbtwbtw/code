@@ -32,6 +32,7 @@ export function resetDb() {
     DELETE FROM member_rates;
     DELETE FROM company_team_members;
     DELETE FROM company_teams;
+    DELETE FROM dwg_files;
     DELETE FROM projects;
     DELETE FROM team_members;
   `)
