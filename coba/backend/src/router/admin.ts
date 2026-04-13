@@ -35,13 +35,19 @@ export const adminRouter = router({
         DELETE FROM sqlite_sequence;
       `)
 
-      // Re-seed
-      seedProjects()
-      await seedTeam()
-      seedRequirements()
-      seedTasks()
-      seedCompanyTeams()
-      seedTimeEntries()
+      // Re-seed — each function runs in its own db.transaction(), so a failure
+      // inside any of them will throw synchronously and propagate as a tRPC error.
+      try {
+        seedProjects()
+        await seedTeam()
+        seedRequirements()
+        seedTasks()
+        seedCompanyTeams()
+        seedTimeEntries()
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        throw new Error(`Reseed failed: ${msg}`)
+      }
 
       return { ok: true, message: 'Database re-seeded successfully' }
     }),

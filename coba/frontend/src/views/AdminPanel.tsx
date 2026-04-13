@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from '../i18n/context'
 import { useCurrentUser } from '../auth'
 import { trpcClient } from '../trpc'
@@ -7,6 +7,7 @@ import { trpcClient } from '../trpc'
 export default function AdminPanel() {
   const { t } = useTranslation()
   const { user } = useCurrentUser()
+  const qc = useQueryClient()
   const [confirmed, setConfirmed] = useState(false)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -14,6 +15,9 @@ export default function AdminPanel() {
   const reseedMutation = useMutation({
     mutationFn: () => trpcClient.admin.reseed.mutate(),
     onSuccess: () => {
+      // Invalidate every cached query so all views fetch fresh data from the
+      // newly-seeded database (avoids stale 30 s cache showing empty results).
+      qc.invalidateQueries()
       setSuccessMsg(t('adminReseedSuccess'))
       setErrorMsg(null)
       setConfirmed(false)
