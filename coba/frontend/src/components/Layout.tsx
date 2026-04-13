@@ -220,7 +220,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
         <span>
           {import.meta.env.VITE_BUILD_NUMBER
             ? `Build #${import.meta.env.VITE_BUILD_NUMBER}`
-            : 'dev'}
+            : `dev · ${__GIT_HASH__}`}
         </span>
       </footer>
     </div>
