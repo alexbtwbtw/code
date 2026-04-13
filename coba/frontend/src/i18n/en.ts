@@ -586,7 +586,7 @@ export const en = {
   dwgSave: 'Save',
   dwgSaved: 'Saved',
   dwgPreviewUnavailable: 'Preview unavailable for this file',
-  dwgPreviewUnavailableHint: 'The file may use an unsupported DWG version.',
+  dwgPreviewUnavailableHint: 'The file may use an AutoCAD version (e.g. R2010/AC1024) whose extended features are not fully supported by the browser renderer.',
   dwgOnlyDwg: 'Only .dwg files are accepted.',
   dwgDeleteConfirm: 'Delete this file?',
   dwgEditInfo: 'Edit Info',

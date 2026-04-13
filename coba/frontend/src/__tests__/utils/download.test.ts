@@ -32,7 +32,8 @@ beforeEach(() => {
 
   vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
     if (tag === 'a') return createdAnchor
-    return document.createElement(tag)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (document.createElement as any)(tag)
   })
 
   createObjectURLSpy = vi.fn().mockReturnValue('blob:http://localhost/fake-url')

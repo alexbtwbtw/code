@@ -136,6 +136,94 @@ function fmtDate(iso: string): string {
   try { return new Date(iso).toLocaleDateString() } catch { return iso }
 }
 
+// ── WASM error codes (LibreDWG bitmask) ──────────────────────────────────────
+//
+// LibreDWG uses OR-combined bitmask error codes. The values below are the
+// individual bit meanings defined in the LibreDWG C headers (dwg.h).
+// Error code 64 = DWG_ERR_VALUEOUTOFBOUNDS — a value in the file exceeded
+// the expected range during parsing. This is a common non-fatal warning on
+// AC1024 (AutoCAD 2010) files but indicates that some entities may not have
+// parsed correctly. Any non-zero error means the data is at best partial.
+//
+// Fatal threshold: errors >= DWG_ERR_INVALIDDWG (2048) mean the file
+// structure itself could not be decoded at all.
+const DWG_ERR_VALUEOUTOFBOUNDS = 64
+
+/**
+ * Translates a LibreDWG bitmask error code into a human-readable string.
+ * This is displayed instead of the raw numeric code so users understand what
+ * went wrong without needing to consult LibreDWG source code.
+ */
+function dwgErrorMessage(code: number): string {
+  if (code === 0) return ''
+  const parts: string[] = []
+  if (code & 1)    parts.push('CRC mismatch')
+  if (code & 2)    parts.push('unsupported DWG version feature')
+  if (code & 4)    parts.push('unhandled entity class')
+  if (code & 8)    parts.push('invalid entity type')
+  if (code & 16)   parts.push('invalid handle reference')
+  if (code & 32)   parts.push('invalid extended entity data')
+  if (code & 64)   parts.push('value out of bounds (AC1024/R2010 subformat)')
+  if (code & 128)  parts.push('class section not found')
+  if (code & 256)  parts.push('section not found')
+  if (code & 512)  parts.push('page not found')
+  if (code & 1024) parts.push('internal WASM error')
+  if (code & 2048) parts.push('invalid DWG file structure')
+  if (code & 4096) parts.push('I/O error reading file')
+  if (code & 8192) parts.push('out of memory')
+  return parts.length > 0 ? parts.join('; ') : `unknown error (code ${code})`
+}
+
+/**
+ * Low-level DWG read helper that uses the raw WASM module (createModule) so
+ * we can inspect result.error before deciding whether to proceed. The higher-
+ * level LibreDwg wrapper logs the error and returns partial data anyway, which
+ * causes confusing downstream crashes.
+ *
+ * Returns the parsed DwgDatabase ready for SVG conversion, or throws a
+ * descriptive Error if parsing failed fatally or produced unusable data.
+ */
+async function readDwgToDatabase(arrayBuffer: ArrayBuffer) {
+  const { createModule, LibreDwg } = await import('@mlightcad/libredwg-web')
+
+  // Use the raw WASM module so we can check result.error directly
+  const wasm = await createModule()
+  const fileName = 'tmp.dwg'
+  wasm.FS.writeFile(fileName, new Uint8Array(arrayBuffer))
+  const result = wasm.dwg_read_file(fileName)
+  wasm.FS.unlink(fileName)
+
+  const errorCode: number = result.error ?? 0
+  const dataPtr = result.data
+
+  // Any error means the data is at best partial. Fatal errors (>= 2048 =
+  // DWG_ERR_INVALIDDWG) mean the file is corrupt; lower codes (like 64 =
+  // DWG_ERR_VALUEOUTOFBOUNDS) typically mean an incompatible DWG subversion
+  // and will cause convert() to crash later anyway.
+  if (errorCode !== 0 || dataPtr == null) {
+    const detail = dwgErrorMessage(errorCode)
+    if (errorCode & DWG_ERR_VALUEOUTOFBOUNDS) {
+      throw new Error(
+        `DWG file uses an AC1024/R2010 feature that is not fully supported ` +
+        `by the browser renderer (${detail}).`,
+      )
+    }
+    if (errorCode !== 0) {
+      throw new Error(`DWG parsing failed: ${detail}.`)
+    }
+    throw new Error('DWG parsing returned no data.')
+  }
+
+  // Build a LibreDwg wrapper around the WASM instance we already created so
+  // we can call convert() and dwg_to_svg() without re-initialising WASM.
+  // LibreDwg.createByWasmInstance is a static helper that reuses the instance.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const libredwg = (LibreDwg as any).createByWasmInstance(wasm)
+  const db = libredwg.convert(dataPtr)
+  libredwg.dwg_free(dataPtr)
+  return { libredwg, db }
+}
+
 // ── WASM render helper ────────────────────────────────────────────────────────
 
 /**
@@ -152,15 +240,7 @@ async function renderDwgToCanvas(
   try {
     const arrayBuffer = await fetchDwgBytes(id)
 
-    // Dynamic import keeps the WASM bundle out of the initial chunk
-    const { LibreDwg, Dwg_File_Type } = await import('@mlightcad/libredwg-web')
-
-    const libredwg = await LibreDwg.create()
-    const dataPtr  = libredwg.dwg_read_data(arrayBuffer, Dwg_File_Type.DWG)
-    if (dataPtr == null) throw new Error('Failed to read DWG data')
-
-    const db  = libredwg.convert(dataPtr)
-    libredwg.dwg_free(dataPtr)
+    const { libredwg, db } = await readDwgToDatabase(arrayBuffer)
 
     const rawSvg  = libredwg.dwg_to_svg(db)
     const safeSvg = sanitizeSvg(rawSvg)
@@ -200,41 +280,40 @@ function DwgViewerPane({ id }: { id: number }) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
+  // Sanitized SVG is stored in state so it can be injected after React renders
+  // the eng-svg-container div (containerRef is null while status === 'loading').
+  const [svgContent, setSvgContent] = useState<string>('')
 
+  // ── Async WASM render effect ──────────────────────────────────────────────
+  // Fetches the DWG, runs the WASM renderer, and stores the sanitized SVG in
+  // state. Does NOT touch the DOM directly — DOM injection is handled by the
+  // separate injection effect below (which runs after React has committed the
+  // eng-svg-container div to the DOM and containerRef is populated).
   useEffect(() => {
     let cancelled = false
     setStatus('loading')
+    setSvgContent('')
 
     ;(async () => {
       try {
         // Fetch raw DWG bytes (with auth headers — endpoint requires authentication)
         const arrayBuffer = await fetchDwgBytes(id)
-
-        // Dynamically import to avoid bundler issues with WASM
-        const { LibreDwg, Dwg_File_Type } = await import('@mlightcad/libredwg-web')
         if (cancelled) return
 
-        const libredwg = await LibreDwg.create()
+        // readDwgToDatabase uses the raw WASM module so it can inspect
+        // result.error and throw a descriptive message instead of silently
+        // continuing with partial data (which would crash downstream and
+        // expose raw "error code: 64" messages to the user).
+        const { libredwg, db } = await readDwgToDatabase(arrayBuffer)
         if (cancelled) return
 
-        const dataPtr = libredwg.dwg_read_data(arrayBuffer, Dwg_File_Type.DWG)
-        if (dataPtr == null) throw new Error('Failed to read DWG data')
+        const rawSvg = libredwg.dwg_to_svg(db)
+        // Sanitize the WASM-rendered SVG before DOM insertion to prevent XSS
+        // from maliciously crafted DWG files (see sanitizeSvg above).
+        const safeSvg = sanitizeSvg(rawSvg)
 
-        const db = libredwg.convert(dataPtr)
-        libredwg.dwg_free(dataPtr)
-
-        const svg = libredwg.dwg_to_svg(db)
-
-        if (!cancelled && containerRef.current) {
-          // Sanitize the WASM-rendered SVG before DOM insertion to prevent XSS
-          // from maliciously crafted DWG files (see sanitizeSvg above).
-          containerRef.current.innerHTML = sanitizeSvg(svg)
-          // Make the embedded SVG responsive
-          const svgEl = containerRef.current.querySelector('svg')
-          if (svgEl) {
-            svgEl.style.width = '100%'
-            svgEl.style.height = '100%'
-          }
+        if (!cancelled) {
+          setSvgContent(safeSvg)
           setStatus('ok')
         }
       } catch (err) {
@@ -245,6 +324,20 @@ function DwgViewerPane({ id }: { id: number }) {
 
     return () => { cancelled = true }
   }, [id])
+
+  // ── SVG injection effect ──────────────────────────────────────────────────
+  // Runs after status becomes 'ok' and React commits the eng-svg-container div.
+  // At this point containerRef.current is populated and we can safely set innerHTML.
+  useEffect(() => {
+    if (status !== 'ok' || !svgContent || !containerRef.current) return
+    containerRef.current.innerHTML = svgContent
+    // Make the embedded SVG fill the container
+    const svgEl = containerRef.current.querySelector('svg')
+    if (svgEl) {
+      svgEl.style.width = '100%'
+      svgEl.style.height = '100%'
+    }
+  }, [status, svgContent])
 
   if (status === 'loading') {
     return (

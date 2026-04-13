@@ -588,7 +588,7 @@ export const pt: Record<TranslationKey, string> = {
   dwgSave: 'Guardar',
   dwgSaved: 'Guardado',
   dwgPreviewUnavailable: 'Pré-visualização indisponível para este ficheiro',
-  dwgPreviewUnavailableHint: 'O ficheiro pode utilizar uma versão DWG não suportada.',
+  dwgPreviewUnavailableHint: 'O ficheiro pode utilizar uma versão AutoCAD (p.ex. R2010/AC1024) cujas funcionalidades avançadas não são totalmente suportadas pelo renderizador do browser.',
   dwgOnlyDwg: 'Apenas ficheiros .dwg são aceites.',
   dwgDeleteConfirm: 'Eliminar este ficheiro?',
   dwgEditInfo: 'Editar Info',

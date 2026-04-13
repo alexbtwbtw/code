@@ -32,6 +32,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/__tests__/setup.ts'],
+    // Exclude Playwright E2E spec files — they use a different test runner
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/*.spec.ts'],
     coverage: { provider: 'v8', reporter: ['text', 'lcov'] },
   },
 })
