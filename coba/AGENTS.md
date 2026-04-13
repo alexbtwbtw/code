@@ -128,16 +128,16 @@ Owns code structure, refactoring, type safety, N+1 query fixes, error handling s
 ### UI Agent
 Owns all frontend CSS, component styling, i18n correctness, accessibility, UX polish, and visual consistency across views.
 
-**Last updated:** 2026-04-13 18:27 | **Status:** Idle — audit complete
+**Last updated:** 2026-04-13 18:48 | **Status:** Idle — nav rework complete
 
 #### Findings Summary
 
-Audited: `frontend/src/index.css` (1722 lines), all 12 views, `components/Layout.tsx`, `i18n/en.ts` + `pt.ts` (497 keys each).
+Audited: `frontend/src/index.css` (1750+ lines), all 12 views, `components/Layout.tsx`, `i18n/en.ts` + `pt.ts` (498 keys each).
 
 Top issues found:
 
 1. **Undefined CSS variables** — `--r-md`, `--r-lg`, `--muted`, `--card` used in ~18 rules but absent from `:root`. Silently breaks border-radius and colour on member cards, history cards, suggest panel, PM autocomplete, import panels, and `.btn-cancel`.
-2. **Duplicate rules** — `.input--sm` declared at lines 906 and 1076 (different sizes); `.btn-sm` at lines 934 and 1077. First declarations are dead code.
+2. **Duplicate rules** — `.input--sm` declared twice (different sizes); `.btn-sm` also declared twice. First declarations are dead code.
 3. **Untranslated hardcoded strings** — `SearchProjects.tsx` line 35 always renders "projeto"/"projetos" in Portuguese. `Reports.tsx` lines 10-16 uses hardcoded English `STATUS_LABELS`/`CATEGORY_LABELS` instead of `t()`.
 4. **Missing home-page CSS modifiers** — `home-project-row--cancelled` and `home-project-row--completed` not defined; those rows show default grey left border.
 5. **PM autocomplete contrast** — `.pm-suggestions` background is `var(--navy)` but `.pm-sug-name` uses `var(--text)` (dark #374151 on dark navy) — nearly unreadable.
@@ -149,37 +149,42 @@ Top issues found:
 
 #### Queue
 
+**Done — Nav rework (2026-04-13)**
+
+- [x] **Nav redesign** — Replaced flat 9-item bar with 4 primary nav items (Início/Home, Projetos, Equipa, Relatórios) + "Mais/More" dropdown for secondary items (Adicionar Projeto, Livros de Encargos, Registo de Tempo, Equipas Internas) + oversight-only Admin button aligned right with orange tint. Implemented in `frontend/src/components/Layout.tsx` with React dropdown state, outside-click dismissal via `useEffect`, and correct `activeTab` mapping for all views. Added dropdown CSS (`.nav-more`, `.nav-dropdown`, `.nav-dropdown-item`, `.nav-dropdown-divider`, `.nav-btn--admin`) and responsive override in tablet breakpoint. Added `navMore` key to both locale files (`'More'` / `'Mais'`). Renamed `navSearch` to `'Projects'`/`'Projetos'` (was `'Search Projects'`/`'Pesquisar Projetos'` — too long for primary nav). Updated `frontend/src/__tests__/components/Layout.test.tsx` to match new labels and fixed children prop TypeScript typing.
+- [x] **P3-5** — `task` view `activeTab` now maps to `''` (no nav highlight) instead of incorrectly highlighting "Search Projects".
+
 **P0 — Broken/invisible UI**
 
-- [ ] **P0-1** `frontend/src/index.css` `:root` (lines 2-30): Add `--r-md: 10px; --r-lg: 14px; --muted: #9ca3af; --card: #ffffff;`
-- [ ] **P0-2** `frontend/src/index.css` line 1542: `.pm-sug-name` — change `color: var(--text)` to `color: rgba(255,255,255,.9)`
-- [ ] **P0-3** `frontend/src/index.css` line 1543: `.pm-sug-title` — change `color: var(--muted)` to `color: rgba(255,255,255,.55)`
+- [ ] **P0-1** `frontend/src/index.css` `:root`: Add `--r-md: 10px; --r-lg: 14px; --muted: #9ca3af; --card: #ffffff;`
+- [ ] **P0-2** `frontend/src/index.css` near `.pm-sug-name`: Change `color: var(--text)` to `color: rgba(255,255,255,.9)`
+- [ ] **P0-3** `frontend/src/index.css` near `.pm-sug-title`: Change `color: var(--muted)` to `color: rgba(255,255,255,.55)`
 
 **P1 — Functional but incorrect**
 
 - [ ] **P1-1** `frontend/src/views/SearchProjects.tsx` line 35: Replace hardcoded "projeto"/"projetos" with `t()` (add `countSingular`/`countPlural` keys to both i18n files)
 - [ ] **P1-2** `frontend/src/views/Reports.tsx` lines 10-16, 122-127: Replace `STATUS_LABELS`/`CATEGORY_LABELS` with `t(STATUS_KEY[...])` and `t(CAT_KEY[...])`
-- [ ] **P1-3** `frontend/src/index.css` after line 175: Add `.home-project-row--cancelled { border-left-color: var(--red); }` and `.home-project-row--completed { border-left-color: #7c3aed; }`
-- [ ] **P1-4** `frontend/src/index.css` after line 108: Add `.view { display: flex; flex-direction: column; gap: 28px; }`
-- [ ] **P1-5** `frontend/src/components/Layout.tsx` line 24: Add `|| page.view === 'task'` to `hasBreadcrumb`; add task breadcrumb case (coordinate with Features Agent who also listed this)
+- [ ] **P1-3** `frontend/src/index.css`: Add `.home-project-row--cancelled { border-left-color: var(--red); }` and `.home-project-row--completed { border-left-color: #7c3aed; }`
+- [ ] **P1-4** `frontend/src/index.css`: Add `.view { display: flex; flex-direction: column; gap: 28px; }`
+- [ ] **P1-5** `frontend/src/components/Layout.tsx`: Add `|| page.view === 'task'` to `hasBreadcrumb`; add task breadcrumb case showing Project / Task. Coordinate with Features Agent (also listed this).
 
 **P2 — CSS hygiene and visual inconsistencies**
 
-- [ ] **P2-1** `frontend/src/index.css` line 906: Remove first `.input--sm` (dead; conflicts with line 1076)
-- [ ] **P2-2** `frontend/src/index.css` line 934: Remove first `.btn-sm` (dead; conflicts with line 1077)
-- [ ] **P2-3** `frontend/src/index.css` line 1527: Remove `!important` from `.report-near-deadline-title`; use `var(--amber)` not hardcoded `#f59e0b` (lines 1526-1527)
-- [ ] **P2-4** `frontend/src/views/TimeReport.tsx` lines 21-25: 3 KpiCard elements in a 4-column `kpi-grid` leave an empty cell — add 4th card or add `.kpi-grid--3 { grid-template-columns: repeat(3,1fr); }` CSS variant
-- [ ] **P2-5** `frontend/src/index.css` lines 971, 1124: `.suggest-badge` and `.suggest-evidence` — change to `background: var(--off); color: var(--text-lt);`
-- [ ] **P2-6** `frontend/src/index.css` line 534: `.btn-cancel { color: var(--muted) }` — change to `color: var(--text-md)`
+- [ ] **P2-1** `frontend/src/index.css`: Remove first (duplicate/dead) `.input--sm` declaration
+- [ ] **P2-2** `frontend/src/index.css`: Remove first (duplicate/dead) `.btn-sm` declaration
+- [ ] **P2-3** `frontend/src/index.css`: Remove `!important` from `.report-near-deadline-title`; use `var(--amber)` not hardcoded `#f59e0b`
+- [ ] **P2-4** `frontend/src/views/TimeReport.tsx`: 3 KpiCard elements in a 4-column `kpi-grid` leave empty cell — add 4th card or add `.kpi-grid--3 { grid-template-columns: repeat(3,1fr); }` CSS variant
+- [ ] **P2-5** `frontend/src/index.css`: `.suggest-badge` and `.suggest-evidence` — change to `background: var(--off); color: var(--text-lt);`
+- [ ] **P2-6** `frontend/src/index.css`: `.btn-cancel { color: var(--muted) }` — change to `color: var(--text-md)`
 - [ ] **P2-7** `frontend/src/index.css` in `@media (max-width: 768px)`: Add `.home-grid { grid-template-columns: 1fr; }` (no tablet breakpoint for `1fr 240px` grid)
 
 **P3 — Accessibility, polish, dead code**
 
-- [ ] **P3-1** `frontend/src/index.css` after reset block (line 38): Add `*:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 2px; }`
+- [ ] **P3-1** `frontend/src/index.css` after reset block: Add `*:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 2px; }`
 - [ ] **P3-2** `frontend/src/i18n/en.ts` + `pt.ts`: Hold on removing `homeMyOpenTasks` until Features Agent wires up My Tasks list on home page
-- [ ] **P3-3** `frontend/src/index.css` lines 779-795: Add `--teal: #0f766e;` to `:root`; remove `var(--teal, #0f766e)` fallbacks from all 6 structure rules
-- [ ] **P3-4** `frontend/src/views/Home.tsx` lines 150-155: Change oversight nav toggle from `className="btn-submit"` to `className="btn-secondary"`
-- [ ] **P3-5** `frontend/src/components/Layout.tsx` line 21: Set active nav to `''` for `task` view (currently highlights "Search Projects" incorrectly)
+- [ ] **P3-3** `frontend/src/index.css`: Add `--teal: #0f766e;` to `:root`; remove `var(--teal, #0f766e)` fallbacks from all 6 structure rules
+- [ ] **P3-4** `frontend/src/views/Home.tsx`: Change oversight nav toggle from `className="btn-submit"` to `className="btn-secondary"`
+- [ ] **P3-6** _(new)_ Pre-existing TypeScript errors in test files unrelated to nav rework: `frontend/src/__tests__/i18n.test.ts` (unused `beforeEach` import), `frontend/src/__tests__/utils/download.test.ts` (`vi.fn()` type mismatch on `URL.createObjectURL`/`revokeObjectURL`), `frontend/src/__tests__/views/SearchProjects.test.tsx` (unused `waitFor` import). These currently cause `npm run build` to fail — fix by removing unused imports and casting mocks with `as unknown as`.
 
 ### Seed Data Agent
 Owns the quality and realism of all seed data across all 16 database tables. Ensures demo data exercises every feature and edge case.
