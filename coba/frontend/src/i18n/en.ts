@@ -462,9 +462,13 @@ export const en = {
   // Time Report
   timeReportNav: 'Time Report',
   timeReportTitle: 'Time Tracking Report',
+  timeReportSubtitle: 'Overview of logged hours across projects and team members',
   timeReportTotalHours: 'Total Hours Logged',
+  timeReportProjectCount: 'Projects with Entries',
   timeReportActiveMembers: 'Members Logging Time',
   timeReportUnderreporting: 'Members with No Time Logged',
+  timeReportUnderreportingDesc: 'The following team members have been assigned to projects but have not logged any hours.',
+  timeReportAllClear: 'All assigned members have logged time.',
   timeReportByProject: 'Hours by Project',
   timeReportByMember: 'Hours by Member',
   timeReportNoData: 'No time entries yet.',

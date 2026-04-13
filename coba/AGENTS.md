@@ -15,7 +15,7 @@ Each agent must update their section when they start, change, or finish a task.
 | Architecture & Docs | Idle | — | 2026-04-13 18:28 |
 | UI | Idle | Nav rework complete | 2026-04-13 18:48 |
 | Seed Data | Idle | Fixed pt.member_id → pt.team_member_id in report query | 2026-04-13 18:46 |
-| Reporting | Idle | Audit complete — task list ready | 2026-04-13 18:27 |
+| Reporting | Idle | Time Report promoted to primary nav; view redesigned with hero, KPIs, styled tables, underreporting warning | 2026-04-13 19:07 |
 | Testing | Idle | Fixed setup.ts jest-dom/vitest import; 107 frontend + 286 backend tests pass | 2026-04-13 19:02 |
 | AWS Migration | Idle | Decommission guide written | 2026-04-13 18:28 |
 | Security | Idle | Audit complete | 2026-04-13 18:30 |

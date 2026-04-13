@@ -1835,23 +1835,141 @@ div.tagged-project-row:hover { border-color: var(--border); }
 .priority-task-due--overdue { color: var(--red); font-weight: 600; }
 
 /* ── Time Report ──────────────────────────────────────────────────────────── */
+
+/* Hero header */
+.time-report-hero {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; gap: 16px; flex-wrap: wrap;
+}
+.time-report-hero-title {
+  font-size: 22px; font-weight: 700; color: var(--text-dk); line-height: 1.2;
+}
+.time-report-hero-sub {
+  font-size: 13px; color: var(--text-md); margin-top: 5px;
+}
+.time-report-alert-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border-radius: 20px;
+  background: rgba(245, 200, 66, 0.12); border: 1px solid rgba(245, 200, 66, 0.3);
+  font-size: 13px; font-weight: 600; color: #c8a200;
+  white-space: nowrap;
+}
+.time-report-alert-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #f5c842; flex-shrink: 0;
+}
+
+/* KPI skeleton */
+.time-report-kpi-skeleton {
+  min-height: 80px;
+  background: linear-gradient(90deg, var(--off) 25%, var(--border-lt) 50%, var(--off) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Sections */
+.time-report-section {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r); box-shadow: var(--shadow-xs);
+  padding: 22px 24px; margin-top: 20px;
+}
+.time-report-section--warning {
+  background: rgba(245, 200, 66, 0.04);
+  border-color: rgba(245, 200, 66, 0.3);
+}
+.time-report-section-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.time-report-section-title {
+  font-size: 13px; font-weight: 700; color: var(--navy);
+  text-transform: uppercase; letter-spacing: .5px; flex: 1;
+}
+.time-report-section-title--warning { color: #a07800; }
+.time-report-section-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  background: var(--off); border: 1px solid var(--border);
+  border-radius: 11px; font-size: 11px; font-weight: 700; color: var(--text-md);
+}
+.time-report-section-count--warning {
+  background: rgba(245, 200, 66, 0.15);
+  border-color: rgba(245, 200, 66, 0.35);
+  color: #a07800;
+}
+.time-report-warning-desc {
+  font-size: 13px; color: var(--text-md); margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* Table */
+.time-report-table-wrap { overflow-x: auto; }
+.time-report-table {
+  width: 100%; border-collapse: collapse; font-size: 0.875rem;
+}
+.time-report-table th {
+  text-align: left; padding: 8px 12px;
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-lt);
+  border-bottom: 1px solid var(--border);
+}
+.time-report-table td {
+  padding: 11px 12px; border-bottom: 1px solid var(--border-lt);
+  vertical-align: middle;
+}
+.time-report-table tr:last-child td { border-bottom: none; }
+.time-report-row:hover td { background: var(--off); }
+.time-report-name { font-weight: 600; color: var(--text-dk); }
+.time-report-col-num { text-align: right; white-space: nowrap; }
+.time-report-col-bar { width: 100px; padding-left: 16px !important; }
+.time-report-hours {
+  font-variant-numeric: tabular-nums; font-weight: 700; color: var(--navy);
+}
+.time-report-unit { font-size: 0.75rem; font-weight: 500; color: var(--text-lt); margin-left: 1px; }
+.time-report-count { font-variant-numeric: tabular-nums; color: var(--text-md); }
+.time-report-bar {
+  height: 6px; background: var(--off); border-radius: 3px; overflow: hidden;
+}
+.time-report-bar-fill {
+  height: 100%; background: var(--orange); border-radius: 3px; transition: width .4s;
+}
+
+/* Empty states */
+.time-report-empty {
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 0; color: var(--text-lt); font-size: 13px;
+}
+.time-report-empty--ok { color: var(--green); }
+.time-report-empty-icon { font-size: 18px; line-height: 1; }
+
+/* Underreporting list */
 .time-report-underreporting-list {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-direction: column; gap: 6px;
 }
 .time-report-underreporting-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px; border-radius: 6px;
+  padding: 11px 14px; border-radius: 6px;
   background: rgba(245, 200, 66, 0.08);
   border: 1px solid rgba(245, 200, 66, 0.25);
+}
+.time-report-underreporting-left {
+  display: flex; align-items: center; gap: 9px;
+}
+.time-report-underreporting-icon {
+  font-size: 14px; opacity: .7; flex-shrink: 0;
 }
 .time-report-underreporting-name {
   font-weight: 600; color: var(--text-dk);
 }
 .time-report-underreporting-count {
-  font-size: 0.82rem; color: #f5c842; font-weight: 500;
-  background: rgba(245, 200, 66, 0.15);
-  padding: 2px 8px; border-radius: 4px;
+  font-size: 0.82rem; color: #a07800; font-weight: 600;
+  background: rgba(245, 200, 66, 0.18);
+  padding: 3px 10px; border-radius: 12px;
+  white-space: nowrap;
 }
 
 /* ── Time entries ──────────────────────────────────────────────────────────── */

@@ -464,9 +464,13 @@ export const pt: Record<TranslationKey, string> = {
   // Time Report
   timeReportNav: 'Relatório de Tempo',
   timeReportTitle: 'Relatório de Registo de Tempo',
+  timeReportSubtitle: 'Visão geral das horas registadas por projeto e por membro',
   timeReportTotalHours: 'Total de Horas Registadas',
+  timeReportProjectCount: 'Projetos com Registos',
   timeReportActiveMembers: 'Membros a Registar Tempo',
   timeReportUnderreporting: 'Membros sem Tempo Registado',
+  timeReportUnderreportingDesc: 'Os seguintes membros estão atribuídos a projetos mas não registaram horas.',
+  timeReportAllClear: 'Todos os membros atribuídos registaram tempo.',
   timeReportByProject: 'Horas por Projeto',
   timeReportByMember: 'Horas por Membro',
   timeReportNoData: 'Sem registos de tempo.',

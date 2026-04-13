@@ -35,7 +35,6 @@ export default function Layout({ page, onNavigate, children }: Props) {
     : (page.view === 'task') ? 'search'
     : (page.view === 'add') ? 'more'
     : (page.view === 'requirements') ? 'more'
-    : (page.view === 'time-report') ? 'more'
     : (page.view === 'company-teams') ? 'more'
     : page.view as string
 
@@ -66,6 +65,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
             <NavBtn active={activeTab === 'search'}  label={t('navSearch')}  onClick={() => navigate({ view: 'search' })} />
             <NavBtn active={activeTab === 'team'}    label={t('navTeam')}    onClick={() => navigate({ view: 'team' })} />
             <NavBtn active={activeTab === 'reports'} label={t('navReports')} onClick={() => navigate({ view: 'reports' })} />
+            <NavBtn active={activeTab === 'time-report'} label={t('timeReportNav')} onClick={() => navigate({ view: 'time-report' })} />
 
             {/* "More" dropdown for secondary items */}
             <div className={`nav-more${moreOpen ? ' nav-more--open' : ''}`} ref={moreRef}>
@@ -92,11 +92,6 @@ export default function Layout({ page, onNavigate, children }: Props) {
                     onClick={() => navigate({ view: 'requirements' })}
                   />
                   <div className="nav-dropdown-divider" />
-                  <DropdownBtn
-                    label={t('timeReportNav')}
-                    active={page.view === 'time-report'}
-                    onClick={() => navigate({ view: 'time-report' })}
-                  />
                   <DropdownBtn
                     label={t('companyTeamsNav')}
                     active={page.view === 'company-teams'}
