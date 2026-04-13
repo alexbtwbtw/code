@@ -17,12 +17,17 @@ export default function Layout({ page, onNavigate, children }: Props) {
   const hasFinanceAccess = user?.role === 'finance' || user?.role === 'oversight'
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
+  const [reportsOpen, setReportsOpen] = useState(false)
+  const reportsRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
         setMoreOpen(false)
+      }
+      if (reportsRef.current && !reportsRef.current.contains(e.target as Node)) {
+        setReportsOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClick)
@@ -37,16 +42,21 @@ export default function Layout({ page, onNavigate, children }: Props) {
     : (page.view === 'add') ? 'more'
     : (page.view === 'requirements') ? 'more'
     : (page.view === 'company-teams') ? 'more'
-    : (page.view === 'finance-report') ? 'finance-report'
+    : (page.view === 'finance-report') ? 'reports'
+    : (page.view === 'time-report') ? 'reports'
+    : (page.view === 'reports') ? 'reports'
     : page.view as string
 
   // Is any "more" item active?
   const moreActive = activeTab === 'more'
+  // Is any reports dropdown item active?
+  const reportsActive = activeTab === 'reports'
 
   const hasBreadcrumb = page.view === 'project' || page.view === 'member' || page.view === 'requirement-book'
 
   function navigate(p: Page) {
     setMoreOpen(false)
+    setReportsOpen(false)
     onNavigate(p)
   }
 
@@ -66,11 +76,41 @@ export default function Layout({ page, onNavigate, children }: Props) {
             <NavBtn active={activeTab === 'home'}    label={t('navHome')}    onClick={() => navigate({ view: 'home' })} />
             <NavBtn active={activeTab === 'search'}  label={t('navSearch')}  onClick={() => navigate({ view: 'search' })} />
             <NavBtn active={activeTab === 'team'}    label={t('navTeam')}    onClick={() => navigate({ view: 'team' })} />
-            <NavBtn active={activeTab === 'reports'} label={t('navReports')} onClick={() => navigate({ view: 'reports' })} />
-            <NavBtn active={activeTab === 'time-report'} label={t('timeReportNav')} onClick={() => navigate({ view: 'time-report' })} />
-            {hasFinanceAccess && (
-              <NavBtn active={activeTab === 'finance-report'} label={t('navFinance')} onClick={() => navigate({ view: 'finance-report' })} />
-            )}
+
+            {/* "Reports" dropdown */}
+            <div className={`nav-more${reportsOpen ? ' nav-more--open' : ''}`} ref={reportsRef}>
+              <button
+                className={`nav-btn nav-more-trigger${reportsActive ? ' nav-btn--active' : ''}`}
+                onClick={() => setReportsOpen(v => !v)}
+                aria-haspopup="true"
+                aria-expanded={reportsOpen}
+              >
+                {t('navReports')}
+                <span className="nav-more-chevron" aria-hidden="true">▾</span>
+              </button>
+
+              {reportsOpen && (
+                <div className="nav-dropdown" role="menu">
+                  <DropdownBtn
+                    label={t('navReports')}
+                    active={page.view === 'reports'}
+                    onClick={() => navigate({ view: 'reports' })}
+                  />
+                  <DropdownBtn
+                    label={t('timeReportNav')}
+                    active={page.view === 'time-report'}
+                    onClick={() => navigate({ view: 'time-report' })}
+                  />
+                  {hasFinanceAccess && (
+                    <DropdownBtn
+                      label={t('navFinance')}
+                      active={page.view === 'finance-report'}
+                      onClick={() => navigate({ view: 'finance-report' })}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* "More" dropdown for secondary items */}
             <div className={`nav-more${moreOpen ? ' nav-more--open' : ''}`} ref={moreRef}>
