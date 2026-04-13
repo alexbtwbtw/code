@@ -10,7 +10,11 @@
 
 The response is stripped of markdown fences and parsed as a JSON array. The function validates that each element has a numeric `memberId` and a string `rationale` before returning.
 
-This function is called by `router/team.ts` in the `suggestMembers` procedure when `mode === 'ai'`.
+This function is called by `router/requirements.ts` in the `matchMembers` procedure when `mode === 'ai'`.
+
+### Mock / Real Dispatch
+
+This function is called from `router/requirements.ts` only when `mode === 'ai'`. The router checks `USE_REAL_AI` and dispatches to either this function or the mock in `lib/mocks/suggestMembersAi.mock.ts`.
 
 ## Key Exports / Procedures
 
@@ -32,4 +36,4 @@ This function is called by `router/team.ts` in the `suggestMembers` procedure wh
 - The prompt asks for exactly `topN` results; Claude may return fewer if there are fewer candidates than `topN`.
 - The result is filtered with `typeof s.memberId === 'number' && typeof s.rationale === 'string'` to drop malformed entries rather than throwing.
 - Evidence is expected to be a verbatim bio quote; the instruction to not paraphrase is explicit in the prompt but not enforced programmatically.
-- Unlike `parseCv`, this function does not apply a Zod schema to the AI response — it relies on the primitive type checks above.
+- Unlike `parseCv`, this function does not apply a Zod schema to the AI response — it relies on primitive type checks.

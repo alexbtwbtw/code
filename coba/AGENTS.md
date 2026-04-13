@@ -9,13 +9,14 @@ Each agent must update their section when they start, change, or finish a task.
 
 | Agent | Status | Working On | Last Updated |
 |-------|--------|------------|--------------|
-| Features | Idle | — | 2026-04-12 12:29 |
-| Architecture & Docs | Idle | — | 2026-04-12 12:31 |
-| UI | Idle | — | 2026-04-12 12:31 |
+| Features | Idle | Audit complete — task list ready | 2026-04-13 18:27 |
+| Architecture & Docs | Idle | — | 2026-04-13 18:28 |
+| UI | Idle | Audit complete — task list ready | 2026-04-13 18:27 |
 | Seed Data | In Progress | Debugging time entry seeding after reseed | 2026-04-13 |
-| Reporting | Idle | — | 2026-04-12 12:29 |
-| Testing | Idle | — | 2026-04-12 12:31 |
-| AWS Migration | Idle | — | 2026-04-12 12:29 |
+| Reporting | Idle | Audit complete — task list ready | 2026-04-13 18:27 |
+| Testing | Idle | — | 2026-04-13 18:27 |
+| AWS Migration | Idle | Decommission guide written | 2026-04-13 18:28 |
+| Security | Idle | Audit complete | 2026-04-13 18:30 |
 
 _Agents: update this table (status, working on, last updated) whenever you pick up or finish a task._
 
@@ -26,11 +27,157 @@ _Agents: update this table (status, working on, last updated) whenever you pick 
 ### Features Agent
 Adds and completes missing product features: new backend endpoints, frontend UI sections, delete flows, confirmation dialogs, and cross-cutting feature gaps.
 
+#### Findings Summary (audited 2026-04-13 18:27)
+
+The codebase is broadly functional but has several notable gaps:
+
+1. **No delete endpoints for projects or team members** — `projects.ts` and `team.ts` routers have no `delete` procedure. Users can create but never remove a project or member through the UI.
+2. **No update endpoints for geo entries, structures, or features** — `geo.ts`, `structures.ts`, and `features.ts` only expose `create` and `delete`. Inline editing of individual entries is impossible without re-deleting and re-creating.
+3. **No update endpoint for time entries** — `timeEntries.ts` has `create` and `delete` but no `update`. Correcting a logged-hours entry requires delete + recreate.
+4. **No CV delete endpoint** — `team.ts` has `attachCv` and `getCvData` but no `deleteCv`. Old or incorrect CVs accumulate with no removal path.
+5. **No Generate CV endpoint exposed** — `generateCv.ts` exists in `lib/` but is only used in seeding. There is no router procedure to generate a formatted PDF CV for an existing member on demand.
+6. **Reports Team tab is a stub** — `Reports.tsx` line 272 renders `reportsTeamComingSoon`. No team utilisation data is shown.
+7. **sortBudget label mismatch** — In `en.ts` the sort-by-budget label says `'Most Hours'`, which is wrong; it sorts by budget (money), not hours.
+8. **Time entries have no edit flow in the UI** — `ProjectDetail.tsx` and `TeamMemberDetail.tsx` show time entries as read-only rows with no inline edit.
+9. **No delete CV UI** — `TeamMemberDetail.tsx` lists CVs with only a download button; no removal action exists.
+10. **Task view breadcrumb missing** — `Layout.tsx` breadcrumb only handles `project`, `member`, and `requirement-book`. Opening a `TaskDetail` shows no breadcrumb and no navigational context.
+11. **homeMyOpenTasks i18n key exists but is not wired up** — `tasks.byMember` exists in the API layer but is never called on the home page for the personal task list.
+
+#### Queue
+
+**P1 — Critical missing CRUD**
+
+- [ ] **Delete project** — Add `projects.delete` procedure in `backend/src/router/projects.ts` + `backend/src/services/projects.ts`. Add a Delete Project button with confirmation dialog in `frontend/src/views/ProjectDetail.tsx`. Add i18n keys `btnDeleteProject` / `projectDeleteConfirm` in `frontend/src/i18n/en.ts` and `pt.ts`. Navigate back to search on success.
+- [ ] **Delete team member** — Add `team.delete` procedure in `backend/src/router/team.ts` + `backend/src/services/team.ts`. Add Delete Member with confirmation in `frontend/src/views/TeamMemberDetail.tsx`. Add keys `btnDeleteMember` / `memberDeleteConfirm` in `en.ts` / `pt.ts`.
+- [ ] **Delete CV** — Add `team.deleteCv` procedure in `backend/src/router/team.ts` (SQL: `DELETE FROM member_cvs WHERE id = ?`). Add a delete button next to each CV row in `frontend/src/views/TeamMemberDetail.tsx`. Add key `btnDeleteCv` in `en.ts` / `pt.ts`.
+
+**P1 — Incorrect i18n label**
+
+- [ ] **Fix sortBudget label** — In `frontend/src/i18n/en.ts` change `sortBudget: 'Most Hours'` to `sortBudget: 'Highest Budget'`. Mirror fix in `frontend/src/i18n/pt.ts`. The sort value is `budget` (project budget), unrelated to hours.
+
+**P2 — Missing update flows**
+
+- [ ] **Update time entry** — Add `timeEntries.update` procedure in `backend/src/router/timeEntries.ts` (input: `id`, `hours`, `date`, `description`). Add inline-edit affordance to each time entry row in `frontend/src/views/ProjectDetail.tsx` and `TeamMemberDetail.tsx`.
+- [ ] **Update geo entry** — Add `geo.update` procedure in `backend/src/router/geo.ts` + `backend/src/services/geo.ts` (same fields as `CreateGeoEntrySchema` plus `id`). Surface an edit button on each geo-entry row in the project detail view.
+- [ ] **Update structure** — Add `structures.update` in `backend/src/router/structures.ts` + `backend/src/services/structures.ts`. Same inline-edit pattern as geo entries.
+- [ ] **Update feature** — Add `features.update` in `backend/src/router/features.ts` + `backend/src/services/features.ts`. Add inline edit form to the features section of `frontend/src/views/ProjectDetail.tsx`.
+
+**P2 — Generate CV on demand**
+
+- [ ] **Expose generateCv as endpoint** — Add `team.generateCv` mutation in `backend/src/router/team.ts` that calls `generateCvPdfOrUpload` from `backend/src/lib/generateCv.ts` for a given `memberId` and returns the PDF as base64. Add a Generate PDF CV button in `frontend/src/views/TeamMemberDetail.tsx` that triggers the download. Add keys `btnGenerateCv` / `memberCvGenerating` in `en.ts` / `pt.ts`.
+
+**P2 — Task view breadcrumb**
+
+- [ ] **Breadcrumb for task view** — In `frontend/src/components/Layout.tsx`, extend the `hasBreadcrumb` check and breadcrumb render block to handle `page.view === 'task'`. Show: Search Projects / {projectName} / Task. The `TaskDetail` page already receives `projectId` and `projectName` as props via the `Page` union.
+
+**P3 — Reports Team tab**
+
+- [ ] **Implement Reports Team tab** — Replace the stub paragraph in `frontend/src/views/Reports.tsx` (around line 272) with a real team-utilisation summary. Reuse the `timeEntries.report` data (already available via `useTimeReport` in `TimeReport.tsx`). Display: member name, total hours, project count, overdue task count (cross-reference `useOverdueTasks` assignees).
+
+**P3 — Personal My Tasks on Home**
+
+- [ ] **My Open Tasks list on UserHome** — In `frontend/src/views/Home.tsx` inside `UserHome`, add a call to `useTasksByMember(user.id)` (hook exists in `frontend/src/api/tasks.ts`) and render non-done tasks under the `homeMyOpenTasks` i18n heading. Each task should navigate to `TaskDetail` on click.
+
+---
+
 ### Architecture & Docs Agent
 Owns code structure, refactoring, type safety, N+1 query fixes, error handling standardisation, pagination, and developer documentation.
 
+#### Findings Summary (audited 2026-04-13 18:28)
+
+**Files audited:** all `docs/` files, `CLAUDE.md` (project instructions), `agents.md`, vs the current backend/frontend source tree.
+
+**Stale or missing documentation found and fixed:**
+
+1. **`docs/backend/db.md`** — described the old monolithic `db.ts` barrel. Rewritten to document the full layered `db/` directory structure (`client.ts`, `schema.ts`, `statements/<domain>.ts`, `index.ts`) and the updated 21-table schema (added `requirement_assignments`, `time_entries`, `company_teams`, `company_team_members` vs the 17 listed previously).
+
+2. **`docs/backend/router-projects.md`** — was describing `RawProject`/`mapProject` as local to the router file; they were extracted to `types/projects.ts` and `services/projects.ts` in Phase 2. Updated to reflect thin-router delegation pattern.
+
+3. **`docs/backend/router-team.md`** — was listing `suggestMembers` as a team router procedure; it was moved to `requirements` router. Updated dependencies to reference `services/team.ts` and corrected all stale notes.
+
+4. **`docs/backend/router-requirements.md`** — added `parseRequirements` procedure (PDF/DOCX AI extraction), correct service/matching.ts delegation, and `USE_REAL_AI` dispatch pattern.
+
+5. **`docs/frontend/App.md`** — was describing "eight view components"; now documents all 13 (added CompanyTeams, AdminPanel, TimeReport). Updated to note `Page` type is now defined in `types/pages.ts`, not inline in App.tsx.
+
+6. **`docs/frontend/ProjectDetail.md`** — was incorrectly stating `GeoSection`/`StructureSection`/`Field` are imported from `AddProject.tsx`; they were extracted to `components/shared/`. Updated dependencies. Added time entries section.
+
+7. **`docs/backend/lib-parseCv.md`** and **`docs/backend/lib-suggestMembersAi.md`** — updated to document the `USE_REAL_AI` mock/real dispatch pattern.
+
+8. **`docs/backend/server-and-index.md`** — updated seed order to include `seedCompanyTeams` and `seedTimeEntries`; added note about `USE_REAL_AI` env var.
+
+**New documentation created:**
+
+9. **`docs/backend/router-new.md`** — covers four routers with no prior docs: `admin.ts` (reseed), `system.ts` (aiEnabled), `companyTeams.ts` (team CRUD + membership), `timeEntries.ts` (time tracking + aggregate report).
+
+10. **`docs/backend/lib-parseRequirements.md`** — documents `parseRequirementsFromPdf`, `parseRequirementsFromDocx`, `RequirementsOutputSchema`, and the mammoth DOCX extraction path.
+
+11. **`docs/backend/lib-s3.md`** — documents the AWS S3 helper functions (presigned URLs, upload, delete) and when they are active.
+
+12. **`docs/frontend/new-views.md`** — covers three views with no prior docs: `CompanyTeams.tsx`, `AdminPanel.tsx`, `TimeReport.tsx`.
+
+13. **`CLAUDE.md`** at repo root — created (was missing from repo, only existed in harness context). Reflects current 21-table schema, 11-router backend, 13-view frontend, and the full layered architecture.
+
+14. **`docs/README.md`** — updated navigation index: added new router doc, new lib docs, new view docs, AWS Deployment Guide, AWS Decommission Guide, Security Tools doc; added table for extracted frontend modules (api/, constants/, types/, utils/, components/shared/).
+
+15. **`docs/Agents.md`** — rewrote to reflect the 7 current agents (was listing only 4). Responsibilities now match `agents.md`.
+
+**Redirect stubs unchanged** — `docs/AUTH_PLAN.md`, `docs/PROJECT_LAYOUT_PLAN.md`, `docs/TEAM_MEMBER_REWORK_PLAN.md`, `docs/TESTING_STRATEGY.md`, `docs/index.md` are one-line redirects pointing to the current file locations; these were left as-is.
+
 ### UI Agent
 Owns all frontend CSS, component styling, i18n correctness, accessibility, UX polish, and visual consistency across views.
+
+**Last updated:** 2026-04-13 18:27 | **Status:** Idle — audit complete
+
+#### Findings Summary
+
+Audited: `frontend/src/index.css` (1722 lines), all 12 views, `components/Layout.tsx`, `i18n/en.ts` + `pt.ts` (497 keys each).
+
+Top issues found:
+
+1. **Undefined CSS variables** — `--r-md`, `--r-lg`, `--muted`, `--card` used in ~18 rules but absent from `:root`. Silently breaks border-radius and colour on member cards, history cards, suggest panel, PM autocomplete, import panels, and `.btn-cancel`.
+2. **Duplicate rules** — `.input--sm` declared at lines 906 and 1076 (different sizes); `.btn-sm` at lines 934 and 1077. First declarations are dead code.
+3. **Untranslated hardcoded strings** — `SearchProjects.tsx` line 35 always renders "projeto"/"projetos" in Portuguese. `Reports.tsx` lines 10-16 uses hardcoded English `STATUS_LABELS`/`CATEGORY_LABELS` instead of `t()`.
+4. **Missing home-page CSS modifiers** — `home-project-row--cancelled` and `home-project-row--completed` not defined; those rows show default grey left border.
+5. **PM autocomplete contrast** — `.pm-suggestions` background is `var(--navy)` but `.pm-sug-name` uses `var(--text)` (dark #374151 on dark navy) — nearly unreadable.
+6. **`.view` class has no CSS rule** — every view root uses `className="view"` but no CSS rule exists for it.
+7. **No `:focus-visible` styles** — entire stylesheet has no keyboard focus indicator.
+8. **TaskDetail breadcrumb missing** — `Layout.tsx` `hasBreadcrumb` excludes `task` view.
+9. **`homeMyOpenTasks` i18n key defined in both files but used by no view**.
+10. **`suggest-badge`/`suggest-evidence` invisible on white surfaces** — near-transparent white backgrounds and `var(--muted)` (undefined) text colour.
+
+#### Queue
+
+**P0 — Broken/invisible UI**
+
+- [ ] **P0-1** `frontend/src/index.css` `:root` (lines 2-30): Add `--r-md: 10px; --r-lg: 14px; --muted: #9ca3af; --card: #ffffff;`
+- [ ] **P0-2** `frontend/src/index.css` line 1542: `.pm-sug-name` — change `color: var(--text)` to `color: rgba(255,255,255,.9)`
+- [ ] **P0-3** `frontend/src/index.css` line 1543: `.pm-sug-title` — change `color: var(--muted)` to `color: rgba(255,255,255,.55)`
+
+**P1 — Functional but incorrect**
+
+- [ ] **P1-1** `frontend/src/views/SearchProjects.tsx` line 35: Replace hardcoded "projeto"/"projetos" with `t()` (add `countSingular`/`countPlural` keys to both i18n files)
+- [ ] **P1-2** `frontend/src/views/Reports.tsx` lines 10-16, 122-127: Replace `STATUS_LABELS`/`CATEGORY_LABELS` with `t(STATUS_KEY[...])` and `t(CAT_KEY[...])`
+- [ ] **P1-3** `frontend/src/index.css` after line 175: Add `.home-project-row--cancelled { border-left-color: var(--red); }` and `.home-project-row--completed { border-left-color: #7c3aed; }`
+- [ ] **P1-4** `frontend/src/index.css` after line 108: Add `.view { display: flex; flex-direction: column; gap: 28px; }`
+- [ ] **P1-5** `frontend/src/components/Layout.tsx` line 24: Add `|| page.view === 'task'` to `hasBreadcrumb`; add task breadcrumb case (coordinate with Features Agent who also listed this)
+
+**P2 — CSS hygiene and visual inconsistencies**
+
+- [ ] **P2-1** `frontend/src/index.css` line 906: Remove first `.input--sm` (dead; conflicts with line 1076)
+- [ ] **P2-2** `frontend/src/index.css` line 934: Remove first `.btn-sm` (dead; conflicts with line 1077)
+- [ ] **P2-3** `frontend/src/index.css` line 1527: Remove `!important` from `.report-near-deadline-title`; use `var(--amber)` not hardcoded `#f59e0b` (lines 1526-1527)
+- [ ] **P2-4** `frontend/src/views/TimeReport.tsx` lines 21-25: 3 KpiCard elements in a 4-column `kpi-grid` leave an empty cell — add 4th card or add `.kpi-grid--3 { grid-template-columns: repeat(3,1fr); }` CSS variant
+- [ ] **P2-5** `frontend/src/index.css` lines 971, 1124: `.suggest-badge` and `.suggest-evidence` — change to `background: var(--off); color: var(--text-lt);`
+- [ ] **P2-6** `frontend/src/index.css` line 534: `.btn-cancel { color: var(--muted) }` — change to `color: var(--text-md)`
+- [ ] **P2-7** `frontend/src/index.css` in `@media (max-width: 768px)`: Add `.home-grid { grid-template-columns: 1fr; }` (no tablet breakpoint for `1fr 240px` grid)
+
+**P3 — Accessibility, polish, dead code**
+
+- [ ] **P3-1** `frontend/src/index.css` after reset block (line 38): Add `*:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 2px; }`
+- [ ] **P3-2** `frontend/src/i18n/en.ts` + `pt.ts`: Hold on removing `homeMyOpenTasks` until Features Agent wires up My Tasks list on home page
+- [ ] **P3-3** `frontend/src/index.css` lines 779-795: Add `--teal: #0f766e;` to `:root`; remove `var(--teal, #0f766e)` fallbacks from all 6 structure rules
+- [ ] **P3-4** `frontend/src/views/Home.tsx` lines 150-155: Change oversight nav toggle from `className="btn-submit"` to `className="btn-secondary"`
+- [ ] **P3-5** `frontend/src/components/Layout.tsx` line 21: Set active nav to `''` for `task` view (currently highlights "Search Projects" incorrectly)
 
 ### Seed Data Agent
 Owns the quality and realism of all seed data across all 16 database tables. Ensures demo data exercises every feature and edge case.
@@ -38,11 +185,203 @@ Owns the quality and realism of all seed data across all 16 database tables. Ens
 ### Reporting Agent
 Owns the Reports view and all backend aggregate/stats procedures. Adds new tabs, charts, and data summaries to give project portfolio visibility.
 
+#### Findings Summary (audited 2026-04-13 18:27)
+
+**Files audited:**
+- `frontend/src/views/Reports.tsx`
+- `frontend/src/views/TimeReport.tsx`
+- `backend/src/router/projects.ts`, `tasks.ts`, `timeEntries.ts`, `team.ts`
+- `backend/src/services/projects.ts`, `tasks.ts`, `team.ts`
+- `frontend/src/api/projects.ts`, `tasks.ts`, `timeEntries.ts`
+- `frontend/src/i18n/en.ts`, `pt.ts`
+
+**Key gaps identified:**
+
+1. **Team tab is a stub** — `Reports.tsx` line 272 renders only `t('reportsTeamComingSoon')`. No backend procedure, no query hook, and no i18n content keys exist for team workload/utilisation data.
+2. **Time Report is siloed as a standalone view** — `TimeReport.tsx` lives at `/time-report`, separate from Reports. The `useTimeReport` hook and `timeEntries.report` backend procedure are fully built but unreachable from the main Reports hub.
+3. **No task aggregate stats procedure** — the tasks router has only per-project/cross-project list queries (overdue, blocked, near-deadline), no count/summary aggregates suitable for charts.
+4. **No budget breakdown chart** — `getProjectStats` returns only a single `totalBudget` (EUR sum only). No `byBudgetRange`, per-category budget, or `avgBudget` breakdown exists.
+5. **No geo/structure portfolio aggregate** — no procedure counts total boreholes, trial pits, or structures across all projects.
+6. **Hardcoded Portuguese strings in `Reports.tsx`** — three strings bypass `t()`:
+   - Line 317: `title={isExpanded ? 'Fechar tarefas' : 'Ver tarefas'}`
+   - Line 332: `{project.doneTasks}/{project.totalTasks} concluídas`
+   - Line 376: `Sem tarefas`
+7. **Missing `reportsTabTime` tab** — no "Time" tab button in Reports; `reportsTabTime` i18n key does not exist in either locale file.
+8. **`riskSummary` procedure unused in Reports** — `projects.riskSummary` exists and is used on Home but is not surfaced in the Reports Summary tab.
+9. **`sortBy: 'budget'` sorts by hours, not budget** — bug in `backend/src/services/projects.ts` line 49: the budget sort case runs `ORDER BY total_hours DESC` instead of `ORDER BY p.budget DESC NULLS LAST`.
+10. **`timeEntries.report` underreporting join uses wrong column** — `backend/src/router/timeEntries.ts` ~line 157: `JOIN project_team pt ON pt.member_id = tm.id` but the schema column is `team_member_id`. This silently returns zero underreporting rows.
+11. **No In-Progress tasks section** — Tasks tab shows overdue, near-deadline, and blocked tasks but no in-progress summary, limiting active workload visibility.
+12. **Missing i18n keys** — `reportsExpandOpen`, `reportsExpandClose`, `reportsDoneOf`, `reportsTabTime`, `reportsInProgressTitle`, `reportsInProgressEmpty`, `tableByBudget`, `reportsTeamWorkload`, `reportsTeamTaskLoad`, `reportsTeamProjectCount`, `reportsTeamHours`, `reportsTeamOverdue`.
+
+#### Queue (prioritised)
+
+- [ ] **P1** Fix hardcoded PT strings in `frontend/src/views/Reports.tsx` lines 317, 332, 376 — replace with `t()` calls; add keys `reportsExpandOpen`, `reportsExpandClose`, `reportsDoneOf` to `frontend/src/i18n/en.ts` and `pt.ts`.
+- [ ] **P1** Fix `timeEntries.report` underreporting join in `backend/src/router/timeEntries.ts` — change `pt.member_id` to `pt.team_member_id`.
+- [ ] **P1** Fix `sortBy: 'budget'` sort bug in `backend/src/services/projects.ts` line 49 — change `ORDER BY total_hours DESC` to `ORDER BY p.budget DESC NULLS LAST`.
+- [ ] **P2** Implement Team tab: add `getTeamWorkload()` to `backend/src/services/team.ts` returning per-member `activeProjectCount`, `openTaskCount`, `totalHoursLogged`, `overdueTaskCount`; expose as `team.workload` in `backend/src/router/team.ts`; add `useTeamWorkload` hook in `frontend/src/api/team.ts`; render sortable table in `Reports.tsx` Team tab replacing the stub.
+- [ ] **P2** Surface Time Report as a `'time'` tab inside `Reports.tsx`: add tab button with `reportsTabTime` i18n key; render `TimeReport` content inline; add `reportsTabTime` to `en.ts` (EN: "Time") and `pt.ts` (PT: "Tempo"). Keep standalone `TimeReport.tsx` for direct navigation.
+- [ ] **P2** Add task aggregate stats: add `getTaskStats()` to `backend/src/services/tasks.ts` returning `{ byStatus, byPriority, totalOpen, totalDone }`; add `tasks.stats` tRPC procedure in `backend/src/router/tasks.ts`; add `useTaskStats` hook in `frontend/src/api/tasks.ts`; render KPI row in Tasks tab header of `Reports.tsx`.
+- [ ] **P3** Add In-Progress tasks section to Tasks tab: add `getInProgress()` to `backend/src/services/tasks.ts` (mirrors `getBlocked()` with `status = 'in_progress'`); expose as `tasks.inProgress` tRPC procedure; add `useInProgressTasks` hook; render in Tasks tab between near-deadline and overdue sections. Add i18n keys `reportsInProgressTitle` / `reportsInProgressEmpty`.
+- [ ] **P3** Add budget breakdown to Summary tab: extend `getProjectStats` in `backend/src/services/projects.ts` to return `byBudgetRange` (buckets: `<100k`, `100k–500k`, `500k–1M`, `>1M`) and average budget; add a `ReportTable` in `Reports.tsx` Summary tab; add i18n key `tableByBudget` to both locale files.
+- [ ] **P3** Surface `riskSummary` in Reports Summary tab: add a "Portfolio Risk" KPI row using the existing `useRiskSummary` hook (projects with overdue tasks count, projects with blocked tasks count). No backend changes needed.
+- [ ] **P4** Add geo/structure portfolio stats: add `getPortfolioGeoStats()` to `backend/src/services/projects.ts` returning total borehole, trial pit, and structure counts; expose as `projects.geoStats` tRPC procedure; render as additional KPI cards in the Summary tab.
+- [ ] **P4** Add all remaining missing i18n keys to `frontend/src/i18n/en.ts` and `pt.ts`: `reportsTabTime`, `reportsExpandOpen`, `reportsExpandClose`, `reportsDoneOf`, `reportsInProgressTitle`, `reportsInProgressEmpty`, `tableByBudget`, `reportsTeamWorkload`, `reportsTeamTaskLoad`, `reportsTeamProjectCount`, `reportsTeamHours`, `reportsTeamOverdue`.
+
 ### Testing Agent
 Owns backend unit tests (Vitest), frontend component tests (RTL), and E2E tests (Playwright). Responsible for CI workflow setup.
 
+#### Findings Summary (audited 2026-04-13 18:27)
+
+**What already exists:**
+- Backend schemas: `projects`, `requirements`, `tasks` — well covered with enum, default, and rejection tests.
+- Backend services: `projects`, `requirements`, `tasks`, `team`, `matching` — good unit coverage via Vitest + in-memory SQLite (`setup.ts` with `resetDb()`).
+- Backend types: all seven mappers (`projects`, `geo`, `structures`, `features`, `tasks`, `requirements`, `team`) — fully covered.
+- Frontend utils: `format.ts` (fmt, fmtDate, fmtDim, initials) — covered.
+- E2E (Playwright): navigation, project list/detail/search, task detail/comments, team list/detail, requirements list/detail/add. Runs against full stack via webServer config.
+
+**Critical gaps identified:**
+
+1. **Backend setup.ts missing two tables** — `resetDb()` does not delete `time_entries` or `company_teams`/`company_team_members`. Any future service tests for those domains will have cross-test contamination.
+2. **No service tests for `geo`, `features`, `structures`** — three functions each with zero coverage; nullable numeric fields are error-prone.
+3. **No service or router tests for `timeEntries`** — six router procedures including complex aggregation SQL (`stats`).
+4. **No service or router tests for `companyTeams`** — eight router procedures, no test file exists.
+5. **No schema tests for `geo`, `features`, `structures`, `team`** — GeoTypeSchema, CreateGeoEntrySchema, CreateFeatureSchema, CreateStructureSchema, MemberInputSchema, HistoryInputSchema all untested.
+6. **No frontend component tests** — `frontend/src/__tests__/` has only `utils/format.test.ts`. No RTL tests for any of the 12 views or 4 shared components.
+7. **No tests for `pages.ts` routing logic** — `pageToPath()` and `pathToPage()` handle 13 routes; a bug silently breaks deep-link navigation.
+8. **No tests for `download.ts` util** — two distinct code paths (base64 vs S3 presigned URL) with zero coverage.
+9. **No tests for i18n context/fallback** — 498 translation keys; missing PT key silently shows raw key strings to users.
+10. **E2E gaps** — No coverage for: `CompanyTeams`, `TimeReport`, `AdminPanel`, `AddProject` full submit, `Reports` dashboard, browser back-button navigation.
+11. **No CI workflow** — No `.github/workflows/` config; entire test suite is manual-run only.
+
+#### Queue
+
+- [ ] **P0 — Fix `resetDb()` to include `time_entries`, `company_teams`, `company_team_members`**
+  File: `backend/src/__tests__/setup.ts`
+  Why: without this, any new service tests for those tables will leak state across tests and produce false passes or false failures.
+
+- [ ] **P1 — `backend/src/__tests__/services/geo.test.ts`** (new file)
+  Cases: `getGeoByProject` returns empty/populated lists ordered by `point_label` ASC; `createGeoEntry` stores all nullable fields correctly (depth, groundwaterDepth, bearingCapacity, sptNValue, lat/lng); `deleteGeoEntry` removes the row.
+  Why: three DB-touching functions with zero coverage; numeric nullable fields are error-prone.
+
+- [ ] **P1 — `backend/src/__tests__/services/features.test.ts`** (new file)
+  Cases: `getFeaturesByProject` returns ordered by label; `createFeature` with and without lat/lng; `deleteFeature` is idempotent.
+
+- [ ] **P1 — `backend/src/__tests__/services/structures.test.ts`** (new file)
+  Cases: `getStructuresByProject` ordered by label; `createStructure` with all optional numeric dimensions null; `deleteStructure` removes the row.
+  Why: structures have the most optional numeric fields of any entity.
+
+- [ ] **P1 — `backend/src/__tests__/services/timeEntries.test.ts`** (new file)
+  Cases: `byProject` returns entries ordered date DESC with member name joined; `byMember` returns entries with project name; `create` stores hours and description; `update` changes hours/description; `delete` removes the row; `stats` aggregations return correct `byProject`/`byMember`/`underreporting` data from known fixtures.
+  Why: new domain with complex aggregation SQL — high regression risk.
+
+- [ ] **P1 — `backend/src/__tests__/services/companyTeams.test.ts`** (new file)
+  Cases: `list` returns memberCount; `byId` throws for missing id; `create` inserts and returns id; `update` changes name/description; `delete` cascades to `company_team_members`; `addMember` is idempotent (INSERT OR IGNORE); `removeMember` is no-op for non-existent pair; `byMember` returns correct teams.
+
+- [ ] **P2 — `backend/src/__tests__/schemas/geo.test.ts`** (new file)
+  Cases: `GeoTypeSchema` accepts all 4 types, rejects unknown; `CreateGeoEntrySchema` requires projectId+pointLabel, defaults type to borehole, accepts optional numeric fields.
+
+- [ ] **P2 — `backend/src/__tests__/schemas/features.test.ts`** (new file)
+  Cases: `CreateFeatureSchema` requires projectId, accepts optional lat/lng, defaults strings to empty.
+
+- [ ] **P2 — `backend/src/__tests__/schemas/structures.test.ts`** (new file)
+  Cases: `CreateStructureSchema` requires projectId, defaults type to other, accepts optional dimensions and geo coords.
+
+- [ ] **P2 — `backend/src/__tests__/schemas/team.test.ts`** (new file)
+  Cases: `MemberInputSchema` requires name; `HistoryInputSchema` defaults geoEntries/structures/features to empty arrays; `HistoryGeoSchema` defaults type to borehole; `HistoryStructureSchema` defaults type to other.
+
+- [ ] **P2 — `frontend/src/__tests__/utils/pages.test.ts`** (new file)
+  Cases: `pageToPath` round-trips all 13 Page variants; `pathToPage` correctly parses `/projects/5/tasks/3`, `/team/2`, `/requirements/7`; unknown paths fall back to `{ view: 'home' }`.
+  Why: routing is entirely client-side; a regression silently breaks all deep-link sharing.
+
+- [ ] **P2 — `frontend/src/__tests__/utils/download.test.ts`** (new file)
+  Cases: base64 mode creates a blob URL and triggers anchor click; S3 presigned-URL mode sets `a.href` to the presigned URL; null fileData returns early without clicking; missing data returns early.
+
+- [ ] **P3 — `frontend/src/__tests__/i18n.test.ts`** (new file)
+  Cases: every key in `en.ts` exists in `pt.ts` (key-parity assertion over all 498 keys); `useTranslation` returns English string when lang=en; fallback returns key name when translation is missing.
+  Why: a missing PT key silently shows the raw key string to users.
+
+- [ ] **P3 — `frontend/src/__tests__/components/Layout.test.tsx`** (new file)
+  Cases (RTL): renders brand logo and nav buttons in PT by default; clicking lang toggle switches labels to EN; nav button click calls `onNavigate` with correct Page variant.
+  Why: Layout wraps every view — a regression here breaks the whole app.
+
+- [ ] **P3 — `frontend/src/__tests__/views/SearchProjects.test.tsx`** (new file)
+  Cases (RTL + tRPC mock): renders loading state; renders project cards on success; typing in search input triggers list with updated search; status filter updates query; clicking a card calls `onNavigate` with `{ view: 'project', id }`.
+
+- [ ] **P3 — `frontend/src/__tests__/views/Reports.test.tsx`** (new file)
+  Cases (RTL): renders stats summary cards (total projects, total budget); chart sections render without crashing on empty data; overdue tasks list renders.
+
+- [ ] **P4 — E2E: `e2e/tests/companyTeams.spec.ts`** (new file)
+  Cases: navigate to Company Teams; create a new team; add a member; remove a member; delete team.
+
+- [ ] **P4 — E2E: `e2e/tests/timeReport.spec.ts`** (new file)
+  Cases: navigate to Time Report; seed data appears in summary tables; create a time entry for a project+member; verify it appears in byProject list.
+
+- [ ] **P4 — E2E: `e2e/tests/addProject.spec.ts`** (new file)
+  Cases: full add-project form submit (refCode, name, category, status); verify new project appears in search list; cancel navigates back.
+
+- [ ] **P4 — E2E: `e2e/tests/reports.spec.ts`** (new file)
+  Cases: Reports page loads; "by status" bar chart is visible; overdue tasks section renders at least one item from seed.
+
+- [ ] **P4 — E2E: back-button navigation** (extend `e2e/tests/navigation.spec.ts`)
+  Cases: navigate to project detail then press browser back; verify returns to search. Navigate to task detail; press back; verify returns to project detail.
+
+- [ ] **P5 — CI workflow: `.github/workflows/test.yml`** (new file)
+  Vitest backend + frontend unit jobs; Playwright E2E job (requires running both servers); triggered on push and pull_request to main.
+  Why: the entire test suite is currently manual-only with no automated gate preventing regressions from merging.
+
 ### AWS Migration Agent
 Owns the migration of COBA from local/in-memory to AWS (EC2 + EBS SQLite + S3 + CloudFront). Responsible for Terraform, deploy pipeline, and required codebase changes.
+
+**Completed work:**
+- Terraform modules: `networking`, `compute`, `storage`, `cdn`, `github_oidc`, `bootstrap`
+- Deployment guide: `docs/aws/DEPLOYMENT_GUIDE.md`
+- Architecture docs: `docs/aws/overview.md`, `compute.md`, `storage.md`, `database.md`, `pipeline.md`, `terraform.md`, `rollout.md`
+- Decommission guide: `docs/aws/decommission.md` (written 2026-04-13) — covers full teardown order, exact AWS CLI commands, Terraform destroy approach, GitHub cleanup, and cost verification
+
+### Security Agent
+Owns security auditing of the full codebase: backend endpoints, auth layer, input validation, SQL injection, XSS, secrets handling, dependency vulnerabilities, and OWASP Top 10.
+
+#### Findings Summary (audited 2026-04-13 18:30)
+
+**Overall risk level: HIGH**
+
+Full report: `docs/security-audit.md`. Tool guide: `docs/security-tools.md`.
+
+**Key findings:**
+
+1. **CRITICAL — No server-side auth on any tRPC procedure.** All procedures use `publicProcedure`. Any HTTP client can invoke mutations including `admin.reseed` (wipes entire DB). `createContext` returns `{}`. No session, JWT, or API key validation exists anywhere on the backend.
+2. **HIGH — `admin.reseed` has no server-side role check.** Only the client-side `user.role !== 'oversight'` check gates this endpoint. Trivially bypassed.
+3. **HIGH — Auth is localStorage-only, bypassable via DevTools.** The `role` field stored in localStorage can be manually changed to `'oversight'` by any user, granting access to the Admin Panel.
+4. **HIGH — Live `ANTHROPIC_API_KEY` stored in plain-text `backend/.env`.** Key excluded from git but at risk of accidental commit or server compromise.
+5. **HIGH — No security headers set** (no CSP, no X-Frame-Options, no X-Content-Type-Options, no HSTS).
+6. **HIGH — No file type or size validation on CV/PDF uploads.** Any file type accepted; no size limit; base64 string unbounded in Zod schema.
+7. **MEDIUM — UserSwitcher rendered unconditionally** — no `import.meta.env.DEV` guard. Production users can switch identity to any team member.
+8. **MEDIUM — Prompt injection risk** in 4 Claude API call sites (`parseCv`, `parseProject`, `parseRequirements`, `suggestMembersAi`). Instruction prompts not separated from untrusted document content via `system` role.
+9. **MEDIUM — CORS allows all `localhost:*` ports**, which is fine for dev but must be tightened before production deployment.
+10. **LOW — Several Zod schema gaps:** no `.max()` on string fields, no date format regex, `z.array(z.any())` in `createWithHistory`, no `hours` upper bound.
+
+**What is safe:**
+- All SQL uses parameterised prepared statements — no SQL injection found.
+- No `dangerouslySetInnerHTML` in frontend — React XSS protection intact.
+- No shell execution anywhere.
+- API key never logged or returned in responses.
+- No hardcoded credentials in source files.
+
+#### Queue
+
+- [ ] **P0 — Implement server-side auth middleware** (`authedProcedure`) in `backend/src/trpc.ts`. Replace `publicProcedure` on all mutations. Update `createContext` in `backend/src/index.ts`.
+- [ ] **P0 — Add server-side role check to `admin.reseed`** in `backend/src/router/admin.ts` — create `oversightProcedure`, do not rely on frontend check.
+- [ ] **P1 — Rotate ANTHROPIC_API_KEY immediately.** Current key in `backend/.env` must be treated as compromised. Move to AWS Secrets Manager for production.
+- [ ] **P1 — Add `secureHeaders` middleware** in `backend/src/index.ts` (Hono built-in: `hono/secure-headers`). Configure CSP, X-Frame-Options, X-Content-Type-Options, HSTS.
+- [ ] **P1 — Validate file type (PDF magic bytes) and add size limit** in `backend/src/router/team.ts` and all base64 input fields.
+- [ ] **P1 — Guard `UserSwitcher` with `import.meta.env.DEV`** in `frontend/src/components/Layout.tsx` line 57.
+- [ ] **P2 — Move Claude instruction prompts to `system` parameter** in all 4 AI lib files to reduce prompt injection surface.
+- [ ] **P2 — Lock CORS to specific allowed origins** via `process.env.ALLOWED_ORIGINS`.
+- [ ] **P2 — Derive `authorName` from auth context** in `tasks.addComment` (after P0 auth work).
+- [ ] **P3 — Replace `z.array(z.any())` in `createWithHistory`** with typed `HistoryGeoSchema` / `HistoryStructureSchema` / `HistoryFeatureSchema`.
+- [ ] **P3 — Add `.max()` to all free-text Zod fields**, date regex validation, and `hours.max(24)` in time entries.
+- [ ] **P3 — Use `TRPCError` with proper codes** instead of bare `Error` throws in `admin.ts` and `companyTeams.ts`.
+- [ ] **P4 — Set up `npm audit` + Semgrep in CI** (see `docs/security-tools.md` for configs).
 
 ---
 

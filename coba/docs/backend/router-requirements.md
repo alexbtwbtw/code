@@ -2,15 +2,15 @@
 
 **Path:** `backend/src/router/requirements.ts`
 **Layer:** Backend
-**Purpose:** tRPC router for requirement books and individual staffing requirements, plus local and AI-powered member matching.
+**Purpose:** tRPC router for requirement books and individual staffing requirements, plus local and AI-powered member matching. Delegates DB logic to `services/requirements.ts` and `services/matching.ts`.
 
 ## Overview
 
 The requirements system is two-level: a `requirement_book` is a named collection optionally linked to a project, and each book contains `requirements` that specify a discipline, seniority level, years of experience, and certifications needed.
 
-The `matchMembers` procedure is the most complex operation in this router. In `local` mode, it scores each team member against a single requirement using keyword matching on bios/titles (via `DISCIPLINE_KEYWORDS` and `LEVEL_KEYWORDS` dictionaries), category-to-discipline affinity (`CAT_DISCIPLINE` map), years of experience (estimated from history count), and certification keywords. In `ai` mode, the same data is sent to the Claude API with a structured prompt, and the model returns ranked candidates with Portuguese-language rationale.
+The `matchMembers` procedure is the most complex operation in this router. In `local` mode, it delegates to `services/matching.ts` which scores each team member against a single requirement using keyword matching on bios/titles, category-to-discipline affinity, years of experience (estimated from history count), and certification keywords. In `ai` mode, the same data is sent to `lib/suggestMembersAi.ts` which calls the Claude API with a structured prompt. Both modes return the same response shape.
 
-Both modes return the same response shape so the frontend can switch between them transparently.
+The router also handles AI-powered requirement extraction from uploaded documents via `parseRequirements` — this accepts a PDF or DOCX and uses the Claude API to generate a fully-populated requirement book.
 
 ## Key Exports / Procedures
 
@@ -24,9 +24,10 @@ Both modes return the same response shape so the frontend can switch between the
 | `createRequirement` | mutation | `RequirementInputSchema` | Add a requirement to a book. |
 | `updateRequirement` | mutation | `RequirementInputSchema + id` | Update a requirement's fields. |
 | `deleteRequirement` | mutation | `{ id }` | Delete a single requirement. |
-| `matchMembers` | mutation | `{ requirementId, mode: 'ai'|'local', topN }` | Rank all team members for a single requirement. Returns up to `topN` results (max 20) with `rationale` and `evidence`. |
+| `matchMembers` | mutation | `{ requirementId, mode: 'ai'\|'local', topN }` | Rank all team members for a single requirement. Returns up to `topN` (max 20) with `rationale` and `evidence`. |
+| `parseRequirements` | mutation | `{ fileBase64, fileType: 'pdf'\|'docx' }` | Extract a full requirement book from an uploaded document using the Claude API (or mock). |
 
-## Exported Constants
+## Exported Constants (from `schemas/requirements.ts`)
 
 | Export | Description |
 |--------|-------------|
@@ -35,15 +36,15 @@ Both modes return the same response shape so the frontend can switch between the
 
 ## Dependencies
 
-- `db` from `../db`
-- `@anthropic-ai/sdk` — used only in `ai` mode of `matchMembers`
-- `@trpc/server` — `TRPCError` for `NOT_FOUND` and `INTERNAL_SERVER_ERROR`
-- `zod`
+- `services/requirements.ts` — books/requirements CRUD, local scoring
+- `services/matching.ts` — `suggestMembersLocal`, `matchMembersLocal`, `extractVerbatimEvidence`
+- `lib/suggestMembersAi.ts` — AI member ranking (with mock dispatch via `USE_REAL_AI`)
+- `lib/parseRequirements.ts` — AI requirement extraction from PDF/DOCX (with mock dispatch)
+- `schemas/requirements.ts` — Zod schemas and constants
 
 ## Notes
 
-- AI mode reads `ANTHROPIC_API_KEY` from `process.env` at call time and throws `INTERNAL_SERVER_ERROR` if it is missing or set to the placeholder value.
-- The AI prompt requests responses in Portuguese and asks for verbatim bio excerpts as evidence.
-- `DISCIPLINE_KEYWORDS` covers both Portuguese and English terms to handle bilingual bios.
-- The local `scoreRequirement` function estimates years of experience by comparing `req.yearsExperience` to `Math.ceil(yearsExperience / 3)` history entries — a rough heuristic.
-- `matchMembers` is a `mutation` rather than a `query` because it may call the Claude API with side effects (token usage), and the AI invocation is async.
+- AI mode reads `ANTHROPIC_API_KEY` from `process.env`; throws `INTERNAL_SERVER_ERROR` if missing.
+- `matchMembers` is a `mutation` rather than a `query` because it may call the Claude API (token usage, async).
+- `parseRequirements` supports both PDF (sent as a document block to Claude) and DOCX (converted to plain text via `mammoth` first).
+- `DISCIPLINE_KEYWORDS` and `LEVEL_KEYWORDS` in the matching service cover both Portuguese and English terms to handle bilingual bios.

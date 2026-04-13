@@ -12,6 +12,12 @@ The prompt instructs Claude to extract: full name, title, email, phone, a 3–5 
 
 The response is stripped of optional markdown code fences and parsed as JSON, then validated with `CvOutputSchema` (a Zod schema). If JSON parsing or Zod validation fails, a `TRPCError` with code `INTERNAL_SERVER_ERROR` is thrown.
 
+### Mock / Real Dispatch
+
+This function respects the `USE_REAL_AI` environment variable:
+- `USE_REAL_AI=true` → calls the real Claude API
+- Otherwise → imports and returns from `lib/mocks/parseCv.mock.ts` (deterministic mock output)
+
 ## Key Exports / Procedures
 
 | Export | Type | Description |
@@ -24,13 +30,12 @@ The response is stripped of optional markdown code fences and parsed as JSON, th
 
 - `@anthropic-ai/sdk` — `Anthropic` client; model `claude-sonnet-4-6`, `max_tokens: 8192`
 - `@trpc/server` — `TRPCError`
-- `STRUCTURE_TYPES` from `../router/structures` — constrains the `type` field of extracted structures to valid enum values (`z.enum(STRUCTURE_TYPES).catch('other')`)
+- `STRUCTURE_TYPES` from `../types/structures` — constrains the `type` field of extracted structures to valid enum values (`z.enum(STRUCTURE_TYPES).catch('other')`)
 - `zod`
 
 ## Notes
 
 - The model is `claude-sonnet-4-6` and `max_tokens` is set to 8192 — longer CVs with many projects may approach this limit.
-- `z.enum(STRUCTURE_TYPES).catch('other')` allows Claude to return an unknown structure type without throwing a Zod validation error; it silently falls back to `'other'`.
-- The prompt is in Portuguese (`Analise o CV em anexo...`) — responses will be in Portuguese regardless of the CV language.
+- `z.enum(STRUCTURE_TYPES).catch('other')` allows Claude to return an unknown structure type without throwing; it silently falls back to `'other'`.
+- The prompt is in Portuguese — responses will be in Portuguese regardless of the CV language.
 - `geoEntries` are not in the output schema; only `structures` and `features` are extracted at the CV-parsing stage. Geo entries can be added manually in the history editor after import.
-- The function checks for `ANTHROPIC_API_KEY` presence and throws a descriptive error if it is missing, making the failure mode obvious during development.
