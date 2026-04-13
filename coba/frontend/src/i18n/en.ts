@@ -601,6 +601,17 @@ export const en = {
   dwgCompareRendering: 'Rendering files...',
   dwgCompareNoFiles: 'Upload at least two DWG files to compare',
 
+  // DWG entity diff
+  dwgEntityDiff: 'Entity Diff',
+  dwgEntityDiffLoading: 'Analysing entities...',
+  dwgEntityDiffUnavailable: 'Entity diff requires ODA File Converter installed on the server.',
+  dwgEntityAdded: 'Added',
+  dwgEntityRemoved: 'Removed',
+  dwgEntityUnchanged: 'Unchanged',
+  dwgEntityIdentical: 'Files are identical at entity level',
+  dwgEntitySummary: '{a} entities in A · +{added} added · -{removed} removed · {unchanged} unchanged',
+  dwgEntityMore: 'and {n} more...',
+
   // DWG date patching
   dwgDatesInFile: 'Dates in File',
   dwgScanDates: 'Scan File for Dates',

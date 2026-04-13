@@ -421,6 +421,178 @@ app.post('/api/engineering/:id/patch-dates', async (c) => {
   })
 })
 
+// ── Engineering: entity-level DXF diff ───────────────────────────────────────
+
+app.post('/api/engineering/entity-diff', async (c) => {
+  const authErr = requireRole(c)
+  if (authErr) return authErr
+
+  let body: { idA?: unknown; idB?: unknown }
+  try {
+    body = await c.req.json() as { idA?: unknown; idB?: unknown }
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const idA = typeof body.idA === 'number' ? body.idA : parseInt(String(body.idA ?? ''), 10)
+  const idB = typeof body.idB === 'number' ? body.idB : parseInt(String(body.idB ?? ''), 10)
+  if (isNaN(idA) || idA <= 0 || isNaN(idB) || idB <= 0) {
+    return c.json({ error: 'idA and idB must be positive integers' }, 400)
+  }
+
+  const bufA = readDwgBuffer(idA)
+  const bufB = readDwgBuffer(idB)
+  if (!bufA) return c.json({ error: `File ${idA} not found` }, 404)
+  if (!bufB) return c.json({ error: `File ${idB} not found` }, 404)
+
+  // Attempt ODA conversion for both files
+  const { spawnSync } = await import('child_process')
+  const { mkdtempSync, writeFileSync, readFileSync, mkdirSync } = await import('fs')
+  const { tmpdir } = await import('os')
+  const { join } = await import('path')
+
+  function dwgToDxf(dwgBuffer: Buffer): string | null {
+    try {
+      const dir    = mkdtempSync(join(tmpdir(), 'dwg-'))
+      const inDir  = join(dir, 'in')
+      const outDir = join(dir, 'out')
+      mkdirSync(inDir)
+      mkdirSync(outDir)
+      writeFileSync(join(inDir, 'file.dwg'), dwgBuffer)
+      const result = spawnSync(
+        'ODAFileConverter',
+        [inDir, outDir, 'ACAD2018', 'DXF', '0', '1'],
+        {
+          timeout: 30000,
+          env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/usr/local/bin` },
+        },
+      )
+      if (result.status !== 0) return null
+      return readFileSync(join(outDir, 'file.dxf'), 'utf8')
+    } catch {
+      return null
+    }
+  }
+
+  const dxfA = dwgToDxf(bufA)
+  const dxfB = dwgToDxf(bufB)
+
+  if (dxfA === null || dxfB === null) {
+    return c.json({ available: false, reason: 'ODA File Converter not installed or failed' })
+  }
+
+  // Parse DXF files
+  const DxfParser = (await import('dxf-parser')).default
+  const parser = new DxfParser()
+
+  let docA: { entities: unknown[] }
+  let docB: { entities: unknown[] }
+  try {
+    docA = parser.parseSync(dxfA) as { entities: unknown[] }
+    docB = parser.parseSync(dxfB) as { entities: unknown[] }
+  } catch (err) {
+    return c.json({ available: false, reason: `DXF parse error: ${err instanceof Error ? err.message : String(err)}` })
+  }
+
+  type Entity = { type: string; handle?: string; layer?: string; [key: string]: unknown }
+  interface EntitySummary {
+    type: string
+    layer: string
+    key: string
+    data: Record<string, unknown>
+  }
+
+  function roundCoord(v: unknown): unknown {
+    if (typeof v === 'number') return Math.round(v * 100) / 100
+    if (v && typeof v === 'object') {
+      const result: Record<string, unknown> = {}
+      for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+        result[k] = roundCoord(val)
+      }
+      return result
+    }
+    return v
+  }
+
+  function extractCoords(e: Entity): unknown {
+    // Grab common geometry fields
+    const coords: Record<string, unknown> = {}
+    const geoFields = ['startPoint', 'endPoint', 'center', 'vertices', 'position',
+      'insertionPoint', 'x', 'y', 'z', 'x1', 'y1', 'x2', 'y2', 'radius',
+      'startAngle', 'endAngle', 'majorAxisEndPoint', 'axisRatio']
+    for (const field of geoFields) {
+      if (field in e) coords[field] = roundCoord(e[field])
+    }
+    return coords
+  }
+
+  function summariseEntity(e: Entity): EntitySummary {
+    const type  = e.type ?? 'UNKNOWN'
+    const layer = e.layer ?? '0'
+    const coords = extractCoords(e)
+    const key = `${type}|${layer}|${JSON.stringify(coords)}`
+    // Build data: type, layer, plus a few human-readable fields
+    const data: Record<string, unknown> = { type, layer }
+    const displayFields = ['text', 'string', 'name', 'handle', 'radius',
+      'startAngle', 'endAngle', 'startPoint', 'endPoint', 'center', 'vertices']
+    for (const f of displayFields) {
+      if (f in e && e[f] !== undefined) data[f] = e[f]
+    }
+    return { type, layer, key, data }
+  }
+
+  function diffEntities(
+    aEntities: Entity[],
+    bEntities: Entity[],
+  ): { added: EntitySummary[]; removed: EntitySummary[]; total: { a: number; b: number } } {
+    const aMap = new Map<string, EntitySummary>()
+    const bMap = new Map<string, EntitySummary>()
+
+    for (const e of aEntities) {
+      const s = summariseEntity(e)
+      aMap.set(s.key, s)
+    }
+    for (const e of bEntities) {
+      const s = summariseEntity(e)
+      bMap.set(s.key, s)
+    }
+
+    const added: EntitySummary[]   = []
+    const removed: EntitySummary[] = []
+
+    for (const [key, s] of bMap) {
+      if (!aMap.has(key)) added.push(s)
+    }
+    for (const [key, s] of aMap) {
+      if (!bMap.has(key)) removed.push(s)
+    }
+
+    return { added, removed, total: { a: aEntities.length, b: bEntities.length } }
+  }
+
+  const entitiesA = (docA.entities ?? []) as Entity[]
+  const entitiesB = (docB.entities ?? []) as Entity[]
+  const diff      = diffEntities(entitiesA, entitiesB)
+
+  const CAP = 200
+  const addedCapped   = diff.added.slice(0, CAP)
+  const removedCapped = diff.removed.slice(0, CAP)
+
+  const unchangedCount = entitiesA.length - diff.removed.length
+
+  return c.json({
+    available: true,
+    added:    addedCapped,
+    removed:  removedCapped,
+    total:    diff.total,
+    summary: {
+      addedCount:     diff.added.length,
+      removedCount:   diff.removed.length,
+      unchangedCount: Math.max(0, unchangedCount),
+    },
+  })
+})
+
 app.all('/trpc/*', (c) =>
   fetchRequestHandler({
     endpoint: '/trpc',

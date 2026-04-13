@@ -635,6 +635,172 @@ function UploadArea({ onUploaded }: { onUploaded: () => void }) {
   )
 }
 
+// ── Entity diff panel ─────────────────────────────────────────────────────────
+
+interface EntitySummary {
+  type: string
+  layer: string
+  key: string
+  data: Record<string, unknown>
+}
+
+interface EntityDiffResult {
+  available: true
+  added: EntitySummary[]
+  removed: EntitySummary[]
+  total: { a: number; b: number }
+  summary: {
+    addedCount: number
+    removedCount: number
+    unchangedCount: number
+  }
+}
+
+interface EntityDiffUnavailable {
+  available: false
+  reason: string
+}
+
+type EntityDiffResponse = EntityDiffResult | EntityDiffUnavailable
+
+type EntityDiffState =
+  | { phase: 'idle' }
+  | { phase: 'loading' }
+  | { phase: 'unavailable'; reason: string }
+  | { phase: 'error'; message: string }
+  | { phase: 'done'; result: EntityDiffResult }
+
+const ENTITY_DISPLAY_CAP = 50
+
+async function fetchEntityDiff(idA: number, idB: number): Promise<EntityDiffState> {
+  const user = getCurrentUser()
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(user ? { 'x-user-role': user.role, 'x-user-id': String(user.id), 'x-user-name': user.name } : {}),
+  }
+  const res = await fetch('/api/engineering/entity-diff', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ idA, idB }),
+  })
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '')
+    let msg = txt
+    try { msg = (JSON.parse(txt) as { error?: string }).error ?? txt } catch { /* raw */ }
+    return { phase: 'error', message: msg || `HTTP ${res.status}` }
+  }
+  const data = (await res.json()) as EntityDiffResponse
+  if (!data.available) {
+    return { phase: 'unavailable', reason: (data as EntityDiffUnavailable).reason }
+  }
+  return { phase: 'done', result: data as EntityDiffResult }
+}
+
+function EntityDiffPanel({ idA, idB }: { idA: number; idB: number }) {
+  const { t } = useTranslation()
+  const [state, setState] = useState<EntityDiffState>({ phase: 'loading' })
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetchEntityDiff(idA, idB)
+      .then(result => { if (!cancelled) setState(result) })
+      .catch(e => { if (!cancelled) setState({ phase: 'error', message: e instanceof Error ? e.message : 'Request failed' }) })
+
+    return () => { cancelled = true }
+  }, [idA, idB])
+
+  return (
+    <div className="eng-entity-diff">
+      <p className="eng-entity-diff-title">{t('dwgEntityDiff')}</p>
+
+      {state.phase === 'loading' && (
+        <div className="eng-compare-loading">
+          <span className="eng-drop-spinner" />
+          <span>{t('dwgEntityDiffLoading')}</span>
+        </div>
+      )}
+
+      {state.phase === 'unavailable' && (
+        <div className="eng-entity-unavailable">
+          {t('dwgEntityDiffUnavailable')}
+        </div>
+      )}
+
+      {state.phase === 'error' && (
+        <p className="eng-error">{state.message}</p>
+      )}
+
+      {state.phase === 'done' && (() => {
+        const { result } = state
+        const { addedCount, removedCount, unchangedCount } = result.summary
+
+        if (addedCount === 0 && removedCount === 0) {
+          return (
+            <div className="eng-entity-unavailable" style={{ borderColor: 'rgba(74,222,128,.2)', color: '#4ade80' }}>
+              {t('dwgEntityIdentical')}
+            </div>
+          )
+        }
+
+        const summaryText = t('dwgEntitySummary')
+          .replace('{a}',         String(result.total.a))
+          .replace('{added}',     String(addedCount))
+          .replace('{removed}',   String(removedCount))
+          .replace('{unchanged}', String(unchangedCount))
+
+        const addedDisplay   = result.added.slice(0, ENTITY_DISPLAY_CAP)
+        const removedDisplay = result.removed.slice(0, ENTITY_DISPLAY_CAP)
+        const addedRemainder   = addedCount   - addedDisplay.length
+        const removedRemainder = removedCount - removedDisplay.length
+
+        return (
+          <>
+            <div className="eng-entity-summary">{summaryText}</div>
+            <div className="eng-entity-cols">
+              {/* Added column */}
+              <div>
+                <p className="eng-entity-col-title eng-entity-col-title--added">
+                  +{addedCount} {t('dwgEntityAdded')}
+                </p>
+                {addedDisplay.map((e, i) => (
+                  <div key={e.key + i} className="eng-entity-row">
+                    <span className="eng-entity-type">{e.type}</span>
+                    <span className="eng-entity-layer">{e.layer}</span>
+                  </div>
+                ))}
+                {addedRemainder > 0 && (
+                  <p className="eng-entity-layer" style={{ marginTop: '.35rem' }}>
+                    {t('dwgEntityMore').replace('{n}', String(addedRemainder))}
+                  </p>
+                )}
+              </div>
+
+              {/* Removed column */}
+              <div>
+                <p className="eng-entity-col-title eng-entity-col-title--removed">
+                  -{removedCount} {t('dwgEntityRemoved')}
+                </p>
+                {removedDisplay.map((e, i) => (
+                  <div key={e.key + i} className="eng-entity-row">
+                    <span className="eng-entity-type">{e.type}</span>
+                    <span className="eng-entity-layer">{e.layer}</span>
+                  </div>
+                ))}
+                {removedRemainder > 0 && (
+                  <p className="eng-entity-layer" style={{ marginTop: '.35rem' }}>
+                    {t('dwgEntityMore').replace('{n}', String(removedRemainder))}
+                  </p>
+                )}
+              </div>
+            </div>
+          </>
+        )
+      })()}
+    </div>
+  )
+}
+
 // ── Compare tab ───────────────────────────────────────────────────────────────
 
 type CompareState =
@@ -814,6 +980,11 @@ function CompareTab({ files }: { files: DwgFile[] }) {
               : t('dwgCompareResult').replace('{n}', state.numDiff.toLocaleString()).replace('{pct}', state.pct)
             }
           </div>
+
+          {/* Entity diff — loads independently from the pixel diff */}
+          {fileAId !== '' && fileBId !== '' && (
+            <EntityDiffPanel idA={fileAId as number} idB={fileBId as number} />
+          )}
         </>
       )}
     </div>

@@ -603,6 +603,17 @@ export const pt: Record<TranslationKey, string> = {
   dwgCompareRendering: 'A processar ficheiros...',
   dwgCompareNoFiles: 'Carregue pelo menos dois ficheiros DWG para comparar',
 
+  // DWG entity diff
+  dwgEntityDiff: 'Diferenças de Entidades',
+  dwgEntityDiffLoading: 'A analisar entidades...',
+  dwgEntityDiffUnavailable: 'A comparação de entidades requer o ODA File Converter instalado no servidor.',
+  dwgEntityAdded: 'Adicionado',
+  dwgEntityRemoved: 'Removido',
+  dwgEntityUnchanged: 'Sem alterações',
+  dwgEntityIdentical: 'Ficheiros são idênticos ao nível das entidades',
+  dwgEntitySummary: '{a} entidades em A · +{added} adicionadas · -{removed} removidas · {unchanged} sem alterações',
+  dwgEntityMore: 'e mais {n}...',
+
   // DWG date patching
   dwgDatesInFile: 'Datas no Ficheiro',
   dwgScanDates: 'Procurar Datas no Ficheiro',
