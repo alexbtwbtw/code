@@ -86,9 +86,9 @@ jobs:
 
           pm2 save
 
-          # Verify health
+          # Verify health through nginx (validates full stack)
           sleep 3
-          curl -sf http://localhost:3000/api/health \
+          curl -sf http://localhost/api/health \
             || (pm2 logs --lines 50 && exit 1)
           SCRIPT
 

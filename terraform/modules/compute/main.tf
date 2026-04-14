@@ -85,6 +85,46 @@ resource "aws_instance" "backend" {
     # Install pm2
     npm install -g pm2
 
+    # Install nginx
+    dnf install -y nginx
+
+    # Remove default nginx config and write app routing config
+    rm -f /etc/nginx/conf.d/default.conf
+    cat > /etc/nginx/conf.d/apps.conf << 'NGINX_CONF'
+    server {
+        listen 80;
+        server_name _;
+
+        # COBA — proxy /api/* and /trpc/* to backend on port 3000
+        location /api/ {
+            proxy_pass         http://127.0.0.1:3000;
+            proxy_http_version 1.1;
+            proxy_set_header   Host              $host;
+            proxy_set_header   X-Real-IP         $remote_addr;
+            proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_read_timeout 60s;
+        }
+
+        location /trpc/ {
+            proxy_pass         http://127.0.0.1:3000;
+            proxy_http_version 1.1;
+            proxy_set_header   Host              $host;
+            proxy_set_header   X-Real-IP         $remote_addr;
+            proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_read_timeout 60s;
+        }
+
+        # Future projects: add additional location blocks here
+        # e.g. location /proj2/api/ { proxy_pass http://127.0.0.1:3001; ... }
+    }
+    NGINX_CONF
+
+    # Enable and start nginx
+    systemctl enable nginx
+    systemctl start nginx
+
     # Mount data volume (EBS at /dev/xvdf)
     mkdir -p /data
     if ! blkid /dev/xvdf; then
