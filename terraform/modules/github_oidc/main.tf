@@ -59,6 +59,27 @@ resource "aws_iam_role_policy" "github_actions" {
         Effect   = "Allow"
         Action   = ["cloudfront:CreateInvalidation"]
         Resource = var.cloudfront_distribution_arn
+      },
+      {
+        Sid    = "ArtifactUpload"
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:DeleteObject"]
+        Resource = "arn:aws:s3:::${var.files_bucket_name}/deployments/*"
+      },
+      {
+        Sid    = "SSMSendCommand"
+        Effect = "Allow"
+        Action = ["ssm:SendCommand"]
+        Resource = [
+          var.ec2_instance_arn,
+          "arn:aws:ssm:*::document/AWS-RunShellScript"
+        ]
+      },
+      {
+        Sid      = "SSMCommandStatus"
+        Effect   = "Allow"
+        Action   = ["ssm:GetCommandInvocation"]
+        Resource = "*"
       }
     ]
   })
