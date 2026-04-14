@@ -3,12 +3,6 @@ variable "region" {
   default = "eu-west-2"
 }
 
-variable "deploy_ssh_cidr" {
-  type        = string
-  description = "CIDR allowed to SSH — restrict to your IP or GitHub Actions IPs in production"
-  default     = "0.0.0.0/0"
-}
-
 variable "files_bucket_name" {
   type    = string
   default = "coba-files-poc"

@@ -2,10 +2,10 @@
 # terraform.tfvars is gitignored — never commit it
 
 anthropic_api_key = "sk-ant-..."
-github_repo       = "alexbtwbtw/code"
+github_repo       = "owner/repo"
 
 # Optional overrides (defaults are fine for POC)
 # region               = "eu-west-2"
-# deploy_ssh_cidr      = "0.0.0.0/0"   # restrict to your IP for better security
+# deploy_ssh_cidr      = "1.2.3.4/32"  # auto-detected from ifconfig.me if omitted
 # files_bucket_name    = "coba-files-poc"
 # frontend_bucket_name = "coba-frontend-poc"
