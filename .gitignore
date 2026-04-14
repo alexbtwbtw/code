@@ -37,3 +37,13 @@ desktop.ini
 #- OTHER
 .VSCodeCounter/
 unity/
+
+# ── Terraform ─────────────────────────────────────────────────────────────────
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!*.tfvars.example
+terraform.tfplan
+crash.log
+override.tf
