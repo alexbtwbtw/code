@@ -3,9 +3,9 @@
 
 anthropic_api_key = "sk-ant-..."
 github_repo       = "owner/repo"
-deploy_ssh_cidr   = "YOUR_IP/32"   # required — run: curl ifconfig.me, then append /32
 
 # Optional overrides (defaults are fine for POC)
 # region               = "eu-west-2"
+# deploy_ssh_cidr      = "1.2.3.4/32"  # auto-detected from ifconfig.me if omitted
 # files_bucket_name    = "coba-files-poc"
 # frontend_bucket_name = "coba-frontend-poc"
