@@ -45,7 +45,7 @@ jobs:
       - name: Package backend artifact
         run: |
           cd coba/backend
-          zip -r ../../backend-artifact.zip dist/ node_modules/ package.json ecosystem.config.cjs
+          zip -r ../../backend-artifact.zip dist/ package.json package-lock.json ecosystem.config.cjs
           cd ../..
           echo "Artifact size: $(du -sh backend-artifact.zip | cut -f1)"
 
@@ -76,6 +76,9 @@ jobs:
           cd /app
           unzip -o /tmp/backend-artifact.zip
           rm /tmp/backend-artifact.zip
+
+          # Install production dependencies (node_modules not in artifact)
+          npm ci --omit=dev
 
           # Write .env file so pm2 picks up secrets on every restart
           printf 'ANTHROPIC_API_KEY=%s\nS3_FILES_BUCKET=%s\nDB_PATH=%s\n' \
