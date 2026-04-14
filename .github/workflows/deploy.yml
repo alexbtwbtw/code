@@ -326,4 +326,4 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/index.html" "/game/index.html"
+            --paths "/index.html" "/game/index.html" "/game/*"
