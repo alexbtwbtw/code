@@ -1,15 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
   base: '/game/',
-  resolve: {
-    alias: {
-      '@backend': path.resolve(__dirname, '../backend/src'),
-    },
-  },
   server: {
     proxy: {
       '/game/api': {
