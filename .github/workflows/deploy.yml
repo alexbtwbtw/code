@@ -126,6 +126,7 @@ jobs:
       - name: Upload COBA artifact and deploy script to S3
         run: |
           COBA_DEPLOY_HASH=$(sha256sum coba-deploy.sh | awk '{print $1}')
+          [[ "$COBA_DEPLOY_HASH" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid hash"; exit 1; }
           echo "COBA_DEPLOY_HASH=$COBA_DEPLOY_HASH" >> "$GITHUB_ENV"
           aws s3 cp coba-backend-artifact.zip s3://${{ vars.FILES_BUCKET_NAME }}/deployments/coba-backend-artifact.zip
           aws s3 cp coba-deploy.sh s3://${{ vars.FILES_BUCKET_NAME }}/deployments/coba-deploy.sh
@@ -224,6 +225,7 @@ jobs:
       - name: Upload Game artifact and deploy script to S3
         run: |
           GAME_DEPLOY_HASH=$(sha256sum game-deploy.sh | awk '{print $1}')
+          [[ "$GAME_DEPLOY_HASH" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid hash"; exit 1; }
           echo "GAME_DEPLOY_HASH=$GAME_DEPLOY_HASH" >> "$GITHUB_ENV"
           aws s3 cp game-backend-artifact.zip s3://${{ vars.FILES_BUCKET_NAME }}/deployments/game-backend-artifact.zip
           aws s3 cp game-deploy.sh s3://${{ vars.FILES_BUCKET_NAME }}/deployments/game-deploy.sh
@@ -311,11 +313,13 @@ jobs:
       - name: Sync Game frontend to S3
         run: |
           aws s3 sync game/frontend/dist/game/assets/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/game/assets/ \
-            --cache-control "public,max-age=31536000,immutable"
+            --cache-control "public,max-age=31536000,immutable" \
+            --delete
 
           aws s3 sync game/frontend/dist/game/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/game/ \
             --cache-control "no-cache,no-store,must-revalidate" \
-            --exclude "assets/*"
+            --exclude "assets/*" \
+            --delete
 
       # ── CloudFront invalidation ────────────────────────────────────────────
       - name: Invalidate CloudFront

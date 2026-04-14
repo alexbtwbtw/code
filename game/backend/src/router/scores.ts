@@ -14,8 +14,8 @@ export const scoresRouter = router({
 
   add: publicProcedure
     .input(z.object({
-      player: z.string().min(1).max(50),
-      score:  z.number().int().min(0),
+      player: z.string().min(1).max(50).transform(s => s.trim()).pipe(z.string().min(1).regex(/^[\x20-\x7E\u00A0-\uFFFF]+$/)),
+      score:  z.number().int().min(0).max(1_000_000),
     }))
     .mutation(({ input }): { id: number } => {
       const result = db.prepare(

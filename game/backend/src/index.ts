@@ -9,7 +9,7 @@ const app = new Hono()
 app.use('*', logger())
 app.use('*', cors({
   origin: (origin) => {
-    if (!origin) return '*'
+    if (!origin) return null
     if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return origin
     return null
   },
