@@ -74,6 +74,7 @@ module "github_oidc" {
   source = "../../modules/github_oidc"
 
   github_repo                 = var.github_repo
+  environment_name            = "poc"
   frontend_bucket_name        = var.frontend_bucket_name
   files_bucket_name           = var.files_bucket_name
   cloudfront_distribution_arn = module.cdn.distribution_arn
