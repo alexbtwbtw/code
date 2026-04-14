@@ -187,7 +187,13 @@ async function readDwgToDatabase(arrayBuffer: ArrayBuffer) {
   // result.error directly; LibreDwg is the typed wrapper.
   const { createModule, LibreDwg } = await import('@mlightcad/libredwg-web')
 
-  const wasm = await createModule()
+  // Pass locateFile so the WASM runtime fetches libredwg-web.wasm from the
+  // Vite public directory instead of trying to resolve it relative to the JS
+  // module URL (which fails in Vite's dev server and in production builds).
+  const wasm = await createModule({
+    locateFile: (file: string) =>
+      file === 'libredwg-web.wasm' ? '/libredwg-web.wasm' : file,
+  })
   const fileName = 'tmp.dwg'
   wasm.FS.writeFile(fileName, new Uint8Array(arrayBuffer))
   const result = wasm.dwg_read_file(fileName)
@@ -315,7 +321,9 @@ function DwgViewerPane({ id }: { id: number }) {
 
         if (!cancelled) setStatus('ok')
       } catch (err) {
-        console.warn('DWG WASM viewer error:', err)
+        // Always log so errors are visible in the console even if the viewer
+        // was unmounted before the async work completed.
+        console.error('DWG WASM viewer error:', err)
         if (!cancelled) {
           // Extract numeric error code from the message if available
           const match = /error (\d+)/.exec(err instanceof Error ? err.message : String(err))
@@ -325,7 +333,19 @@ function DwgViewerPane({ id }: { id: number }) {
       }
     })()
 
-    return () => { cancelled = true }
+    // Safety timeout: if WASM init hangs (e.g. network error fetching .wasm),
+    // surface an error after 30 s rather than staying in 'loading' forever.
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        console.error('DWG WASM viewer timed out after 30 s')
+        setStatus('error')
+      }
+    }, 30_000)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
   }, [id])
 
   if (status === 'loading') {
