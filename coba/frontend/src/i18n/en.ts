@@ -610,7 +610,6 @@ export const en = {
   dwgEntityIdentical: 'Files are identical at entity level',
   dwgEntitySummary: '{a} entities in A · +{added} added · -{removed} removed · {unchanged} unchanged',
   dwgEntityMore: 'and {n} more...',
-  dwgOdaNotInstalled: 'Preview unavailable — DWG converter (dwg2dxf) not installed on server',
 
   // Misc
   optional: '(optional)',

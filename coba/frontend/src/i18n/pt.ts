@@ -612,7 +612,6 @@ export const pt: Record<TranslationKey, string> = {
   dwgEntityIdentical: 'Ficheiros são idênticos ao nível das entidades',
   dwgEntitySummary: '{a} entidades em A · +{added} adicionadas · -{removed} removidas · {unchanged} sem alterações',
   dwgEntityMore: 'e mais {n}...',
-  dwgOdaNotInstalled: 'Pré-visualização indisponível — conversor DWG (dwg2dxf) não está instalado no servidor',
 
   // Misc
   optional: '(opcional)',

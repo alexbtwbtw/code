@@ -137,16 +137,12 @@ function fmtDate(iso: string): string {
 
 // ── WASM error codes (LibreDWG bitmask) ──────────────────────────────────────
 //
-// LibreDWG uses OR-combined bitmask error codes. The values below are the
-// individual bit meanings defined in the LibreDWG C headers (dwg.h).
-// Error code 64 = DWG_ERR_VALUEOUTOFBOUNDS — a value in the file exceeded
-// the expected range during parsing. This is a common non-fatal warning on
-// AC1024 (AutoCAD 2010) files but indicates that some entities may not have
-// parsed correctly. Any non-zero error means the data is at best partial.
+// LibreDWG uses OR-combined bitmask error codes. Individual bit meanings are
+// defined in the LibreDWG C headers (dwg.h).
 //
-// Fatal threshold: errors >= DWG_ERR_INVALIDDWG (2048) mean the file
-// structure itself could not be decoded at all.
-const DWG_ERR_VALUEOUTOFBOUNDS = 64
+// Fatal threshold: DWG_ERR_INVALIDDWG (2048) — the file structure could not
+// be decoded at all. Lower codes (e.g. 64 = DWG_ERR_VALUEOUTOFBOUNDS) are
+// non-fatal warnings; the SVG is still produced and displayed.
 
 /**
  * Translates a LibreDWG bitmask error code into a human-readable string.
@@ -181,11 +177,16 @@ function dwgErrorMessage(code: number): string {
  *
  * Returns the parsed DwgDatabase ready for SVG conversion, or throws a
  * descriptive Error if parsing failed fatally or produced unusable data.
+ *
+ * Fatal threshold: DWG_ERR_INVALIDDWG = 2048. Error codes below this (e.g.
+ * 64 = DWG_ERR_VALUEOUTOFBOUNDS) are non-fatal warnings — the SVG is still
+ * produced and we should proceed.
  */
 async function readDwgToDatabase(arrayBuffer: ArrayBuffer) {
+  // createModule comes from the raw WASM entry point so we can check
+  // result.error directly; LibreDwg is the typed wrapper.
   const { createModule, LibreDwg } = await import('@mlightcad/libredwg-web')
 
-  // Use the raw WASM module so we can check result.error directly
   const wasm = await createModule()
   const fileName = 'tmp.dwg'
   wasm.FS.writeFile(fileName, new Uint8Array(arrayBuffer))
@@ -195,22 +196,13 @@ async function readDwgToDatabase(arrayBuffer: ArrayBuffer) {
   const errorCode: number = result.error ?? 0
   const dataPtr = result.data
 
-  // Any error means the data is at best partial. Fatal errors (>= 2048 =
-  // DWG_ERR_INVALIDDWG) mean the file is corrupt; lower codes (like 64 =
-  // DWG_ERR_VALUEOUTOFBOUNDS) typically mean an incompatible DWG subversion
-  // and will cause convert() to crash later anyway.
-  if (errorCode !== 0 || dataPtr == null) {
+  // Only treat as fatal when DWG_ERR_INVALIDDWG (2048) bit is set, meaning
+  // the file structure itself is unreadable. Non-fatal codes like 64
+  // (DWG_ERR_VALUEOUTOFBOUNDS) still produce a valid (possibly partial) SVG.
+  const DWG_ERR_INVALIDDWG = 2048
+  if ((errorCode & DWG_ERR_INVALIDDWG) !== 0 || dataPtr == null) {
     const detail = dwgErrorMessage(errorCode)
-    if (errorCode & DWG_ERR_VALUEOUTOFBOUNDS) {
-      throw new Error(
-        `DWG file uses an AC1024/R2010 feature that is not fully supported ` +
-        `by the browser renderer (${detail}).`,
-      )
-    }
-    if (errorCode !== 0) {
-      throw new Error(`DWG parsing failed: ${detail}.`)
-    }
-    throw new Error('DWG parsing returned no data.')
+    throw new Error(`DWG parsing failed (error ${errorCode}): ${detail}.`)
   }
 
   // Build a LibreDwg wrapper around the WASM instance we already created so
@@ -273,103 +265,67 @@ async function renderDwgToCanvas(
   }
 }
 
-// ── DWG Viewer (dxf-viewer / WebGL) ──────────────────────────────────────────
+// ── DWG Viewer (client-side WASM, libredwg-web) ───────────────────────────────
 //
-// Fetches DXF text from the backend conversion endpoint (/api/engineering/:id/dxf)
-// and renders it with the dxf-viewer Three.js-based WebGL viewer.
-// If the backend returns 503 { error: 'converter_not_installed' } we show a friendly
-// "converter not installed" message rather than a generic error.
+// Fetches raw DWG bytes from /api/engineering/:id/dwg and renders them to SVG
+// entirely in the browser using the @mlightcad/libredwg-web WASM library.
+// No server-side conversion tool (dwg2dxf / ODA) is required.
+//
+// Error handling:
+//   - Non-fatal WASM errors (e.g. code 64 = DWG_ERR_VALUEOUTOFBOUNDS) are
+//     ignored — the SVG is still produced and displayed.
+//   - Fatal errors (DWG_ERR_INVALIDDWG = 2048 bit set) show an error message
+//     with the numeric error code.
 
-type ViewerStatus = 'loading' | 'ok' | 'converter_not_installed' | 'error'
+type ViewerStatus = 'loading' | 'ok' | 'error'
 
 function DwgViewerPane({ id }: { id: number }) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<ViewerStatus>('loading')
+  const [errorCode, setErrorCode] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setStatus('loading')
-
-    // Destroy any previous viewer that may have appended a canvas to the container.
-    // We track it via a closure-scoped variable so the cleanup function can call Destroy().
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let viewerInstance: any = null
+    setErrorCode(null)
 
     ;(async () => {
       try {
-        // Fetch DXF content from the backend ODA conversion endpoint
-        const user = getCurrentUser()
-        const headers: HeadersInit = user
-          ? { 'x-user-role': user.role, 'x-user-id': String(user.id), 'x-user-name': user.name }
-          : {}
-
-        const res = await fetch(`/api/engineering/${id}/dxf`, { headers })
-
+        // 1. Fetch raw DWG bytes from the existing endpoint
+        const arrayBuffer = await fetchDwgBytes(id)
         if (cancelled) return
 
-        if (res.status === 503) {
-          let body: { error?: string } = {}
-          try { body = await res.json() as { error?: string } } catch { /* ignore */ }
-          if (body.error === 'converter_not_installed' || body.error === 'oda_not_installed') {
-            setStatus('converter_not_installed')
-            return
-          }
-          setStatus('error')
-          return
-        }
-
-        if (!res.ok) {
-          setStatus('error')
-          return
-        }
-
-        const dxfText = await res.text()
+        // 2. Parse via WASM — non-fatal errors (e.g. code 64) are treated as
+        //    warnings; fatal errors throw and are caught below.
+        const { libredwg, db } = await readDwgToDatabase(arrayBuffer)
         if (cancelled) return
 
-        // Wait until the container div is in the DOM
-        if (!containerRef.current) {
-          setStatus('error')
-          return
-        }
+        // 3. Convert DwgDatabase → SVG string
+        const rawSvg = libredwg.dwg_to_svg(db)
+        if (cancelled) return
 
-        // Build a blob URL so DxfViewer can fetch it (its Load() API expects a URL)
-        const blob    = new Blob([dxfText], { type: 'text/plain' })
-        const blobUrl = URL.createObjectURL(blob)
+        // 4. Sanitize: strip <script> and other dangerous elements/attributes
+        const safeSvg = sanitizeSvg(rawSvg)
 
-        try {
-          const { DxfViewer } = await import('dxf-viewer')
-          const three = await import('three')
-          if (cancelled) { URL.revokeObjectURL(blobUrl); return }
+        if (!containerRef.current || cancelled) return
 
-          // Clear any previously mounted canvas from the container
-          containerRef.current.innerHTML = ''
-
-          const viewer = new DxfViewer(containerRef.current, {
-            autoResize: true,
-            clearColor: new three.Color('#1a2236'),
-            clearAlpha: 1,
-            antialias: true,
-          })
-          viewerInstance = viewer
-
-          await viewer.Load({ url: blobUrl, fonts: null, workerFactory: null })
-        } finally {
-          URL.revokeObjectURL(blobUrl)
-        }
+        // 5. Inject SVG into the container div
+        containerRef.current.innerHTML = safeSvg || '<svg/>'
 
         if (!cancelled) setStatus('ok')
       } catch (err) {
-        console.warn('DXF viewer error:', err)
-        if (!cancelled) setStatus('error')
+        console.warn('DWG WASM viewer error:', err)
+        if (!cancelled) {
+          // Extract numeric error code from the message if available
+          const match = /error (\d+)/.exec(err instanceof Error ? err.message : String(err))
+          setErrorCode(match ? parseInt(match[1], 10) : null)
+          setStatus('error')
+        }
       }
     })()
 
-    return () => {
-      cancelled = true
-      // Destroy the Three.js renderer to free WebGL context and memory
-      try { viewerInstance?.Destroy?.() } catch { /* ignore */ }
-    }
+    return () => { cancelled = true }
   }, [id])
 
   if (status === 'loading') {
@@ -381,30 +337,24 @@ function DwgViewerPane({ id }: { id: number }) {
     )
   }
 
-  if (status === 'converter_not_installed') {
-    return (
-      <div className="eng-viewer-placeholder eng-viewer-placeholder--error">
-        <div className="eng-viewer-error-body">
-          <span className="eng-viewer-error-icon">⚠</span>
-          <span className="eng-viewer-error-title">{t('dwgOdaNotInstalled')}</span>
-        </div>
-      </div>
-    )
-  }
-
   if (status === 'error') {
     return (
       <div className="eng-viewer-placeholder eng-viewer-placeholder--error">
         <div className="eng-viewer-error-body">
           <span className="eng-viewer-error-icon">⚠</span>
           <span className="eng-viewer-error-title">{t('dwgPreviewUnavailable')}</span>
+          {errorCode != null && (
+            <span className="eng-viewer-error-hint">
+              {dwgErrorMessage(errorCode)} (code {errorCode})
+            </span>
+          )}
           <span className="eng-viewer-error-hint">{t('dwgPreviewUnavailableHint')}</span>
         </div>
       </div>
     )
   }
 
-  // status === 'ok' — container already has the canvas mounted by DxfViewer
+  // status === 'ok' — SVG has been injected into the container via innerHTML
   return (
     <div
       ref={containerRef}
