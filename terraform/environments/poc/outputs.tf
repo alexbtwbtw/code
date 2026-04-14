@@ -18,10 +18,9 @@ output "frontend_bucket" {
   value = module.storage.frontend_bucket_name
 }
 
-output "ec2_private_key" {
-  description = "Private SSH key for EC2 access — save this to coba-ec2-key.pem"
-  value       = tls_private_key.ec2.private_key_openssh
-  sensitive   = true
+output "ec2_instance_id" {
+  description = "Add this as the EC2_INSTANCE_ID variable in your GitHub repo environment"
+  value       = module.compute.instance_id
 }
 
 output "github_actions_role_arn" {
