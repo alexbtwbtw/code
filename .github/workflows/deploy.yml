@@ -27,32 +27,50 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: eu-west-2
 
-      # ── Backend build ──────────────────────────────────────────────────────
       - uses: actions/setup-node@v4
         with:
           node-version: '25'
           cache: 'npm'
-          cache-dependency-path: coba/backend/package-lock.json
+          cache-dependency-path: |
+            coba/backend/package-lock.json
+            game/backend/package-lock.json
 
-      - name: Install backend dependencies
+      # ── COBA backend ───────────────────────────────────────────────────────
+      - name: Install COBA backend dependencies
         run: npm ci
         working-directory: coba/backend
 
-      - name: Build backend
+      - name: Build COBA backend
         run: npm run build
         working-directory: coba/backend
 
-      - name: Package backend artifact
+      - name: Package COBA backend artifact
         run: |
           cd coba/backend
-          zip -r ../../backend-artifact.zip dist/ package.json package-lock.json ecosystem.config.cjs
+          zip -r ../../coba-backend-artifact.zip dist/ package.json package-lock.json ecosystem.config.cjs
           cd ../..
-          echo "Artifact size: $(du -sh backend-artifact.zip | cut -f1)"
+          echo "COBA artifact size: $(du -sh coba-backend-artifact.zip | cut -f1)"
 
-      # ── Deploy backend via SSM (no SSH, no open ports) ────────────────────
-      - name: Write deploy script
+      # ── Game backend ───────────────────────────────────────────────────────
+      - name: Install Game backend dependencies
+        run: npm ci
+        working-directory: game/backend
+
+      - name: Build Game backend
+        run: npm run build
+        working-directory: game/backend
+
+      - name: Package Game backend artifact
         run: |
-          cat > deploy.sh << 'SCRIPT'
+          cd game/backend
+          zip -r ../../game-backend-artifact.zip dist/ package.json package-lock.json ecosystem.config.cjs
+          cd ../..
+          echo "Game artifact size: $(du -sh game-backend-artifact.zip | cut -f1)"
+
+      # ── Deploy COBA backend via SSM ────────────────────────────────────────
+      - name: Write COBA deploy script
+        run: |
+          cat > coba-deploy.sh << 'SCRIPT'
           #!/bin/bash
           set -e
 
@@ -69,13 +87,13 @@ jobs:
             --query Parameter.Value --output text)
 
           # Download artifact from S3
-          aws s3 cp s3://${S3_BUCKET}/deployments/backend-artifact.zip /tmp/backend-artifact.zip
+          aws s3 cp s3://${S3_BUCKET}/deployments/coba-backend-artifact.zip /tmp/coba-backend-artifact.zip
 
           # Extract artifact
           mkdir -p /app /var/log/coba
           cd /app
-          unzip -o /tmp/backend-artifact.zip
-          rm /tmp/backend-artifact.zip
+          unzip -o /tmp/coba-backend-artifact.zip
+          rm /tmp/coba-backend-artifact.zip
 
           # Install production dependencies (node_modules not in artifact)
           npm ci --omit=dev
@@ -90,14 +108,13 @@ jobs:
           pm2 save
 
           # Verify health through nginx (validates full stack)
-          # Retry up to 10 times to account for app startup time
           for attempt in $(seq 1 10); do
             if curl -sf http://localhost/api/health; then
-              echo "Health check passed on attempt $attempt."
+              echo "COBA health check passed on attempt $attempt."
               break
             fi
             if [ "$attempt" -eq 10 ]; then
-              echo "Health check failed after 10 attempts."
+              echo "COBA health check failed after 10 attempts."
               pm2 logs --lines 50
               exit 1
             fi
@@ -106,14 +123,15 @@ jobs:
           done
           SCRIPT
 
-      - name: Upload artifact and deploy script to S3
+      - name: Upload COBA artifact and deploy script to S3
         run: |
-          DEPLOY_HASH=$(sha256sum deploy.sh | awk '{print $1}')
-          echo "DEPLOY_HASH=$DEPLOY_HASH" >> "$GITHUB_ENV"
-          aws s3 cp backend-artifact.zip s3://${{ vars.FILES_BUCKET_NAME }}/deployments/backend-artifact.zip
-          aws s3 cp deploy.sh s3://${{ vars.FILES_BUCKET_NAME }}/deployments/deploy.sh
+          COBA_DEPLOY_HASH=$(sha256sum coba-deploy.sh | awk '{print $1}')
+          [[ "$COBA_DEPLOY_HASH" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid hash"; exit 1; }
+          echo "COBA_DEPLOY_HASH=$COBA_DEPLOY_HASH" >> "$GITHUB_ENV"
+          aws s3 cp coba-backend-artifact.zip s3://${{ vars.FILES_BUCKET_NAME }}/deployments/coba-backend-artifact.zip
+          aws s3 cp coba-deploy.sh s3://${{ vars.FILES_BUCKET_NAME }}/deployments/coba-deploy.sh
 
-      - name: Run deploy script via SSM
+      - name: Run COBA deploy script via SSM
         env:
           EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
           FILES_BUCKET: ${{ vars.FILES_BUCKET_NAME }}
@@ -121,14 +139,13 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[\"set -e && aws s3 cp s3://${FILES_BUCKET}/deployments/deploy.sh /tmp/deploy.sh && echo '${DEPLOY_HASH}  /tmp/deploy.sh' | sha256sum -c - && bash /tmp/deploy.sh\"]" \
+            --parameters "commands=[\"set -e && aws s3 cp s3://${FILES_BUCKET}/deployments/coba-deploy.sh /tmp/coba-deploy.sh && echo '${COBA_DEPLOY_HASH}  /tmp/coba-deploy.sh' | sha256sum -c - && bash /tmp/coba-deploy.sh\"]" \
             --timeout-seconds 600 \
             --query "Command.CommandId" \
             --output text)
 
           echo "SSM Command ID: $COMMAND_ID"
 
-          # Poll until the command finishes (max ~10 min)
           for i in $(seq 1 60); do
             STATUS=$(aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
@@ -139,11 +156,11 @@ jobs:
 
             case "$STATUS" in
               Success)
-                echo "Deployment succeeded."
+                echo "COBA deployment succeeded."
                 break
                 ;;
               Failed|Cancelled|TimedOut|Cancelling)
-                echo "Deployment failed with status: $STATUS"
+                echo "COBA deployment failed with status: $STATUS"
                 aws ssm get-command-invocation \
                   --command-id "$COMMAND_ID" \
                   --instance-id "$EC2_INSTANCE_ID" \
@@ -161,18 +178,117 @@ jobs:
             fi
           done
 
-      # ── Build and deploy frontend ──────────────────────────────────────────
-      - name: Install frontend dependencies
+      # ── Deploy Game backend via SSM ────────────────────────────────────────
+      - name: Write Game deploy script
+        run: |
+          cat > game-deploy.sh << 'SCRIPT'
+          #!/bin/bash
+          set -e
+
+          S3_BUCKET=$(aws ssm get-parameter \
+            --name /coba/poc/s3-files-bucket \
+            --query Parameter.Value --output text)
+
+          # Download artifact from S3
+          aws s3 cp s3://${S3_BUCKET}/deployments/game-backend-artifact.zip /tmp/game-backend-artifact.zip
+
+          # Extract artifact
+          mkdir -p /app-game /var/log/game
+          cd /app-game
+          unzip -o /tmp/game-backend-artifact.zip
+          rm /tmp/game-backend-artifact.zip
+
+          # Install production dependencies (node_modules not in artifact)
+          npm ci --omit=dev
+
+          pm2 reload /app-game/ecosystem.config.cjs --update-env \
+            || pm2 start /app-game/ecosystem.config.cjs
+
+          pm2 save
+
+          # Verify health through nginx
+          for attempt in $(seq 1 10); do
+            if curl -sf http://localhost/game/api/health; then
+              echo "Game health check passed on attempt $attempt."
+              break
+            fi
+            if [ "$attempt" -eq 10 ]; then
+              echo "Game health check failed after 10 attempts."
+              pm2 logs --lines 50
+              exit 1
+            fi
+            echo "Attempt $attempt failed, retrying in 3s..."
+            sleep 3
+          done
+          SCRIPT
+
+      - name: Upload Game artifact and deploy script to S3
+        run: |
+          GAME_DEPLOY_HASH=$(sha256sum game-deploy.sh | awk '{print $1}')
+          [[ "$GAME_DEPLOY_HASH" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid hash"; exit 1; }
+          echo "GAME_DEPLOY_HASH=$GAME_DEPLOY_HASH" >> "$GITHUB_ENV"
+          aws s3 cp game-backend-artifact.zip s3://${{ vars.FILES_BUCKET_NAME }}/deployments/game-backend-artifact.zip
+          aws s3 cp game-deploy.sh s3://${{ vars.FILES_BUCKET_NAME }}/deployments/game-deploy.sh
+
+      - name: Run Game deploy script via SSM
+        env:
+          EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          FILES_BUCKET: ${{ vars.FILES_BUCKET_NAME }}
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[\"set -e && aws s3 cp s3://${FILES_BUCKET}/deployments/game-deploy.sh /tmp/game-deploy.sh && echo '${GAME_DEPLOY_HASH}  /tmp/game-deploy.sh' | sha256sum -c - && bash /tmp/game-deploy.sh\"]" \
+            --timeout-seconds 600 \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM Command ID: $COMMAND_ID"
+
+          for i in $(seq 1 60); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$EC2_INSTANCE_ID" \
+              --query "Status" --output text 2>/dev/null || echo "Pending")
+
+            echo "[$i/60] Status: $STATUS"
+
+            case "$STATUS" in
+              Success)
+                echo "Game deployment succeeded."
+                break
+                ;;
+              Failed|Cancelled|TimedOut|Cancelling)
+                echo "Game deployment failed with status: $STATUS"
+                aws ssm get-command-invocation \
+                  --command-id "$COMMAND_ID" \
+                  --instance-id "$EC2_INSTANCE_ID" \
+                  --query "StandardErrorContent" --output text
+                exit 1
+                ;;
+              *)
+                sleep 10
+                ;;
+            esac
+
+            if [ "$i" -eq 60 ]; then
+              echo "Timed out waiting for SSM command to complete."
+              exit 1
+            fi
+          done
+
+      # ── Build and deploy COBA frontend ─────────────────────────────────────
+      - name: Install COBA frontend dependencies
         run: npm ci
         working-directory: coba/frontend
 
-      - name: Build frontend
+      - name: Build COBA frontend
         run: npm run build
         working-directory: coba/frontend
         env:
           NODE_ENV: production
 
-      - name: Sync frontend to S3
+      - name: Sync COBA frontend to S3
         run: |
           aws s3 sync coba/frontend/dist/assets/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/assets/ \
             --cache-control "public,max-age=31536000,immutable" \
@@ -183,8 +299,31 @@ jobs:
             --exclude "assets/*" \
             --delete
 
+      # ── Build and deploy Game frontend ─────────────────────────────────────
+      - name: Install Game frontend dependencies
+        run: npm ci
+        working-directory: game/frontend
+
+      - name: Build Game frontend
+        run: npm run build
+        working-directory: game/frontend
+        env:
+          NODE_ENV: production
+
+      - name: Sync Game frontend to S3
+        run: |
+          aws s3 sync game/frontend/dist/game/assets/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/game/assets/ \
+            --cache-control "public,max-age=31536000,immutable" \
+            --delete
+
+          aws s3 sync game/frontend/dist/game/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/game/ \
+            --cache-control "no-cache,no-store,must-revalidate" \
+            --exclude "assets/*" \
+            --delete
+
+      # ── CloudFront invalidation ────────────────────────────────────────────
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/index.html"
+            --paths "/index.html" "/game/index.html" "/game/*"
