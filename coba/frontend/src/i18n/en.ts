@@ -611,6 +611,16 @@ export const en = {
   dwgEntitySummary: '{a} entities in A · +{added} added · -{removed} removed · {unchanged} unchanged',
   dwgEntityMore: 'and {n} more...',
 
+  // DWG Date Editor
+  dwgDateEditor: 'Date Editor',
+  dwgDateEditorDrop: 'Drop a DWG file here or click to browse',
+  dwgDateEditorNoDates: 'No date fields found in this file',
+  dwgDateEditorOffset: 'Offset',
+  dwgDateEditorCurrent: 'Current Date',
+  dwgDateEditorNew: 'New Date',
+  dwgDateEditorPatchAll: 'Patch & Download',
+  dwgDateEditorWarning: 'This directly modifies the DWG binary. Keep the original file as backup.',
+
   // Misc
   optional: '(optional)',
   na: 'N/A',

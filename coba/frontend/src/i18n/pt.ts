@@ -613,6 +613,16 @@ export const pt: Record<TranslationKey, string> = {
   dwgEntitySummary: '{a} entidades em A · +{added} adicionadas · -{removed} removidas · {unchanged} sem alterações',
   dwgEntityMore: 'e mais {n}...',
 
+  // DWG Date Editor
+  dwgDateEditor: 'Editor de Datas',
+  dwgDateEditorDrop: 'Arraste um ficheiro DWG ou clique para selecionar',
+  dwgDateEditorNoDates: 'Nenhuma data encontrada neste ficheiro',
+  dwgDateEditorOffset: 'Offset',
+  dwgDateEditorCurrent: 'Data Atual',
+  dwgDateEditorNew: 'Nova Data',
+  dwgDateEditorPatchAll: 'Aplicar e Transferir',
+  dwgDateEditorWarning: 'Isto modifica diretamente o binário DWG. Mantenha o ficheiro original como cópia de segurança.',
+
   // Misc
   optional: '(opcional)',
   na: 'N/D',

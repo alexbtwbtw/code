@@ -889,9 +889,218 @@ function CompareTab({ files }: { files: DwgFile[] }) {
   )
 }
 
+// ── DWG Date Editor ───────────────────────────────────────────────────────────
+//
+// Purely client-side utility. Scans a DWG binary for Julian Day Number doubles
+// (IEEE 754 little-endian, range 1980–2050), lets the user edit them via date
+// pickers, and downloads the patched buffer without any server involvement.
+//
+// Julian Day Number ↔ Unix epoch conversion:
+//   jd  → Date:  new Date((jd  - 2440587.5) * 86400000)
+//   Date → jd:   (date.getTime() / 86400000) + 2440587.5
+
+const JD_MIN = 2444239.5  // 1980-01-01
+const JD_MAX = 2469807.5  // 2050-01-01
+
+/** Convert a Julian Day Number to an ISO date string (YYYY-MM-DD). */
+function jdToIso(jd: number): string {
+  const d = new Date((jd - 2440587.5) * 86400000)
+  return d.toISOString().slice(0, 10)
+}
+
+/** Convert an ISO date string (YYYY-MM-DD) back to a Julian Day Number. */
+function isoToJd(iso: string): number {
+  return new Date(iso).getTime() / 86400000 + 2440587.5
+}
+
+/** Read a little-endian float64 from a DataView at the given byte offset. */
+function readF64LE(view: DataView, offset: number): number {
+  return view.getFloat64(offset, /* littleEndian= */ true)
+}
+
+/** Write a little-endian float64 into a DataView at the given byte offset. */
+function writeF64LE(view: DataView, offset: number, value: number): void {
+  view.setFloat64(offset, value, /* littleEndian= */ true)
+}
+
+interface DateCandidate {
+  offset: number   // byte offset in the file
+  jd: number       // original Julian Day Number
+  newIso: string   // editable new date (ISO YYYY-MM-DD)
+}
+
+function DwgDateEditor() {
+  const { t } = useTranslation()
+  const [dragging, setDragging]       = useState(false)
+  const [fileName, setFileName]       = useState<string | null>(null)
+  const [buffer, setBuffer]           = useState<ArrayBuffer | null>(null)
+  const [candidates, setCandidates]   = useState<DateCandidate[]>([])
+  const [scanning, setScanning]       = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  /** Scan the loaded ArrayBuffer for plausible Julian Date Number doubles. */
+  function scanBuffer(buf: ArrayBuffer) {
+    setScanning(true)
+    const view = new DataView(buf)
+    const found: DateCandidate[] = []
+
+    // Read every aligned 8-byte block
+    for (let off = 0; off + 8 <= buf.byteLength; off += 8) {
+      const v = readF64LE(view, off)
+      if (v >= JD_MIN && v <= JD_MAX && isFinite(v)) {
+        found.push({ offset: off, jd: v, newIso: jdToIso(v) })
+      }
+    }
+
+    setCandidates(found)
+    setScanning(false)
+  }
+
+  async function loadFile(file: File) {
+    setFileName(file.name)
+    setCandidates([])
+    const buf = await file.arrayBuffer()
+    setBuffer(buf)
+    scanBuffer(buf)
+  }
+
+  function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return
+    void loadFile(files[0])
+  }
+
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragging(false)
+    handleFiles(e.dataTransfer.files)
+  }
+
+  function updateNewIso(offset: number, iso: string) {
+    setCandidates(prev =>
+      prev.map(c => c.offset === offset ? { ...c, newIso: iso } : c),
+    )
+  }
+
+  function patchAndDownload() {
+    if (!buffer || !fileName) return
+
+    // Clone the original buffer so we never mutate it
+    const copy = buffer.slice(0)
+    const view = new DataView(copy)
+
+    for (const c of candidates) {
+      const newJd = isoToJd(c.newIso)
+      writeF64LE(view, c.offset, newJd)
+    }
+
+    const blob = new Blob([copy], { type: 'application/octet-stream' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="eng-date-editor">
+      {/* Drop zone */}
+      <div
+        className={`eng-drop-zone${dragging ? ' eng-drop-zone--drag' : ''}`}
+        onDrop={onDrop}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onClick={() => inputRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".dwg"
+          style={{ display: 'none' }}
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        <div className="eng-drop-inner">
+          <span className="eng-drop-icon">📅</span>
+          <span className="eng-drop-label">
+            {fileName ?? t('dwgDateEditorDrop')}
+          </span>
+          {fileName && (
+            <span className="eng-drop-hint">{t('dwgDateEditorDrop')}</span>
+          )}
+        </div>
+      </div>
+
+      {scanning && (
+        <div className="eng-compare-loading">
+          <span className="eng-drop-spinner" />
+          <span>{t('loading')}</span>
+        </div>
+      )}
+
+      {/* Warning banner */}
+      {buffer && !scanning && (
+        <div className="eng-date-editor-warning">
+          ⚠ {t('dwgDateEditorWarning')}
+        </div>
+      )}
+
+      {/* Results table */}
+      {buffer && !scanning && candidates.length === 0 && (
+        <div className="eng-compare-info">{t('dwgDateEditorNoDates')}</div>
+      )}
+
+      {buffer && !scanning && candidates.length > 0 && (
+        <>
+          <div className="eng-date-table-wrap">
+            <table className="eng-date-table">
+              <thead>
+                <tr>
+                  <th>{t('dwgDateEditorOffset')}</th>
+                  <th>{t('dwgDateEditorCurrent')}</th>
+                  <th>{t('dwgDateEditorNew')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {candidates.map(c => (
+                  <tr key={c.offset}>
+                    <td className="eng-date-offset">
+                      0x{c.offset.toString(16).toUpperCase().padStart(8, '0')}
+                    </td>
+                    <td className="eng-date-current">{jdToIso(c.jd)}</td>
+                    <td>
+                      <input
+                        type="date"
+                        className="eng-input"
+                        value={c.newIso}
+                        onChange={(e) => updateNewIso(c.offset, e.target.value)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <button
+            className="btn eng-save-btn eng-date-patch-btn"
+            onClick={patchAndDownload}
+          >
+            {t('dwgDateEditorPatchAll')}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── Main view ─────────────────────────────────────────────────────────────────
 
-type Tab = 'files' | 'compare'
+type Tab = 'files' | 'compare' | 'dateEditor'
 
 export default function EngineeringTools() {
   const { t } = useTranslation()
@@ -936,6 +1145,12 @@ export default function EngineeringTools() {
           onClick={() => setTab('compare')}
         >
           {t('dwgCompareTab')}
+        </button>
+        <button
+          className={`eng-tab${tab === 'dateEditor' ? ' eng-tab--active' : ''}`}
+          onClick={() => setTab('dateEditor')}
+        >
+          {t('dwgDateEditor')}
         </button>
       </div>
 
@@ -1037,6 +1252,16 @@ export default function EngineeringTools() {
           ) : (
             <CompareTab files={files} />
           )}
+        </section>
+      )}
+
+      {/* ── Date Editor tab ── */}
+      {tab === 'dateEditor' && (
+        <section className="time-report-section">
+          <div className="time-report-section-header">
+            <h2 className="time-report-section-title">{t('dwgDateEditor')}</h2>
+          </div>
+          <DwgDateEditor />
         </section>
       )}
     </div>

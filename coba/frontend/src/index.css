@@ -2464,3 +2464,45 @@ div.tagged-project-row:hover { border-color: var(--border); }
 .eng-entity-type { font-size: .65rem; font-weight: 700; padding: .1rem .35rem; border-radius: 3px; text-transform: uppercase; background: rgba(255,255,255,.1); }
 .eng-entity-layer { opacity: .6; font-size: .75rem; }
 .eng-entity-unavailable { color: var(--text-lt); font-size: .85rem; padding: 1rem; background: rgba(255,255,255,.03); border-radius: 8px; border: 1px solid rgba(255,255,255,.08); }
+
+/* DWG Date Editor */
+.eng-date-editor { display: flex; flex-direction: column; gap: 16px; }
+.eng-date-editor-warning {
+  background: rgba(245,158,11,.08);
+  border: 1px solid rgba(245,158,11,.25);
+  border-radius: 8px;
+  padding: .6rem 1rem;
+  font-size: 13px;
+  color: var(--amber);
+}
+.eng-date-table-wrap { overflow-x: auto; }
+.eng-date-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.eng-date-table th {
+  text-align: left;
+  padding: .5rem .75rem;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-lt);
+  border-bottom: 1px solid var(--border);
+}
+.eng-date-table td {
+  padding: .45rem .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  vertical-align: middle;
+}
+.eng-date-table tr:last-child td { border-bottom: none; }
+.eng-date-table tr:hover td { background: rgba(255,255,255,.02); }
+.eng-date-offset {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--text-lt);
+  white-space: nowrap;
+}
+.eng-date-current { color: var(--text-md); white-space: nowrap; }
+.eng-date-patch-btn { width: auto; align-self: flex-start; }
