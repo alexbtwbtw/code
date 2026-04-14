@@ -620,6 +620,7 @@ export const en = {
   dwgDateEditorNew: 'New Date',
   dwgDateEditorPatchAll: 'Patch & Download',
   dwgDateEditorWarning: 'This directly modifies the DWG binary. Keep the original file as backup.',
+  dwgDateEditorCapped: 'Showing first 20 matches — the file may contain more date fields.',
 
   // Misc
   optional: '(optional)',

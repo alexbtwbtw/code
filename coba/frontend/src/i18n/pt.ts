@@ -622,6 +622,7 @@ export const pt: Record<TranslationKey, string> = {
   dwgDateEditorNew: 'Nova Data',
   dwgDateEditorPatchAll: 'Aplicar e Transferir',
   dwgDateEditorWarning: 'Isto modifica diretamente o binário DWG. Mantenha o ficheiro original como cópia de segurança.',
+  dwgDateEditorCapped: 'A mostrar os primeiros 20 resultados — o ficheiro pode conter mais campos de data.',
 
   // Misc
   optional: '(opcional)',

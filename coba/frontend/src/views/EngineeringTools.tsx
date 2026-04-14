@@ -956,11 +956,18 @@ function DwgDateEditor() {
     const view = new DataView(buf)
     const found: DateCandidate[] = []
 
-    // Read every aligned 8-byte block
-    for (let off = 0; off + 8 <= buf.byteLength; off += 8) {
+    // Stride of 1: DWG header dates are NOT guaranteed to be 8-byte aligned, so
+    // we must try every single byte offset. We deduplicate by skipping any offset
+    // that is within 7 bytes of the previous accepted hit (the 8 bytes of that
+    // double would overlap). We cap at 20 results to keep the UI readable.
+    let lastAccepted = -8
+    for (let off = 0; off + 8 <= buf.byteLength; off++) {
+      if (off < lastAccepted + 8) continue   // skip bytes overlapping the last hit
       const v = readF64LE(view, off)
       if (v >= JD_MIN && v <= JD_MAX && isFinite(v)) {
         found.push({ offset: off, jd: v, newIso: jdToIso(v) })
+        lastAccepted = off
+        if (found.length >= 20) break
       }
     }
 
@@ -1068,6 +1075,9 @@ function DwgDateEditor() {
 
       {buffer && !scanning && candidates.length > 0 && (
         <>
+          {candidates.length === 20 && (
+            <div className="eng-compare-info">{t('dwgDateEditorCapped')}</div>
+          )}
           <div className="eng-date-table-wrap">
             <table className="eng-date-table">
               <thead>
