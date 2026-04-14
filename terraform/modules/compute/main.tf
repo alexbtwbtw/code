@@ -94,6 +94,8 @@ resource "aws_instance" "backend" {
     server {
         listen 80;
         server_name _;
+        server_tokens off;
+        client_max_body_size 10m;
 
         # COBA — proxy /api/* and /trpc/* to backend on port 3000
         location /api/ {

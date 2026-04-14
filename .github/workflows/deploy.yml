@@ -87,9 +87,20 @@ jobs:
           pm2 save
 
           # Verify health through nginx (validates full stack)
-          sleep 3
-          curl -sf http://localhost/api/health \
-            || (pm2 logs --lines 50 && exit 1)
+          # Retry up to 10 times to account for app startup time
+          for attempt in $(seq 1 10); do
+            if curl -sf http://localhost/api/health; then
+              echo "Health check passed on attempt $attempt."
+              break
+            fi
+            if [ "$attempt" -eq 10 ]; then
+              echo "Health check failed after 10 attempts."
+              pm2 logs --lines 50
+              exit 1
+            fi
+            echo "Attempt $attempt failed, retrying in 3s..."
+            sleep 3
+          done
           SCRIPT
 
       - name: Upload artifact and deploy script to S3
