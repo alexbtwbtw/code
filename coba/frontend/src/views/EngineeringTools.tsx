@@ -287,14 +287,13 @@ type ViewerStatus = 'loading' | 'ok' | 'error'
 
 function DwgViewerPane({ id }: { id: number }) {
   const { t } = useTranslation()
-  const containerRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<ViewerStatus>('loading')
-  const [errorCode, setErrorCode] = useState<number | null>(null)
+  const [svgContent, setSvgContent] = useState<string>('')
 
   useEffect(() => {
     let cancelled = false
     setStatus('loading')
-    setErrorCode(null)
+    setSvgContent('')
 
     ;(async () => {
       try {
@@ -312,22 +311,19 @@ function DwgViewerPane({ id }: { id: number }) {
         if (cancelled) return
 
         // 4. Sanitize: strip <script> and other dangerous elements/attributes
-        const safeSvg = sanitizeSvg(rawSvg)
+        const safeSvg = sanitizeSvg(rawSvg ?? '')
+        if (!safeSvg) throw new Error('SVG sanitization produced empty output')
 
-        if (!containerRef.current || cancelled) return
+        if (cancelled) return
 
-        // 5. Inject SVG into the container div
-        containerRef.current.innerHTML = safeSvg || '<svg/>'
-
-        if (!cancelled) setStatus('ok')
+        // 5. Store SVG in state so React renders it via dangerouslySetInnerHTML
+        setSvgContent(safeSvg)
+        setStatus('ok')
       } catch (err) {
         // Always log so errors are visible in the console even if the viewer
         // was unmounted before the async work completed.
         console.error('DWG WASM viewer error:', err)
         if (!cancelled) {
-          // Extract numeric error code from the message if available
-          const match = /error (\d+)/.exec(err instanceof Error ? err.message : String(err))
-          setErrorCode(match ? parseInt(match[1], 10) : null)
           setStatus('error')
         }
       }
@@ -363,22 +359,18 @@ function DwgViewerPane({ id }: { id: number }) {
         <div className="eng-viewer-error-body">
           <span className="eng-viewer-error-icon">⚠</span>
           <span className="eng-viewer-error-title">{t('dwgPreviewUnavailable')}</span>
-          {errorCode != null && (
-            <span className="eng-viewer-error-hint">
-              {dwgErrorMessage(errorCode)} (code {errorCode})
-            </span>
-          )}
           <span className="eng-viewer-error-hint">{t('dwgPreviewUnavailableHint')}</span>
         </div>
       </div>
     )
   }
 
-  // status === 'ok' — SVG has been injected into the container via innerHTML
+  // status === 'ok' — SVG rendered via dangerouslySetInnerHTML (already sanitized)
   return (
     <div
-      ref={containerRef}
       className="eng-svg-container"
+      // eslint-disable-next-line react/no-danger
+      dangerouslySetInnerHTML={{ __html: svgContent }}
     />
   )
 }
