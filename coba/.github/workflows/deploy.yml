@@ -114,6 +114,8 @@ jobs:
 
       - name: Upload artifact and deploy script to S3
         run: |
+          DEPLOY_HASH=$(sha256sum deploy.sh | awk '{print $1}')
+          echo "DEPLOY_HASH=$DEPLOY_HASH" >> "$GITHUB_ENV"
           aws s3 cp backend-artifact.zip s3://${{ vars.FILES_BUCKET_NAME }}/deployments/backend-artifact.zip
           aws s3 cp deploy.sh s3://${{ vars.FILES_BUCKET_NAME }}/deployments/deploy.sh
 
@@ -125,7 +127,7 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[\"aws s3 cp s3://${FILES_BUCKET}/deployments/deploy.sh /tmp/deploy.sh && bash /tmp/deploy.sh\"]" \
+            --parameters "commands=[\"set -e && aws s3 cp s3://${FILES_BUCKET}/deployments/deploy.sh /tmp/deploy.sh && echo '${DEPLOY_HASH}  /tmp/deploy.sh' | sha256sum -c - && bash /tmp/deploy.sh\"]" \
             --timeout-seconds 300 \
             --query "Command.CommandId" \
             --output text)

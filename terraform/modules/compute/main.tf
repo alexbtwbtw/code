@@ -70,6 +70,7 @@ resource "aws_instance" "backend" {
   root_block_device {
     volume_size           = 8
     volume_type           = "gp3"
+    encrypted             = true
     delete_on_termination = true
   }
 
@@ -104,6 +105,7 @@ resource "aws_ebs_volume" "data" {
   availability_zone = "${var.region}a"
   size              = 30
   type              = "gp3"
+  encrypted         = true
   tags              = { Name = "coba-poc-data" }
 }
 
