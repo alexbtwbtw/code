@@ -147,26 +147,51 @@ function sanitizeSvg(svgString: string): string {
   }
   removeBackgroundRect(root)
 
-  // 2. Remap white strokes/fills (RGB 255,255,255) to a visible light grey.
-  //    Also handle the hex #ffffff / #fff shorthands that some builds emit.
-  const WHITE_PATTERNS = [
-    /\brgb\(\s*255\s*,\s*255\s*,\s*255\s*\)/gi,
-    /#ffffff\b/gi,
-    /#fff\b/gi,
+  // 2. Remap invisible-on-navy stroke/fill colours to a visible light grey.
+  //
+  //    Two cases must be handled:
+  //
+  //    a) White (#ffffff / rgb(255,255,255)) — DWG ACI colour 7 ("white") is
+  //       intended for dark model-space backgrounds. As pure white it would be
+  //       invisible on a light background, but on COBA's navy background it
+  //       would actually be VISIBLE — except that LibreDWG remaps colour 7 to
+  //       the inverse on light backgrounds, so we still see it occasionally.
+  //
+  //    b) Black (#000000 / #000 / rgb(0,0,0) / "black") — this is the REAL
+  //       blue-screen culprit. LibreDWG's svgConverter wraps every entity in
+  //       a top-level `<g stroke="#000000" stroke-width="0.1%" fill="none">`,
+  //       inheriting black strokes for any entity that does not override its
+  //       colour. On COBA's dark navy `--navy-dk` background, black strokes
+  //       are completely invisible, so the viewer just shows a uniform navy
+  //       rectangle — the "blue screen" reported in the bug.
+  //
+  //    Both colours are remapped to a neutral light grey that is visible on
+  //    both light and dark backgrounds.
+  const REMAP_PATTERNS: Array<[RegExp, string]> = [
+    // White → grey
+    [/\brgb\(\s*255\s*,\s*255\s*,\s*255\s*\)/gi, '#d0d0d0'],
+    [/#ffffff\b/gi, '#d0d0d0'],
+    [/#fff\b/gi, '#d0d0d0'],
+    // Black → grey (root cause of the dark-navy blue-screen)
+    [/\brgb\(\s*0\s*,\s*0\s*,\s*0\s*\)/gi, '#d0d0d0'],
+    [/#000000\b/gi, '#d0d0d0'],
+    [/#000\b/gi, '#d0d0d0'],
+    [/\bblack\b/gi, '#d0d0d0'],
   ]
-  const VISIBLE_GREY = '#d0d0d0'
 
-  function remapWhite(node: Element) {
+  function remapInvisibleColours(node: Element) {
     for (const attr of ['fill', 'stroke', 'style']) {
       const val = node.getAttribute(attr)
       if (!val) continue
       let updated = val
-      for (const pat of WHITE_PATTERNS) updated = updated.replace(pat, VISIBLE_GREY)
+      for (const [pat, replacement] of REMAP_PATTERNS) {
+        updated = updated.replace(pat, replacement)
+      }
       if (updated !== val) node.setAttribute(attr, updated)
     }
-    Array.from(node.children).forEach(remapWhite)
+    Array.from(node.children).forEach(remapInvisibleColours)
   }
-  remapWhite(root)
+  remapInvisibleColours(root)
 
   // 3. Force SVG width/height to 100% so the SVG fills its flex container.
   //    The viewBox (if present) handles the aspect-ratio / geometry scaling.

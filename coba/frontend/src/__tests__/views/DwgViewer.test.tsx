@@ -281,6 +281,136 @@ describe('DwgViewerPane — error code 64 regression', () => {
   })
 })
 
+// ── Realistic libredwg-web SVG rendering ─────────────────────────────────────
+//
+// These tests use SVG payloads that mirror what @mlightcad/libredwg-web actually
+// emits from svgConverter.js: a top-level <defs>, a top-level <g stroke="#000000"
+// stroke-width="0.1%" fill="none" transform="matrix(1,0,0,-1,0,0)"> wrapping all
+// model-space geometry, and NO background <rect>. The geometry strokes are pure
+// black (#000000), which is invisible on COBA's dark navy background unless the
+// viewer post-processing remaps them.
+
+describe('DwgViewerPane — realistic libredwg SVG output', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockUseUpdateDwgFile.mockReturnValue({ mutate: vi.fn(), isPending: false })
+    mockUseDeleteDwgFile.mockReturnValue({ mutate: vi.fn(), isPending: false })
+    mockUseCurrentUser.mockReturnValue({ user: null, switchUser: vi.fn(), signOut: vi.fn() })
+    mockUseDwgFiles.mockReturnValue({ data: sampleFiles, isLoading: false, refetch: vi.fn() })
+    mockFetchDwgBytes.mockResolvedValue(FAKE_DWG_BUFFER)
+    mockDwgReadFile.mockReturnValue({ error: 0, data: 0x1234 })
+    mockConvert.mockReturnValue({ entities: [] })
+  })
+
+  // The exact shape libredwg-web's svgConverter.toSvgString() returns for a
+  // model space containing one rectangle outline and one line.
+  const REALISTIC_SVG = `<?xml version="1.0"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"
+  preserveAspectRatio="xMinYMin meet"
+  viewBox="0 -100 200 100"
+  width="100%" height="100%"
+>
+  <defs></defs>
+  <g stroke="#000000" stroke-width="0.1%" fill="none" transform="matrix(1,0,0,-1,0,0)">
+    <g id="ent1" stroke="rgb(255,255,255)" fill="none"><rect x="10" y="10" width="50" height="40"/></g>
+    <g id="ent2" stroke="#000000" fill="none"><path d="M 0 0 L 100 100"/></g>
+    <g id="ent3" stroke="#000000" fill="none"><line x1="0" y1="0" x2="50" y2="50"/></g>
+  </g>
+</svg>`
+
+  it('preserves geometry inside the top-level <g> wrapper (does not strip rects as background)', async () => {
+    mockDwgToSvg.mockReturnValue(REALISTIC_SVG)
+
+    renderET()
+    expandFirstRow()
+
+    await waitFor(() => {
+      expect(document.querySelector('.eng-svg-container svg')).not.toBeNull()
+    }, { timeout: 5000 })
+
+    const svg = document.querySelector('.eng-svg-container svg')!
+    // Must keep the <path> (line geometry)
+    expect(svg.querySelector('path')).not.toBeNull()
+    // Must keep the <line>
+    expect(svg.querySelector('line')).not.toBeNull()
+    // Must keep the <rect> (it is real geometry, NOT a background fill)
+    expect(svg.querySelector('rect')).not.toBeNull()
+  })
+
+  it('remaps black strokes so geometry is visible on the dark navy background', async () => {
+    mockDwgToSvg.mockReturnValue(REALISTIC_SVG)
+
+    renderET()
+    expandFirstRow()
+
+    await waitFor(() => {
+      expect(document.querySelector('.eng-svg-container svg')).not.toBeNull()
+    }, { timeout: 5000 })
+
+    const svg = document.querySelector('.eng-svg-container svg')!
+    // The injected SVG must NOT keep #000000 strokes, otherwise everything is
+    // invisible against the navy background — that is the "blue screen" bug.
+    const html = svg.outerHTML
+    expect(html).not.toMatch(/stroke=["']#000000["']/i)
+    expect(html).not.toMatch(/stroke=["']#000["']/i)
+    expect(html).not.toMatch(/stroke=["']black["']/i)
+  })
+
+  it('still remaps white strokes (existing behaviour)', async () => {
+    mockDwgToSvg.mockReturnValue(REALISTIC_SVG)
+
+    renderET()
+    expandFirstRow()
+
+    await waitFor(() => {
+      expect(document.querySelector('.eng-svg-container svg')).not.toBeNull()
+    }, { timeout: 5000 })
+
+    const html = document.querySelector('.eng-svg-container svg')!.outerHTML
+    expect(html).not.toMatch(/rgb\(\s*255\s*,\s*255\s*,\s*255\s*\)/i)
+    expect(html).not.toMatch(/#ffffff/i)
+  })
+
+  it('forces svg width/height to 100% so it fills the container', async () => {
+    mockDwgToSvg.mockReturnValue(REALISTIC_SVG)
+
+    renderET()
+    expandFirstRow()
+
+    await waitFor(() => {
+      expect(document.querySelector('.eng-svg-container svg')).not.toBeNull()
+    }, { timeout: 5000 })
+
+    const svg = document.querySelector('.eng-svg-container svg')!
+    expect(svg.getAttribute('width')).toBe('100%')
+    expect(svg.getAttribute('height')).toBe('100%')
+  })
+
+  it('removes a leading full-size background <rect> if one is present', async () => {
+    // Some converters may emit a background rect — verify that case still works.
+    const SVG_WITH_BG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect x="0" y="0" width="100" height="100" fill="white"/>
+  <g><path d="M 0 0 L 100 100" stroke="#000000"/></g>
+</svg>`
+    mockDwgToSvg.mockReturnValue(SVG_WITH_BG)
+
+    renderET()
+    expandFirstRow()
+
+    await waitFor(() => {
+      expect(document.querySelector('.eng-svg-container svg')).not.toBeNull()
+    }, { timeout: 5000 })
+
+    const svg = document.querySelector('.eng-svg-container svg')!
+    // The geometry path must survive
+    expect(svg.querySelector('path')).not.toBeNull()
+    // The leading background rect must be removed
+    expect(svg.querySelector('rect')).toBeNull()
+  })
+})
+
 // ── dwgErrorMessage unit tests ────────────────────────────────────────────────
 //
 // We can't import dwgErrorMessage directly (it's private), but we can verify
