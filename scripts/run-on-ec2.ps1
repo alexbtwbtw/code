@@ -1,4 +1,5 @@
-# Usage: .\scripts\run-on-ec2.ps1 scripts\install-nginx.sh
+# Usage: .\scripts\run-on-ec2.ps1 <script-path>
+# Example: .\scripts\run-on-ec2.ps1 scripts\update-nginx.sh
 # Run from repo root.
 param(
     [Parameter(Mandatory)][string]$Script
@@ -49,7 +50,7 @@ for ($i = 1; $i -le 60; $i++) {
         exit 0
     } elseif ($Status -in @("Failed", "Cancelled", "TimedOut")) {
         Write-Host ""
-        Write-Host "=== Failed — fetching error output ==="
+        Write-Host "=== Failed - fetching error output ==="
         & aws ssm get-command-invocation --command-id $CommandId --instance-id $InstanceId --region $Region --query "StandardErrorContent" --output text 2>$null
         exit 1
     }
