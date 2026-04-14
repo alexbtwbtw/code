@@ -107,6 +107,65 @@ function sanitizeSvg(svgString: string): string {
 
   walkNode(root)
 
+  // ── Post-processing for dark-theme display ────────────────────────────────
+  //
+  // LibreDWG's SVG output is designed for a white (or model-space dark)
+  // background. When injected into COBA's dark-navy UI several problems arise:
+  //
+  // 1. Background rect: the first direct-child <rect> of the <svg> (or of a
+  //    top-level <g>) is typically a full-size background fill (white or a dark
+  //    blue). It covers all geometry below it when the app's own background is
+  //    similar. We remove it.
+  //
+  // 2. White entities: DWG colour index 7 ("white") is intended for dark model-
+  //    space backgrounds. As RGB(255,255,255) it becomes invisible on the app's
+  //    navy background once the background rect is removed. Remap to #e0e0e0.
+  //
+  // 3. SVG dimensions: some converters emit absolute pixel widths. Force 100%
+  //    so the SVG fills its container, relying on viewBox for geometry scaling.
+
+  // 1. Remove the leading background rect.
+  //    Match the first <rect> that is a direct child of <svg> OR of the first
+  //    direct <g> child, and that has no meaningful x/y offset (i.e. x and y
+  //    are absent, "0", or "0.0") — this is the background fill rect.
+  function removeBackgroundRect(container: Element) {
+    const firstRect = container.querySelector(':scope > rect, :scope > g > rect')
+    if (!firstRect) return
+    const x = firstRect.getAttribute('x') ?? '0'
+    const y = firstRect.getAttribute('y') ?? '0'
+    const isAtOrigin = (parseFloat(x) === 0) && (parseFloat(y) === 0)
+    if (isAtOrigin) {
+      firstRect.parentNode?.removeChild(firstRect)
+    }
+  }
+  removeBackgroundRect(root)
+
+  // 2. Remap white strokes/fills (RGB 255,255,255) to a visible light grey.
+  //    Also handle the hex #ffffff / #fff shorthands that some builds emit.
+  const WHITE_PATTERNS = [
+    /\brgb\(\s*255\s*,\s*255\s*,\s*255\s*\)/gi,
+    /#ffffff\b/gi,
+    /#fff\b/gi,
+  ]
+  const VISIBLE_GREY = '#d0d0d0'
+
+  function remapWhite(node: Element) {
+    for (const attr of ['fill', 'stroke', 'style']) {
+      const val = node.getAttribute(attr)
+      if (!val) continue
+      let updated = val
+      for (const pat of WHITE_PATTERNS) updated = updated.replace(pat, VISIBLE_GREY)
+      if (updated !== val) node.setAttribute(attr, updated)
+    }
+    Array.from(node.children).forEach(remapWhite)
+  }
+  remapWhite(root)
+
+  // 3. Force SVG width/height to 100% so the SVG fills its flex container.
+  //    The viewBox (if present) handles the aspect-ratio / geometry scaling.
+  root.setAttribute('width', '100%')
+  root.setAttribute('height', '100%')
+
   return new XMLSerializer().serializeToString(root)
 }
 
