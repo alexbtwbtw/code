@@ -1,12 +1,7 @@
 #!/bin/bash
+# Updates the nginx config on a running instance and reloads.
+# Run via: .\scripts\run-on-ec2.ps1 scripts\update-nginx.sh
 set -e
-
-dnf install -y nginx
-
-rm -f /etc/nginx/conf.d/default.conf
-
-# Comment out the default server block in nginx.conf to avoid conflict
-sed -i '/^    server {/,/^    }$/s/^/#/' /etc/nginx/nginx.conf
 
 cat > /etc/nginx/conf.d/apps.conf << 'NGINX_CONF'
 server {
@@ -57,9 +52,7 @@ server {
 }
 NGINX_CONF
 
-mkdir -p /app /app-game /var/log/coba /var/log/game
+mkdir -p /app-game /var/log/game
 
-systemctl enable nginx
-systemctl start nginx
-systemctl reload nginx
-curl -sf http://localhost/api/health && echo "Health OK" || echo "Health check failed (app may not be running yet)"
+nginx -t && systemctl reload nginx
+echo "nginx reloaded with game routes"

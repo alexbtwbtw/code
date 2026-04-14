@@ -119,8 +119,26 @@ resource "aws_instance" "backend" {
             proxy_read_timeout 60s;
         }
 
-        # Future projects: add additional location blocks here
-        # e.g. location /proj2/api/ { proxy_pass http://127.0.0.1:3001; ... }
+        # Game — proxy /game/api/* and /game/trpc/* to backend on port 3001
+        location /game/api/ {
+            proxy_pass         http://127.0.0.1:3001/api/;
+            proxy_http_version 1.1;
+            proxy_set_header   Host              $host;
+            proxy_set_header   X-Real-IP         $remote_addr;
+            proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_read_timeout 60s;
+        }
+
+        location /game/trpc/ {
+            proxy_pass         http://127.0.0.1:3001/trpc/;
+            proxy_http_version 1.1;
+            proxy_set_header   Host              $host;
+            proxy_set_header   X-Real-IP         $remote_addr;
+            proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_read_timeout 60s;
+        }
     }
     NGINX_CONF
 
@@ -137,8 +155,8 @@ resource "aws_instance" "backend" {
     mount -a
 
     # Create app and log directories with correct ownership
-    mkdir -p /app /var/log/coba
-    chown -R ec2-user:ec2-user /app /var/log/coba /data
+    mkdir -p /app /app-game /var/log/coba /var/log/game
+    chown -R ec2-user:ec2-user /app /app-game /var/log/coba /var/log/game /data
   EOF
 
   tags = { Name = "coba-poc-backend" }
