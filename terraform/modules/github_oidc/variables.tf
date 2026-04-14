@@ -23,10 +23,9 @@ variable "ec2_instance_arn" {
   description = "ARN of the EC2 instance that SSM send-command is scoped to"
 }
 
-variable "deploy_branch" {
+variable "environment_name" {
   type        = string
-  default     = "main"
-  description = "Git branch that is allowed to assume the deploy role (e.g. main)"
+  description = "GitHub Actions environment name (e.g. poc). Jobs using this environment send sub=repo:owner/repo:environment:NAME."
 }
 
 variable "create_oidc_provider" {
