@@ -3,6 +3,13 @@ import pixelmatch from 'pixelmatch'
 import { useTranslation } from '../i18n/context'
 import { useDwgFiles, useUpdateDwgFile, useDeleteDwgFile, downloadDwg, fetchDwgBytes } from '../api/engineering'
 import { useCurrentUser, getCurrentUser } from '../auth'
+import {
+  jdToIso,
+  isoToJd,
+  writeTimeBll,
+  scanDwgDates,
+  type DateCandidate,
+} from '../utils/dwgDates'
 
 // ── SVG Sanitizer ─────────────────────────────────────────────────────────────
 //
@@ -962,43 +969,18 @@ function CompareTab({ files }: { files: DwgFile[] }) {
 
 // ── DWG Date Editor ───────────────────────────────────────────────────────────
 //
-// Purely client-side utility. Scans a DWG binary for Julian Day Number doubles
-// (IEEE 754 little-endian, range 1980–2050), lets the user edit them via date
-// pickers, and downloads the patched buffer without any server involvement.
+// Purely client-side utility. Scans a DWG binary for dates stored in the
+// TIMEBLL (BL + BL) format used by DWG header variables (TDCREATE, TDUPDATE,
+// TDINDWG, TDUUPDATE, etc.), lets the user edit them via date pickers, and
+// downloads the patched buffer without any server involvement.
+//
+// DWG TIMEBLL format (little-endian, 8 bytes total):
+//   bytes 0–3: uint32 Julian Day Number (integer part)
+//   bytes 4–7: uint32 milliseconds into that day (0 – 86 399 999)
 //
 // Julian Day Number ↔ Unix epoch conversion:
 //   jd  → Date:  new Date((jd  - 2440587.5) * 86400000)
 //   Date → jd:   (date.getTime() / 86400000) + 2440587.5
-
-const JD_MIN = 2444239.5  // 1980-01-01
-const JD_MAX = 2469807.5  // 2050-01-01
-
-/** Convert a Julian Day Number to an ISO date string (YYYY-MM-DD). */
-function jdToIso(jd: number): string {
-  const d = new Date((jd - 2440587.5) * 86400000)
-  return d.toISOString().slice(0, 10)
-}
-
-/** Convert an ISO date string (YYYY-MM-DD) back to a Julian Day Number. */
-function isoToJd(iso: string): number {
-  return new Date(iso).getTime() / 86400000 + 2440587.5
-}
-
-/** Read a little-endian float64 from a DataView at the given byte offset. */
-function readF64LE(view: DataView, offset: number): number {
-  return view.getFloat64(offset, /* littleEndian= */ true)
-}
-
-/** Write a little-endian float64 into a DataView at the given byte offset. */
-function writeF64LE(view: DataView, offset: number, value: number): void {
-  view.setFloat64(offset, value, /* littleEndian= */ true)
-}
-
-interface DateCandidate {
-  offset: number   // byte offset in the file
-  jd: number       // original Julian Day Number
-  newIso: string   // editable new date (ISO YYYY-MM-DD)
-}
 
 function DwgDateEditor() {
   const { t } = useTranslation()
@@ -1009,28 +991,10 @@ function DwgDateEditor() {
   const [scanning, setScanning]       = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  /** Scan the loaded ArrayBuffer for plausible Julian Date Number doubles. */
+  /** Scan the loaded ArrayBuffer for DWG TIMEBLL date fields. */
   function scanBuffer(buf: ArrayBuffer) {
     setScanning(true)
-    const view = new DataView(buf)
-    const found: DateCandidate[] = []
-
-    // Stride of 1: DWG header dates are NOT guaranteed to be 8-byte aligned, so
-    // we must try every single byte offset. We deduplicate by skipping any offset
-    // that is within 7 bytes of the previous accepted hit (the 8 bytes of that
-    // double would overlap). We cap at 20 results to keep the UI readable.
-    let lastAccepted = -8
-    for (let off = 0; off + 8 <= buf.byteLength; off++) {
-      if (off < lastAccepted + 8) continue   // skip bytes overlapping the last hit
-      const v = readF64LE(view, off)
-      if (v >= JD_MIN && v <= JD_MAX && isFinite(v)) {
-        found.push({ offset: off, jd: v, newIso: jdToIso(v) })
-        lastAccepted = off
-        if (found.length >= 20) break
-      }
-    }
-
-    setCandidates(found)
+    setCandidates(scanDwgDates(buf))
     setScanning(false)
   }
 
@@ -1068,7 +1032,7 @@ function DwgDateEditor() {
 
     for (const c of candidates) {
       const newJd = isoToJd(c.newIso)
-      writeF64LE(view, c.offset, newJd)
+      writeTimeBll(view, c.offset, newJd)
     }
 
     const blob = new Blob([copy], { type: 'application/octet-stream' })
