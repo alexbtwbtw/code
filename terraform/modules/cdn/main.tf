@@ -11,12 +11,12 @@ resource "aws_cloudfront_distribution" "main" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100" # US, Canada, Europe only
 
-  # Origin 1: EC2 backend (port 3000)
+  # Origin 1: EC2 nginx reverse proxy (port 80)
   origin {
     origin_id   = "ec2-backend"
     domain_name = var.ec2_origin_domain
     custom_origin_config {
-      http_port              = 3000
+      http_port              = 80
       https_port             = 443
       origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1.2"]

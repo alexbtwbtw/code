@@ -37,9 +37,9 @@ resource "aws_security_group" "ec2" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-    description     = "API traffic from CloudFront"
-    from_port       = 3000
-    to_port         = 3000
+    description     = "HTTP from CloudFront to nginx reverse proxy"
+    from_port       = 80
+    to_port         = 80
     protocol        = "tcp"
     prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
   }
