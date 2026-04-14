@@ -90,6 +90,7 @@ resource "aws_instance" "backend" {
 
     # Remove default nginx config and write app routing config
     rm -f /etc/nginx/conf.d/default.conf
+    sed -i '/^    server {/,/^    }$/s/^/#/' /etc/nginx/nginx.conf
     cat > /etc/nginx/conf.d/apps.conf << 'NGINX_CONF'
     server {
         listen 80;
