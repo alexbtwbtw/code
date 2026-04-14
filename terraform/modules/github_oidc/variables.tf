@@ -8,6 +8,17 @@ variable "frontend_bucket_name" {
   description = "Name of the S3 bucket for frontend assets"
 }
 
+variable "cloudfront_distribution_arn" {
+  type        = string
+  description = "ARN of the CloudFront distribution this role is allowed to invalidate"
+}
+
+variable "deploy_branch" {
+  type        = string
+  default     = "main"
+  description = "Git branch that is allowed to assume the deploy role (e.g. main)"
+}
+
 variable "create_oidc_provider" {
   type        = bool
   default     = true

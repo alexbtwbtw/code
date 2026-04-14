@@ -24,10 +24,8 @@ resource "aws_iam_role" "github_actions" {
       Principal = { Federated = local.oidc_provider_arn }
       Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
-        StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
-        }
         StringEquals = {
+          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/${var.deploy_branch}"
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
       }
@@ -60,7 +58,7 @@ resource "aws_iam_role_policy" "github_actions" {
         Sid      = "CloudFrontInvalidation"
         Effect   = "Allow"
         Action   = ["cloudfront:CreateInvalidation"]
-        Resource = "*"
+        Resource = var.cloudfront_distribution_arn
       }
     ]
   })
