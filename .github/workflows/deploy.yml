@@ -119,20 +119,20 @@ jobs:
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters "commands=[\"set -e && aws s3 cp s3://${FILES_BUCKET}/deployments/deploy.sh /tmp/deploy.sh && echo '${DEPLOY_HASH}  /tmp/deploy.sh' | sha256sum -c - && bash /tmp/deploy.sh\"]" \
-            --timeout-seconds 300 \
+            --timeout-seconds 600 \
             --query "Command.CommandId" \
             --output text)
 
           echo "SSM Command ID: $COMMAND_ID"
 
-          # Poll until the command finishes (max ~5 min)
-          for i in $(seq 1 30); do
+          # Poll until the command finishes (max ~10 min)
+          for i in $(seq 1 60); do
             STATUS=$(aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
               --instance-id "$EC2_INSTANCE_ID" \
               --query "Status" --output text 2>/dev/null || echo "Pending")
 
-            echo "[$i/30] Status: $STATUS"
+            echo "[$i/60] Status: $STATUS"
 
             case "$STATUS" in
               Success)
@@ -152,7 +152,7 @@ jobs:
                 ;;
             esac
 
-            if [ "$i" -eq 30 ]; then
+            if [ "$i" -eq 60 ]; then
               echo "Timed out waiting for SSM command to complete."
               exit 1
             fi
