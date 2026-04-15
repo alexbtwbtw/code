@@ -8,6 +8,12 @@ const routes = [
   { prefix: '/trpc',      target: { host: 'localhost', port: 3000 } },
   { prefix: '/game/api',  target: { host: 'localhost', port: 3001 } },
   { prefix: '/game/trpc', target: { host: 'localhost', port: 3001 } },
+  // WebSocket connections for the multiplayer game arrive at /game/ws.
+  // The game backend (port 3001) runs both the Hono HTTP server and the
+  // ws.WebSocketServer on the same underlying http.Server, so WS upgrades
+  // to /game/ws are forwarded directly to port 3001 — no separate WS port
+  // is needed. The generic upgrade handler below tunnels them correctly.
+  { prefix: '/game/ws',   target: { host: 'localhost', port: 3001 } },
   { prefix: '/game',      target: { host: 'localhost', port: 5174 } },
   { prefix: '/coba',      target: { host: 'localhost', port: 5173 } },
   { prefix: '/',          target: { host: 'localhost', port: 5175 } },
@@ -60,6 +66,9 @@ const server = http.createServer((req, res) => {
 })
 
 // WebSocket / HMR upgrade handling
+// This generic tunnel forwards WS upgrades to the resolved target port.
+// For /game/ws → port 3001 (game backend WS server on the same HTTP server).
+// For /game/* HMR → port 5174 (Vite dev server).
 server.on('upgrade', (req, socket, head) => {
   const url = req.url || '/'
   const target = resolveTarget(url)
@@ -95,6 +104,7 @@ server.listen(PORT, () => {
   console.log(`  /trpc/*      → http://localhost:3000  (COBA backend)`)
   console.log(`  /game/api/*  → http://localhost:3001  (Game backend)`)
   console.log(`  /game/trpc/* → http://localhost:3001  (Game backend)`)
+  console.log(`  /game/ws     → ws://localhost:3001    (Game WS server, same port as backend)`)
   console.log(`  /game/*      → http://localhost:5174  (Game Vite)`)
   console.log(`  /coba/*      → http://localhost:5173  (COBA Vite)`)
   console.log(`  /*           → http://localhost:5175  (Home Vite)`)
