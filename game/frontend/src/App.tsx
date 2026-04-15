@@ -70,6 +70,9 @@ export default function App() {
   // Shared WebSocket state lifted to App so WS persists across view changes
   const wsRef = useRef<WebSocket | null>(null)
   const pendingJoinRef = useRef<string | null>(null)
+  // Tracks whether the local user is an active player (received game_start) vs a spectator.
+  // Using a ref avoids re-triggering the spectate effect when it changes.
+  const isPlayerRef = useRef<boolean>(false)
   const [myId, setMyId] = useState<string | null>(null)
   const [myName, setMyName] = useState<string>('')
   const [joined, setJoined] = useState(false)
@@ -145,6 +148,7 @@ export default function App() {
           break
 
         case 'game_start':
+          isPlayerRef.current = true
           setGameRoom({
             gameId: msg.gameId,
             opponentId: msg.opponentId,
@@ -181,6 +185,7 @@ export default function App() {
           break
 
         case 'game_end':
+          isPlayerRef.current = false
           setGameRoom(prev => prev ? { ...prev, state: 'ended', scores: msg.scores, winnerId: msg.winnerId } : null)
           break
       }
@@ -194,15 +199,13 @@ export default function App() {
     return () => ws.close()
   }, [])
 
-  // When navigating to a game URL directly (spectator), send spectate
+  // When navigating to a game URL directly (spectator), send spectate.
+  // Players who received game_start have isPlayerRef.current === true and must NOT send spectate.
   useEffect(() => {
-    if (view.kind === 'game' && myId) {
-      const isPlayer = gameRoom?.gameId === view.gameId
-      if (!isPlayer) {
-        sendWs({ type: 'spectate', gameId: view.gameId })
-      }
+    if (view.kind === 'game' && myId && !isPlayerRef.current) {
+      sendWs({ type: 'spectate', gameId: view.gameId })
     }
-  }, [view, myId, gameRoom, sendWs])
+  }, [view, myId, sendWs])
 
   // ── Views ──────────────────────────────────────────────────────────────────
 
@@ -217,7 +220,10 @@ export default function App() {
         myId={myId}
         gameRoom={gameRoom}
         sendWs={sendWs}
-        onLeave={() => navigate('/game/')}
+        onLeave={() => {
+          isPlayerRef.current = false
+          navigate('/game/')
+        }}
       />
     )
   }
