@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws'
 import { IncomingMessage } from 'http'
 import { wsByPlayer, rooms } from './state'
 import { handleJoin, handleChallenge, handleChallengeResponse } from './lobby'
-import { handleReady, handleClick, handleSpectate } from './game'
+import { handleReady, handleClick, handleBomb, handleSpectate } from './game'
 import { cleanupPlayer } from './cleanup'
 
 // ── Input validation guard ────────────────────────────────────────────────────
@@ -59,6 +59,12 @@ function handleMessage(ws: WebSocket, raw: string) {
     case 'click': {
       if (typeof msg.gameId !== 'string') return
       handleClick(ws, msg, playerId)
+      break
+    }
+
+    case 'bomb': {
+      if (typeof msg.gameId !== 'string') return
+      handleBomb(ws, msg, playerId)
       break
     }
 

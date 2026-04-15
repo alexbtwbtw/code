@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws'
-import type { Player, GameRoom } from './types'
+import type { Player, GameRoom, GameSettings } from './types'
 
 // ── In-memory state ───────────────────────────────────────────────────────────
 
@@ -12,3 +12,6 @@ export const playerRoom = new Map<string, string>()        // playerId → roomI
 
 // challengerId → targetId
 export const pendingChallenges = new Map<string, string>()
+
+// challengerId → settings (set when challenge is sent, consumed when accepted)
+export const pendingChallengeSettings = new Map<string, GameSettings>()
