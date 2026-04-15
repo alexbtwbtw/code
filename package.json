@@ -1,0 +1,17 @@
+{
+  "name": "portal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=25.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently --names \"coba-be,game-be,home-fe,coba-fe,game-fe,proxy\" \"npm --prefix coba run dev:backend\" \"npm --prefix game run dev:backend\" \"npm --prefix home/frontend run dev\" \"npm --prefix coba run dev:frontend\" \"npm --prefix game run dev:frontend\" \"node scripts/dev-proxy.mjs\"",
+    "dev:proxy": "node scripts/dev-proxy.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "wait-on": "^9.0.5"
+  }
+}

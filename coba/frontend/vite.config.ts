@@ -12,6 +12,7 @@ export default defineConfig({
   define: {
     __GIT_HASH__: JSON.stringify(gitHash),
   },
+  base: '/coba/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -22,6 +23,7 @@ export default defineConfig({
     exclude: ['@mlightcad/libredwg-web'],
   },
   server: {
+    port: 5173,
     proxy: {
       '/api': 'http://localhost:3000',
       '/trpc': 'http://localhost:3000',

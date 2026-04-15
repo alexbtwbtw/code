@@ -6,10 +6,13 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
 }
 
 # Rewrites directory-style paths to their index.html:
+#   /coba        → /coba/index.html
+#   /coba/       → /coba/index.html
+#   /coba/<route> (no extension) → /coba/index.html  (COBA SPA routing)
 #   /game        → /game/index.html
 #   /game/       → /game/index.html
 #   /game/<route> (no extension) → /game/index.html  (game SPA routing)
-# All other paths pass through unchanged (COBA SPA handled by custom_error_response).
+# All other paths pass through unchanged.
 resource "aws_cloudfront_function" "spa_router" {
   name    = "coba-poc-spa-router"
   runtime = "cloudfront-js-2.0"
@@ -18,14 +21,27 @@ resource "aws_cloudfront_function" "spa_router" {
     function handler(event) {
       var uri = event.request.uri;
 
+      // COBA SPA routing
+      if (uri === '/coba' || uri === '/coba/') {
+        event.request.uri = '/coba/index.html';
+        return event.request;
+      }
+      if (uri.startsWith('/coba/')) {
+        var last = uri.slice(uri.lastIndexOf('/') + 1);
+        if (!last.includes('.')) {
+          event.request.uri = '/coba/index.html';
+          return event.request;
+        }
+      }
+
+      // Game SPA routing
       if (uri === '/game' || uri === '/game/') {
         event.request.uri = '/game/index.html';
         return event.request;
       }
-
       if (uri.startsWith('/game/')) {
-        var lastSegment = uri.slice(uri.lastIndexOf('/') + 1);
-        if (!lastSegment.includes('.')) {
+        var last = uri.slice(uri.lastIndexOf('/') + 1);
+        if (!last.includes('.')) {
           event.request.uri = '/game/index.html';
           return event.request;
         }
@@ -120,18 +136,19 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
-  # COBA SPA routing: 403/404 from S3 → serve index.html with 200
-  # (game SPA routing is handled upstream by the CloudFront Function)
+  # COBA SPA routing: 403/404 from S3 → serve /coba/index.html with 200
+  # (COBA and game SPA routing is handled upstream by the CloudFront Function;
+  #  this is a fallback for S3 permission errors and other uncaught cases)
   custom_error_response {
     error_code            = 403
     response_code         = 200
-    response_page_path    = "/index.html"
+    response_page_path    = "/coba/index.html"
     error_caching_min_ttl = 0
   }
   custom_error_response {
     error_code            = 404
     response_code         = 200
-    response_page_path    = "/index.html"
+    response_page_path    = "/coba/index.html"
     error_caching_min_ttl = 0
   }
 
