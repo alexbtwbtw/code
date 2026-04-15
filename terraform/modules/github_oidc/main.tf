@@ -64,7 +64,10 @@ resource "aws_iam_role_policy" "github_actions" {
         Sid    = "ArtifactUpload"
         Effect = "Allow"
         Action = ["s3:PutObject", "s3:DeleteObject"]
-        Resource = "arn:aws:s3:::${var.files_bucket_name}/deployments/*"
+        Resource = [
+          "arn:aws:s3:::${var.files_bucket_name}/deployments/*",
+          "arn:aws:s3:::${var.files_bucket_name}/scripts/*"
+        ]
       },
       {
         Sid    = "SSMSendCommand"
