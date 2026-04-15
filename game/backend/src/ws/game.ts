@@ -37,6 +37,7 @@ export function getRoomGameState(room: GameRoom) {
     player1Name: room.player1.name,
     player2Id: room.player2.id,
     player2Name: room.player2.name,
+    settings: room.settings,
   }
 }
 
@@ -96,8 +97,8 @@ export function startCountdown(room: GameRoom) {
       room.startTime = Date.now()
       broadcastRoom(room, getRoomGameState(room))
 
-      // End after 30 seconds
-      room.gameTimer = setTimeout(() => endGame(room), 30_000)
+      // End after the configured duration
+      room.gameTimer = setTimeout(() => endGame(room), room.settings.duration * 1_000)
     }
   }, 1_000)
 }
@@ -141,6 +142,26 @@ export function handleClick(
   if (!isClickAllowed(playerId)) return
 
   room.scores[playerId] = (room.scores[playerId] ?? 0) + 1
+  broadcastRoom(room, getRoomGameState(room))
+}
+
+// ── handleBomb ────────────────────────────────────────────────────────────────
+
+export function handleBomb(
+  _ws: WebSocket,
+  msg: Record<string, unknown>,
+  playerId: string,
+) {
+  if (typeof msg.gameId !== 'string') return
+
+  const room = rooms.get(msg.gameId)
+  if (!room) return
+  if (room.state !== 'playing') return
+  if (room.player1.id !== playerId && room.player2.id !== playerId) return
+
+  // Deduct 5 points, minimum 0
+  const current = room.scores[playerId] ?? 0
+  room.scores[playerId] = Math.max(0, current - 5)
   broadcastRoom(room, getRoomGameState(room))
 }
 
