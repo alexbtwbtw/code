@@ -69,6 +69,7 @@ export default function App() {
 
   // Shared WebSocket state lifted to App so WS persists across view changes
   const wsRef = useRef<WebSocket | null>(null)
+  const pendingJoinRef = useRef<string | null>(null)
   const [myId, setMyId] = useState<string | null>(null)
   const [myName, setMyName] = useState<string>('')
   const [joined, setJoined] = useState(false)
@@ -94,8 +95,16 @@ export default function App() {
 
   const sendWs = useCallback((msg: unknown) => {
     const ws = wsRef.current
-    if (ws && ws.readyState === WebSocket.OPEN) {
+    if (!ws) return
+    if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(msg))
+    } else if (
+      ws.readyState === WebSocket.CONNECTING &&
+      typeof (msg as Record<string, unknown>).type === 'string' &&
+      (msg as Record<string, unknown>).type === 'join'
+    ) {
+      // Socket still connecting — buffer the join so onopen can flush it.
+      pendingJoinRef.current = (msg as Record<string, unknown>).name as string
     }
   }, [])
 
@@ -103,6 +112,15 @@ export default function App() {
   useEffect(() => {
     const ws = new WebSocket(getWsUrl())
     wsRef.current = ws
+
+    ws.onopen = () => {
+      // Flush any join that was queued while the socket was still connecting.
+      const pending = pendingJoinRef.current
+      if (pending) {
+        pendingJoinRef.current = null
+        ws.send(JSON.stringify({ type: 'join', name: pending }))
+      }
+    }
 
     ws.onmessage = (evt) => {
       let msg: ServerMsg
