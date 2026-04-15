@@ -69,6 +69,7 @@ export default function App() {
 
   // Shared WebSocket state lifted to App so WS persists across view changes
   const wsRef = useRef<WebSocket | null>(null)
+  const pendingJoinRef = useRef<string | null>(null)
   const [myId, setMyId] = useState<string | null>(null)
   const [myName, setMyName] = useState<string>('')
   const [joined, setJoined] = useState(false)
@@ -94,8 +95,16 @@ export default function App() {
 
   const sendWs = useCallback((msg: unknown) => {
     const ws = wsRef.current
-    if (ws && ws.readyState === WebSocket.OPEN) {
+    if (!ws) return
+    if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(msg))
+    } else if (
+      ws.readyState === WebSocket.CONNECTING &&
+      typeof (msg as Record<string, unknown>).type === 'string' &&
+      (msg as Record<string, unknown>).type === 'join'
+    ) {
+      // Socket still connecting — buffer the join so onopen can flush it.
+      pendingJoinRef.current = (msg as Record<string, unknown>).name as string
     }
   }, [])
 
@@ -103,6 +112,15 @@ export default function App() {
   useEffect(() => {
     const ws = new WebSocket(getWsUrl())
     wsRef.current = ws
+
+    ws.onopen = () => {
+      // Flush any join that was queued while the socket was still connecting.
+      const pending = pendingJoinRef.current
+      if (pending) {
+        pendingJoinRef.current = null
+        ws.send(JSON.stringify({ type: 'join', name: pending }))
+      }
+    }
 
     ws.onmessage = (evt) => {
       let msg: ServerMsg
@@ -273,7 +291,10 @@ function LobbyView({
 
   return (
     <div className="container">
-      <h1>Clicker Battle</h1>
+      <div>
+        <h1 className="lobby-title">Clicker Battle</h1>
+        <p className="lobby-subtitle">Real-time 1v1 clicking frenzy</p>
+      </div>
 
       {!joined ? (
         <section className="card">
@@ -427,16 +448,16 @@ function GameView({
   if (!isPlayer) {
     return (
       <div className="container">
-        <div className="game-header">
+        <div className="spectator-header">
           <button className="btn-ghost" onClick={onLeave}>← Lobby</button>
-          <h1>Spectating</h1>
+          <span className="spectator-badge">Spectating</span>
         </div>
 
         <div className="score-board spectator-board">
           <ScoreCard name={room.player1Name} score={room.scores[room.player1Id] ?? 0} highlight={false} />
           <div className="vs-divider">
             {room.state === 'countdown' && <span className="countdown">{room.countdown}</span>}
-            {room.state === 'playing' && <span className="timer">{timeLeft}s</span>}
+            {room.state === 'playing' && <span className={`timer${timeLeft < 10 ? ' timer-low' : ''}`}>{timeLeft}s</span>}
             {room.state === 'ended' && <span className="ended-label">ENDED</span>}
             {room.state === 'waiting' && <span className="vs-text">VS</span>}
           </div>
@@ -471,7 +492,7 @@ function GameView({
         <ScoreCard name="You" score={myScore} highlight={true} />
         <div className="vs-divider">
           {room.state === 'countdown' && <span className="countdown">{room.countdown}</span>}
-          {room.state === 'playing' && <span className="timer">{timeLeft}s</span>}
+          {room.state === 'playing' && <span className={`timer${timeLeft < 10 ? ' timer-low' : ''}`}>{timeLeft}s</span>}
           {room.state === 'ended' && <span className="ended-label">ENDED</span>}
           {room.state === 'waiting' && <span className="vs-text">VS</span>}
         </div>
