@@ -53,12 +53,11 @@ module "networking" {
 module "storage" {
   source = "../../modules/storage"
 
-  region                      = var.region
-  vpc_id                      = module.networking.vpc_id
-  public_route_table_id       = module.networking.public_route_table_id
-  files_bucket_name           = var.files_bucket_name
-  frontend_bucket_name        = var.frontend_bucket_name
-  cloudfront_distribution_arn = module.cdn.distribution_arn
+  region                = var.region
+  vpc_id                = module.networking.vpc_id
+  public_route_table_id = module.networking.public_route_table_id
+  files_bucket_name     = var.files_bucket_name
+  frontend_bucket_name  = var.frontend_bucket_name
 }
 
 # ── CDN (CloudFront with default *.cloudfront.net certificate) ────────────────
@@ -67,6 +66,25 @@ module "cdn" {
 
   ec2_origin_domain               = module.networking.elastic_ip_dns
   frontend_bucket_regional_domain = module.storage.frontend_bucket_regional_domain
+}
+
+# ── S3 bucket policy (broken out to avoid storage↔cdn circular dependency) ────
+# storage needs cdn's ARN for the policy; cdn needs storage's domain for the
+# origin. Placing the policy here lets Terraform resolve both modules first.
+resource "aws_s3_bucket_policy" "frontend" {
+  bucket = module.storage.frontend_bucket_id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "cloudfront.amazonaws.com" }
+      Action    = "s3:GetObject"
+      Resource  = "${module.storage.frontend_bucket_arn}/*"
+      Condition = {
+        StringEquals = { "AWS:SourceArn" = module.cdn.distribution_arn }
+      }
+    }]
+  })
 }
 
 # ── GitHub Actions OIDC role ──────────────────────────────────────────────────
