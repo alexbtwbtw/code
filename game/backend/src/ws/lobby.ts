@@ -1,8 +1,8 @@
 import { WebSocket } from 'ws'
 import { randomUUID } from 'crypto'
-import { players, wsByPlayer, rooms, playerRoom, pendingChallenges } from './state'
+import { players, wsByPlayer, rooms, playerRoom, pendingChallenges, pendingChallengeSettings } from './state'
 import { broadcastRoom, getRoomGameState } from './game'
-import type { Player, GameRoom } from './types'
+import type { Player, GameRoom, GameSettings } from './types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -12,6 +12,51 @@ export function send(ws: WebSocket, msg: object): void {
     ws.send(JSON.stringify(msg))
   } catch (e) {
     console.error('[ws] send error:', e)
+  }
+}
+
+export function defaultSettings(): GameSettings {
+  return {
+    duration: 30,
+    movingButton: false,
+    moveSpeed: 150,
+    buttonSize: 'normal',
+    ghostMode: false,
+    shrinkMode: false,
+    gravityMode: false,
+    hotZone: false,
+    bombMode: false,
+  }
+}
+
+function parseSettings(raw: unknown): GameSettings {
+  const defaults = defaultSettings()
+  if (!raw || typeof raw !== 'object') return defaults
+  const r = raw as Record<string, unknown>
+
+  const validDurations = [15, 30, 45, 60] as const
+  const duration = validDurations.includes(r.duration as (typeof validDurations)[number])
+    ? (r.duration as GameSettings['duration'])
+    : defaults.duration
+
+  const rawMoveSpeed = typeof r.moveSpeed === 'number' ? r.moveSpeed : defaults.moveSpeed
+  const moveSpeed = Math.round(Math.max(50, Math.min(500, rawMoveSpeed)) / 10) * 10
+
+  const validButtonSizes = ['tiny', 'small', 'normal', 'large'] as const
+  const buttonSize = validButtonSizes.includes(r.buttonSize as (typeof validButtonSizes)[number])
+    ? (r.buttonSize as GameSettings['buttonSize'])
+    : defaults.buttonSize
+
+  return {
+    duration,
+    movingButton: typeof r.movingButton === 'boolean' ? r.movingButton : defaults.movingButton,
+    moveSpeed,
+    buttonSize,
+    ghostMode: typeof r.ghostMode === 'boolean' ? r.ghostMode : defaults.ghostMode,
+    shrinkMode: typeof r.shrinkMode === 'boolean' ? r.shrinkMode : defaults.shrinkMode,
+    gravityMode: typeof r.gravityMode === 'boolean' ? r.gravityMode : defaults.gravityMode,
+    hotZone: typeof r.hotZone === 'boolean' ? r.hotZone : defaults.hotZone,
+    bombMode: typeof r.bombMode === 'boolean' ? r.bombMode : defaults.bombMode,
   }
 }
 
@@ -61,6 +106,10 @@ export function handleChallenge(
   // Reject if either player is already in a room
   if (playerRoom.has(playerId) || playerRoom.has(target.id)) return
 
+  // Parse and store settings
+  const settings = parseSettings(msg.settings)
+  pendingChallengeSettings.set(playerId, settings)
+
   // Record pending challenge (overwrite any prior challenge from this player)
   pendingChallenges.set(playerId, target.id)
 
@@ -68,6 +117,7 @@ export function handleChallenge(
     type: 'challenge_received',
     challengerId: playerId,
     challengerName: player.name,
+    settings,
   })
 }
 
@@ -89,6 +139,10 @@ export function handleChallengeResponse(
   if (pendingChallenges.get(challengerId) !== playerId) return
   pendingChallenges.delete(challengerId)
 
+  // Retrieve and remove the challenger's settings
+  const settings = pendingChallengeSettings.get(challengerId) ?? defaultSettings()
+  pendingChallengeSettings.delete(challengerId)
+
   const player = players.get(playerId)
   if (!player) return
 
@@ -109,6 +163,7 @@ export function handleChallengeResponse(
     state: 'waiting',
     ready: new Set(),
     scores: { [challenger.id]: 0, [player.id]: 0 },
+    settings,
     spectators: new Set(),
   }
   rooms.set(gameId, room)
@@ -120,6 +175,7 @@ export function handleChallengeResponse(
     gameId,
     opponentId: opponent.id,
     opponentName: opponent.name,
+    settings,
   })
 
   send(challenger.ws, gameStartMsg(player))
