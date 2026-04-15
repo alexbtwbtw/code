@@ -8,6 +8,8 @@ COBA is a bilingual (EN/PT) project management app for civil engineering / geote
 
 ## Commands
 
+Run from the `coba/` directory:
+
 ```bash
 # Development (runs backend on :3000 + frontend on :5173 concurrently)
 npm run dev
@@ -26,11 +28,13 @@ npm --prefix frontend run lint
 npm --prefix frontend run preview
 ```
 
+To run all three apps together with the reverse proxy, use `npm run dev` from the repo root (`D:\code`).
+
 Requires Node >= v25 (see `.nvmrc`).
 
 ## Architecture
 
-Monorepo with two packages (`backend/`, `frontend/`) and a root `package.json` that orchestrates them via `concurrently`.
+COBA is one app inside the larger monorepo. Its own `package.json` at `coba/` orchestrates `backend/` and `frontend/` via `concurrently`.
 
 ### Backend (`backend/src/`)
 
@@ -131,7 +135,7 @@ Zod (v4) schemas validate input (camelCase) and map to snake_case for DB columns
 - `utils/` — `format.ts` (fmt, fmtDate, fmtDim, initials), `download.ts` (downloadCv)
 - `auth/index.ts` — auth abstraction: `getCurrentUser`, `setCurrentUser`, `signOut`, `useCurrentUser`
 - Plain CSS dark navy theme (no UI library) in `index.css`
-- `vite.config.ts` proxies `/api` and `/trpc` to backend in dev; has path alias `@backend` → `../backend/src`
+- `vite.config.ts` proxies `/api` and `/trpc` to backend in dev; has path alias `@backend` → `../backend/src`; `base: '/coba/'` for production
 
 ### Type Safety
 

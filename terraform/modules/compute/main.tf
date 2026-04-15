@@ -85,6 +85,10 @@ resource "aws_instance" "backend" {
     # Install pm2
     npm install -g pm2
 
+    # Register pm2 with systemd so processes survive reboots
+    env PATH=$PATH:/usr/bin pm2 startup systemd -u ec2-user --hp /home/ec2-user
+    systemctl enable pm2-ec2-user
+
     # Install nginx
     dnf install -y nginx
 

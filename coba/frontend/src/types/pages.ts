@@ -18,27 +18,30 @@ export type Page =
 // ── URL ↔ Page mapping ──────────────────────────────────────────────────────
 
 export function pageToPath(page: Page): string {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '') // e.g. '/coba'
+  if (page.view === 'home') return import.meta.env.BASE_URL // e.g. '/coba/'
   switch (page.view) {
-    case 'home':             return '/'
-    case 'search':           return '/projects'
-    case 'add':              return '/add'
-    case 'reports':          return '/reports'
-    case 'project':          return `/projects/${page.id}`
-    case 'team':             return '/team'
-    case 'member':           return `/team/${page.id}`
-    case 'requirements':     return '/requirements'
-    case 'requirement-book': return `/requirements/${page.id}`
-    case 'task':             return `/projects/${page.projectId}/tasks/${page.id}`
-    case 'admin':            return '/admin'
-    case 'company-teams':    return '/company-teams'
-    case 'time-report':      return '/time-report'
-    case 'finance-report':   return '/finance'
-    case 'engineering':      return '/engineering'
+    case 'search':           return `${base}/projects`
+    case 'add':              return `${base}/add`
+    case 'reports':          return `${base}/reports`
+    case 'project':          return `${base}/projects/${page.id}`
+    case 'team':             return `${base}/team`
+    case 'member':           return `${base}/team/${page.id}`
+    case 'requirements':     return `${base}/requirements`
+    case 'requirement-book': return `${base}/requirements/${page.id}`
+    case 'task':             return `${base}/projects/${page.projectId}/tasks/${page.id}`
+    case 'admin':            return `${base}/admin`
+    case 'company-teams':    return `${base}/company-teams`
+    case 'time-report':      return `${base}/time-report`
+    case 'finance-report':   return `${base}/finance`
+    case 'engineering':      return `${base}/engineering`
   }
 }
 
 export function pathToPage(path: string): Page {
-  const s = path.replace(/\/+$/, '') || '/'
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '') // e.g. '/coba'
+  const stripped = path.startsWith(base) ? path.slice(base.length) || '/' : path
+  const s = stripped.replace(/\/+$/, '') || '/'
 
   if (s === '/')              return { view: 'home' }
   if (s === '/projects')      return { view: 'search' }

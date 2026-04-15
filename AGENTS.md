@@ -1,11 +1,11 @@
 # Agent Status Board
 
-This file is the shared coordination log for all agents working on COBA.
+This file is the shared coordination log for all agents working in this repo.
 Each agent must update their section when they start, change, or finish a task.
 
 **Format rule:** The `Last updated` field must always include both date AND time in `YYYY-MM-DD HH:MM` format (24h). **Always get the real current time by running `date +"%Y-%m-%d %H:%M"` (bash) before writing — never guess or hardcode a time.**
 
-**Git rules:** The `.gitignore` lives at `D:\code\.gitignore` (one level above the project root) and also at `D:\code\coba\.gitignore`. Both exclude `.env` and `backend/.env`. **Never commit any `.env` file.** Always run `git status` before committing to verify no secrets are staged.
+**Git rules:** The root `.gitignore` lives at `D:\code\.gitignore`. Each app also has its own `.gitignore` (e.g. `D:\code\coba\.gitignore`). All exclude `.env` and `backend/.env`. **Never commit any `.env` file.** Always run `git status` before committing to verify no secrets are staged.
 
 ## At a Glance
 

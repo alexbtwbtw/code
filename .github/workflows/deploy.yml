@@ -67,6 +67,46 @@ jobs:
           cd ../..
           echo "Game artifact size: $(du -sh game-backend-artifact.zip | cut -f1)"
 
+      # ── Sync nginx config via SSM ─────────────────────────────────────────
+      - name: Sync nginx config via SSM
+        env:
+          EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          FILES_BUCKET: ${{ vars.FILES_BUCKET_NAME }}
+        run: |
+          NGINX_HASH=$(sha256sum scripts/update-nginx.sh | awk '{print $1}')
+          [[ "$NGINX_HASH" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid hash"; exit 1; }
+          aws s3 cp scripts/update-nginx.sh s3://${{ vars.FILES_BUCKET_NAME }}/scripts/update-nginx.sh
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[\"set -e && aws s3 cp s3://${FILES_BUCKET}/scripts/update-nginx.sh /tmp/update-nginx.sh && echo '${NGINX_HASH}  /tmp/update-nginx.sh' | sha256sum -c - && bash /tmp/update-nginx.sh\"]" \
+            --timeout-seconds 120 \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM Command ID: $COMMAND_ID"
+
+          for i in $(seq 1 24); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$EC2_INSTANCE_ID" \
+              --query "Status" --output text 2>/dev/null || echo "Pending")
+            echo "[$i/24] Status: $STATUS"
+            case "$STATUS" in
+              Success) echo "nginx sync succeeded."; break ;;
+              Failed|Cancelled|TimedOut|Cancelling)
+                echo "nginx sync failed: $STATUS"
+                aws ssm get-command-invocation \
+                  --command-id "$COMMAND_ID" \
+                  --instance-id "$EC2_INSTANCE_ID" \
+                  --query "StandardErrorContent" --output text
+                exit 1 ;;
+              *) sleep 5 ;;
+            esac
+            if [ "$i" -eq 24 ]; then echo "Timed out."; exit 1; fi
+          done
+
       # ── Deploy COBA backend via SSM ────────────────────────────────────────
       - name: Write COBA deploy script
         run: |
@@ -290,11 +330,11 @@ jobs:
 
       - name: Sync COBA frontend to S3
         run: |
-          aws s3 sync coba/frontend/dist/assets/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/assets/ \
+          aws s3 sync coba/frontend/dist/assets/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/coba/assets/ \
             --cache-control "public,max-age=31536000,immutable" \
             --delete
 
-          aws s3 sync coba/frontend/dist/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/ \
+          aws s3 sync coba/frontend/dist/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/coba/ \
             --cache-control "no-cache,no-store,must-revalidate" \
             --exclude "assets/*" \
             --delete
@@ -321,9 +361,31 @@ jobs:
             --exclude "assets/*" \
             --delete
 
+      # ── Build and deploy Home frontend ─────────────────────────────────────
+      - name: Install Home frontend dependencies
+        run: npm ci
+        working-directory: home/frontend
+
+      - name: Build Home frontend
+        run: npm run build
+        working-directory: home/frontend
+        env:
+          NODE_ENV: production
+
+      - name: Sync Home frontend to S3
+        run: |
+          aws s3 sync home/frontend/dist/assets/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/assets/ \
+            --cache-control "public,max-age=31536000,immutable" \
+            --delete
+
+          aws s3 sync home/frontend/dist/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/ \
+            --cache-control "no-cache,no-store,must-revalidate" \
+            --exclude "assets/*" \
+            --delete
+
       # ── CloudFront invalidation ────────────────────────────────────────────
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/index.html" "/game/index.html" "/game/*"
+            --paths "/index.html" "/coba/index.html" "/coba/*" "/game/index.html" "/game/*"
