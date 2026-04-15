@@ -17,8 +17,3 @@ variable "files_bucket_name" {
 variable "frontend_bucket_name" {
   type = string
 }
-
-variable "cloudfront_distribution_arn" {
-  type    = string
-  default = ""
-}

@@ -1,10 +1,12 @@
-name: CI
+name: CI — COBA
 
 on:
   push:
     branches: [main]
+    paths: ['coba/**']
   pull_request:
     branches: [main]
+    paths: ['coba/**']
 
 jobs:
   # ── Backend ────────────────────────────────────────────────────────────────

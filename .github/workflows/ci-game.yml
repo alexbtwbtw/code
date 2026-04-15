@@ -1,0 +1,69 @@
+name: CI — Game
+
+on:
+  push:
+    branches: [main]
+    paths: ['game/**']
+  pull_request:
+    branches: [main]
+    paths: ['game/**']
+
+jobs:
+  # ── Backend ────────────────────────────────────────────────────────────────
+  backend:
+    name: Backend — typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game/backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '25'
+          cache: npm
+          cache-dependency-path: game/backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+  # ── Frontend ───────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend — typecheck & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game/frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '25'
+          cache: npm
+          cache-dependency-path: |
+            game/frontend/package-lock.json
+            game/backend/package-lock.json
+
+      - name: Install backend dependencies
+        # tsc -b follows the @backend path alias into ../backend/src and needs
+        # backend's node_modules to resolve @trpc/server, zod, etc.
+        run: npm ci
+        working-directory: game/backend
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BUILD_NUMBER: ${{ github.run_number }}
