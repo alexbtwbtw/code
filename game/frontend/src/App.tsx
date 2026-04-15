@@ -220,6 +220,7 @@ export default function App() {
         myId={myId}
         gameRoom={gameRoom}
         sendWs={sendWs}
+        isParticipant={isPlayerRef.current}
         onLeave={() => {
           isPlayerRef.current = false
           navigate('/game/')
@@ -374,6 +375,7 @@ function GameView({
   myId,
   gameRoom,
   sendWs,
+  isParticipant,
   onLeave,
 }: {
   gameId: string
@@ -393,13 +395,16 @@ function GameView({
     winnerId?: string | null
   } | null
   sendWs: (msg: unknown) => void
+  isParticipant: boolean
   onLeave: () => void
 }) {
   const [timeLeft, setTimeLeft] = useState(30)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const room = gameRoom?.gameId === gameId ? gameRoom : null
-  const isPlayer = myId !== null && room !== null && (room.player1Id === myId || room.player2Id === myId)
+  // isParticipant is set when this client received game_start (authoritative).
+  // Fall back to room-based check once game_state arrives with player IDs.
+  const isPlayer = isParticipant || (myId !== null && room !== null && (room.player1Id === myId || room.player2Id === myId))
 
   // Derive opponent info for players
   let myScore = 0

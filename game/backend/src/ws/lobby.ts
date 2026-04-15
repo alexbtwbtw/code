@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws'
 import { randomUUID } from 'crypto'
 import { players, wsByPlayer, rooms, playerRoom, pendingChallenges } from './state'
+import { broadcastRoom, getRoomGameState } from './game'
 import type { Player, GameRoom } from './types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -123,4 +124,8 @@ export function handleChallengeResponse(
 
   send(challenger.ws, gameStartMsg(player))
   send(player.ws, gameStartMsg(challenger))
+
+  // Immediately broadcast game_state so both players receive player1Id/player2Id
+  // and can show the player view without waiting for the first ready/click.
+  broadcastRoom(room, getRoomGameState(room))
 }
