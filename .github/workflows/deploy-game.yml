@@ -6,6 +6,7 @@ on:
     paths:
       - 'game/**'
       - 'scripts/update-nginx.sh'
+  workflow_dispatch:
 
 permissions:
   id-token: write
