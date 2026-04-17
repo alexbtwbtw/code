@@ -30,8 +30,10 @@ export function cleanupPlayer(id: string, ws: WebSocket) {
           winnerId: otherId,
         })
       }
-      // Notify spectators and the other player
+      // Notify spectators and the other player, then clean up both room entries
+      const otherId = room.player1.id === id ? room.player2.id : room.player1.id
       rooms.delete(roomId)
+      playerRoom.delete(otherId)
     }
     playerRoom.delete(id)
   }

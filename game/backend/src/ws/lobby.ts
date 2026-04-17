@@ -132,10 +132,9 @@ export function handleChallengeResponse(
   if (typeof msg.accepted !== 'boolean') return
 
   const challengerId = msg.challengerId
-  const challenger = players.get(challengerId)
-  if (!challenger) return
 
   // Validate there is actually a pending challenge from challengerId to playerId
+  // Do this BEFORE fetching challenger so we always clean up the pending state
   if (pendingChallenges.get(challengerId) !== playerId) return
   pendingChallenges.delete(challengerId)
 
@@ -143,13 +142,18 @@ export function handleChallengeResponse(
   const settings = pendingChallengeSettings.get(challengerId) ?? defaultSettings()
   pendingChallengeSettings.delete(challengerId)
 
+  const challenger = players.get(challengerId)
   const player = players.get(playerId)
   if (!player) return
 
   if (!msg.accepted) {
-    send(challenger.ws, { type: 'challenge_declined', targetId: playerId })
+    // Notify challenger only if still connected
+    if (challenger) send(challenger.ws, { type: 'challenge_declined', targetId: playerId })
     return
   }
+
+  // Challenger disconnected between sending the challenge and us accepting — abort
+  if (!challenger) return
 
   // Reject if either player is already in a room
   if (playerRoom.has(challengerId) || playerRoom.has(playerId)) return
