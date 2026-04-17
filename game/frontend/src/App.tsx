@@ -619,7 +619,7 @@ function LocalGameView({
 }) {
   const [phase, setPhase] = useState<LocalPhase>('countdown')
   const [countdown, setCountdown] = useState(3)
-  const [timeLeft, setTimeLeft] = useState(settings.duration)
+  const [timeLeft, setTimeLeft] = useState<number>(settings.duration)
   const [score1, setScore1] = useState(0)
   const [score2, setScore2] = useState(0)
   // Ghost mode: track button visibility per side
