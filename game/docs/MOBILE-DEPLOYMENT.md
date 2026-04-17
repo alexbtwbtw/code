@@ -4,6 +4,8 @@
 **Author:** Engineering (research spike)
 **Scope:** How to ship the existing `game/` app (React 19 + Vite frontend, Hono + ws backend on :3001) to iOS and Android.
 
+> **Update (April 2026):** this memo is the original cross-platform decision. The **Android-only** follow-up with full offline support for solo and local-2p is specified in detail in [`ANDROID-CAPACITOR-PLAN.md`](./ANDROID-CAPACITOR-PLAN.md). Read that doc for the concrete ship plan; this one remains the rationale for why Capacitor (over RN/Expo/Tauri/PWA) was chosen in the first place.
+
 ---
 
 ## TL;DR
