@@ -1146,3 +1146,293 @@ button {
   font-size: 0.875rem;
   color: #f87171;
 }
+
+/* ── Local 2-Player CTA Card ─────────────────────────────────────────────── */
+
+.local-cta {
+  background: rgba(13, 45, 94, 0.85);
+  border-color: rgba(124, 58, 237, 0.3);
+  padding: 1.1rem 1.5rem;
+}
+
+.local-cta-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.local-cta-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #c4b5fd;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.2rem;
+}
+
+.local-cta-desc {
+  font-size: 0.78rem;
+  color: #4a6080;
+}
+
+.btn-local {
+  padding: 0.6rem 1.3rem;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(79, 70, 229, 0.25));
+  color: #c4b5fd;
+  border: 1px solid rgba(124, 58, 237, 0.5);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+.btn-local:hover {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.4), rgba(79, 70, 229, 0.4));
+  border-color: #a78bfa;
+  color: #e9d5ff;
+  transform: translateY(-1px);
+}
+.btn-local:active { transform: translateY(0); }
+
+/* ── Local Setup View ────────────────────────────────────────────────────── */
+
+.local-names-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 400px) {
+  .local-names-grid { grid-template-columns: 1fr; }
+}
+
+.local-name-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.local-name-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.local-name-left  { color: #60a5fa; }  /* blue tint for left player */
+.local-name-right { color: #f87171; }  /* red tint for right player */
+
+.local-name-input { width: 100%; }
+
+.btn-start-local {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  border-radius: 12px;
+}
+
+/* ── Local Game Root ─────────────────────────────────────────────────────── */
+
+.local-game-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  background: #081d3f;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(13, 45, 94, 0.5) 0%, transparent 50%);
+}
+
+.local-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.local-leave-btn {
+  min-width: 60px;
+}
+
+.local-timer-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Local Split Screen ──────────────────────────────────────────────────── */
+
+.local-split {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.local-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1.25rem 1rem;
+  gap: 1rem;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.15s;
+  overflow: hidden;
+  position: relative;
+}
+
+.local-side-left  { background: rgba(96, 165, 250, 0.04); border-right: none; }
+.local-side-right { background: rgba(248, 113, 113, 0.04); }
+
+.local-side-active.local-side-left  { background: rgba(96, 165, 250, 0.07); }
+.local-side-active.local-side-right { background: rgba(248, 113, 113, 0.07); }
+
+.local-side-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.local-player-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.local-side-left  .local-player-name { color: #93c5fd; }
+.local-side-right .local-player-name { color: #fca5a5; }
+
+.local-score {
+  font-size: 5rem;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #e2e8f0;
+  text-shadow: 0 0 20px rgba(255,255,255,0.1);
+}
+
+.local-side-left  .local-score { color: #93c5fd; text-shadow: 0 0 20px rgba(147, 197, 253, 0.3); }
+.local-side-right .local-score { color: #fca5a5; text-shadow: 0 0 20px rgba(252, 165, 165, 0.3); }
+
+.local-key-hint {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #2d4a6a;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.local-btn-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  pointer-events: none; /* clicks go through to the side div via onPointerDown */
+}
+
+/* Override pointer-events for the button itself so it still activates */
+.local-btn-wrap .click-btn {
+  pointer-events: all;
+  /* Scale down big-click for smaller half-screen layout */
+  padding: 1.25rem 2rem !important;
+  font-size: 1.4rem !important;
+}
+
+/* ── Local Side Divider ──────────────────────────────────────────────────── */
+
+.local-divider {
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 15%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.06) 85%,
+    transparent 100%
+  );
+  flex-shrink: 0;
+}
+
+/* ── Local Countdown Overlay ─────────────────────────────────────────────── */
+
+.local-countdown-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ── Local Result Overlay ────────────────────────────────────────────────── */
+
+.local-result-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 29, 63, 0.88);
+  backdrop-filter: blur(6px);
+  z-index: 20;
+  padding: 1.5rem;
+}
+
+.local-result-card {
+  max-width: 400px;
+  width: 100%;
+}
+
+.local-scores-summary {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin-top: -0.5rem;
+}
+
+.local-scores-summary strong { color: #c4b5fd; }
+
+.local-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.local-result-actions .btn-primary,
+.local-result-actions .btn-secondary {
+  width: 100%;
+  text-align: center;
+}
+
+.local-saved-notice {
+  font-size: 0.875rem;
+  color: #34d399;
+  font-weight: 600;
+}
