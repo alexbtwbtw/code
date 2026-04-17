@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { trpc, trpcClient } from './trpc'
 
+// ── Solo score submission helper ──────────────────────────────────────────────
+
+async function submitSoloScore(player: string, score: number) {
+  return trpcClient.scores.add.mutate({ player, score })
+}
+
 // ── Types (mirror backend ws.ts) ─────────────────────────────────────────────
 
 type LobbyUser = { id: string; name: string }
@@ -72,6 +78,7 @@ type View =
   | { kind: 'lobby' }
   | { kind: 'game'; gameId: string }
   | { kind: 'leaderboard' }
+  | { kind: 'solo'; playerName: string; settings: GameSettings }
 
 function getView(): View {
   const path = window.location.pathname
@@ -259,6 +266,16 @@ export default function App() {
     return <LeaderboardView onBack={() => navigate('/game/')} />
   }
 
+  if (view.kind === 'solo') {
+    return (
+      <SoloGameView
+        playerName={view.playerName}
+        settings={view.settings}
+        onBack={() => navigate('/game/')}
+      />
+    )
+  }
+
   if (view.kind === 'game') {
     return (
       <GameView
@@ -289,6 +306,7 @@ export default function App() {
       declinedNotice={declinedNotice}
       sendWs={sendWs}
       onGoLeaderboard={() => navigate('/game/leaderboard')}
+      onPlaySolo={(name, settings) => setView({ kind: 'solo', playerName: name, settings })}
       pendingSettings={pendingSettings}
       setPendingSettings={setPendingSettings}
     />
@@ -309,6 +327,7 @@ function LobbyView({
   declinedNotice,
   sendWs,
   onGoLeaderboard,
+  onPlaySolo,
   pendingSettings,
   setPendingSettings,
 }: {
@@ -323,6 +342,7 @@ function LobbyView({
   declinedNotice: string | null
   sendWs: (msg: unknown) => void
   onGoLeaderboard: () => void
+  onPlaySolo: (name: string, settings: GameSettings) => void
   pendingSettings: GameSettings
   setPendingSettings: (s: GameSettings) => void
 }) {
@@ -334,6 +354,17 @@ function LobbyView({
     setMyName(name)
     sendWs({ type: 'join', name })
     setJoined(true)
+  }
+
+  const handlePlaySolo = () => {
+    const name = (joined ? myName : nameInput).trim()
+    if (!name) return
+    if (!joined) {
+      setMyName(name)
+      sendWs({ type: 'join', name })
+      setJoined(true)
+    }
+    onPlaySolo(name, pendingSettings)
   }
 
   const handleChallenge = (targetId: string) => {
@@ -376,6 +407,13 @@ function LobbyView({
               Join
             </button>
           </div>
+          <button
+            className="btn-solo"
+            onClick={handlePlaySolo}
+            disabled={!nameInput.trim()}
+          >
+            Play Solo
+          </button>
         </section>
       ) : (
         <>
@@ -401,7 +439,10 @@ function LobbyView({
           <section className="card">
             <div className="lobby-header">
               <h2>Lobby <span className="pill">{otherUsers.length + 1} online</span></h2>
-              <button className="btn-ghost" onClick={onGoLeaderboard}>Leaderboard →</button>
+              <div className="lobby-header-actions">
+                <button className="btn-solo btn-solo-sm" onClick={handlePlaySolo}>Play Solo</button>
+                <button className="btn-ghost" onClick={onGoLeaderboard}>Leaderboard →</button>
+              </div>
             </div>
 
             {otherUsers.length === 0 ? (
@@ -910,6 +951,275 @@ function GameView({
               : <p className="result-lose">You lose. Better luck next time!</p>
           }
           <button className="btn-primary mt" onClick={onLeave}>Back to Lobby</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Solo Game View ────────────────────────────────────────────────────────────
+
+type SoloPhase = 'countdown' | 'playing' | 'ended'
+
+function SoloGameView({
+  playerName,
+  settings,
+  onBack,
+}: {
+  playerName: string
+  settings: GameSettings
+  onBack: () => void
+}) {
+  const [phase, setPhase] = useState<SoloPhase>('countdown')
+  const [countdown, setCountdown] = useState(3)
+  const [timeLeft, setTimeLeft] = useState<number>(settings.duration)
+  const [score, setScore] = useState(0)
+  const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // Moving button / gravity state (mirrors GameView)
+  const posRef = useRef({ x: 50, y: 50 })
+  const velRef = useRef({ vx: 1, vy: 0.7 })
+  const animFrameRef = useRef<number>(0)
+  const lastTimeRef = useRef<number>(0)
+  const [buttonPos, setButtonPos] = useState<{ x: number; y: number }>({ x: 50, y: 50 })
+
+  const gravityRef = useRef<{ x: number; y: number; vx: number; vy: number }>({ x: 50, y: 30, vx: 1.5, vy: 0 })
+  const rafRef = useRef<number | null>(null)
+
+  const [isGhost, setIsGhost] = useState(false)
+  const [hotZonePos, setHotZonePos] = useState<{ x: number; y: number }>({ x: 30, y: 40 })
+  const [bombPos, setBombPos] = useState<{ x: number; y: number } | null>(null)
+  const bombTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Shrink scale
+  const shrinkScale = settings.shrinkMode && phase === 'playing'
+    ? 0.3 + (timeLeft / settings.duration) * 1.2
+    : 1
+  const isMoving = settings.movingButton || settings.gravityMode
+
+  // ── Countdown phase ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'countdown') return
+    const id = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) {
+          clearInterval(id)
+          setPhase('playing')
+          return 0
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [phase])
+
+  // ── Game timer ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'playing') return
+    setTimeLeft(settings.duration)
+    const id = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) { clearInterval(id); setPhase('ended'); return 0 }
+        return t - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [phase, settings.duration])
+
+  // ── Auto-submit score when game ends ─────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'ended' || submitted) return
+    submitSoloScore(playerName, score)
+      .then(() => setSubmitted(true))
+      .catch(() => setSubmitError('Could not save score — check your connection.'))
+  }, [phase, submitted, playerName, score])
+
+  // ── Moving button ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'playing' || !settings.movingButton || settings.gravityMode) return
+    const speedPct = settings.moveSpeed / 400
+    const angle = Math.random() * Math.PI * 2
+    velRef.current = { vx: Math.cos(angle), vy: Math.sin(angle) }
+    lastTimeRef.current = 0
+    function tick(now: number) {
+      const dt = lastTimeRef.current ? now - lastTimeRef.current : 16
+      lastTimeRef.current = now
+      const pos = posRef.current
+      const vel = velRef.current
+      const step = speedPct * dt * 100
+      let newX = pos.x + vel.vx * step
+      let newY = pos.y + vel.vy * step
+      if (newX < 5 || newX > 85) { velRef.current = { ...velRef.current, vx: -vel.vx }; newX = Math.max(5, Math.min(85, newX)) }
+      if (newY < 5 || newY > 85) { velRef.current = { ...velRef.current, vy: -vel.vy }; newY = Math.max(5, Math.min(85, newY)) }
+      posRef.current = { x: newX, y: newY }
+      setButtonPos({ x: newX, y: newY })
+      animFrameRef.current = requestAnimationFrame(tick)
+    }
+    animFrameRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animFrameRef.current)
+  }, [phase, settings.movingButton, settings.moveSpeed, settings.gravityMode])
+
+  // ── Gravity mode ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'playing' || !settings.gravityMode) return
+    gravityRef.current = { x: 50, y: 30, vx: 1.5, vy: 0 }
+    const step = () => {
+      const g = gravityRef.current
+      g.vy += 0.3; g.x += g.vx; g.y += g.vy
+      if (g.x < 5)  { g.x = 5;  g.vx =  Math.abs(g.vx) }
+      if (g.x > 90) { g.x = 90; g.vx = -Math.abs(g.vx) }
+      if (g.y < 5)  { g.y = 5;  g.vy =  Math.abs(g.vy) }
+      if (g.y > 85) { g.y = 85; g.vy = -Math.abs(g.vy) * 0.8 }
+      setButtonPos({ x: g.x, y: g.y })
+      rafRef.current = requestAnimationFrame(step)
+    }
+    rafRef.current = requestAnimationFrame(step)
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current) }
+  }, [phase, settings.gravityMode])
+
+  // ── Ghost mode ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'playing' || !settings.ghostMode) { setIsGhost(false); return }
+    const id = setInterval(() => {
+      setIsGhost(true)
+      setTimeout(() => setIsGhost(false), 500)
+    }, 3000)
+    return () => clearInterval(id)
+  }, [phase, settings.ghostMode])
+
+  // ── Hot zone ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'playing' || !settings.hotZone) return
+    setHotZonePos({ x: 10 + Math.random() * 60, y: 10 + Math.random() * 60 })
+    const id = setInterval(() => {
+      setHotZonePos({ x: 10 + Math.random() * 60, y: 10 + Math.random() * 60 })
+    }, 10_000)
+    return () => clearInterval(id)
+  }, [phase, settings.hotZone])
+
+  // ── Bomb mode ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'playing' || !settings.bombMode) { setBombPos(null); return }
+    const spawnBomb = () => {
+      setBombPos({ x: 5 + Math.random() * 80, y: 5 + Math.random() * 80 })
+      bombTimerRef.current = setTimeout(() => {
+        setBombPos(null)
+        bombTimerRef.current = setTimeout(spawnBomb, 8_000)
+      }, 3_000)
+    }
+    bombTimerRef.current = setTimeout(spawnBomb, 8_000)
+    return () => { if (bombTimerRef.current) clearTimeout(bombTimerRef.current); setBombPos(null) }
+  }, [phase, settings.bombMode])
+
+  // ── Click handlers ───────────────────────────────────────────────────────
+  const inHotZone = (bx: number, by: number, zx: number, zy: number) => {
+    const dx = bx - zx, dy = by - zy
+    return Math.sqrt(dx * dx + dy * dy) < 12
+  }
+
+  const handleClick = () => {
+    if (phase !== 'playing') return
+    if (settings.hotZone && inHotZone(buttonPos.x, buttonPos.y, hotZonePos.x, hotZonePos.y)) {
+      setScore(s => s + 2)
+    } else {
+      setScore(s => s + 1)
+    }
+  }
+
+  const handleBombClick = () => {
+    if (phase !== 'playing') return
+    setScore(s => Math.max(0, s - 5))
+    setBombPos(null)
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  return (
+    <div className="container">
+      <div className="game-header">
+        <button className="btn-ghost" onClick={onBack}>← Lobby</button>
+        <h1>Solo Run</h1>
+      </div>
+
+      {/* Score + timer */}
+      <div className="solo-hud">
+        <div className="solo-score-block">
+          <span className="solo-score-label">Score</span>
+          <span className="solo-score-num">{score}</span>
+        </div>
+        <div className="solo-timer-block">
+          {phase === 'countdown' && <span className="countdown">{countdown}</span>}
+          {phase === 'playing' && (
+            <span className={`timer${timeLeft < 10 ? ' timer-low' : ''}`}>{timeLeft}s</span>
+          )}
+          {phase === 'ended' && <span className="ended-label">DONE</span>}
+        </div>
+        <div className="solo-mode-block">
+          <span className="solo-mode-text">{settingsSummary(settings)}</span>
+        </div>
+      </div>
+
+      {phase === 'countdown' && (
+        <div className="countdown-display">
+          <span className="countdown-big">{countdown}</span>
+          <p className="muted">Get ready to click!</p>
+        </div>
+      )}
+
+      {phase === 'playing' && (
+        <div className={`playing-section${isMoving ? ' playing-arena' : ''}`}>
+          {settings.hotZone && (
+            <div
+              className="hot-zone"
+              style={{ left: `${hotZonePos.x}%`, top: `${hotZonePos.y}%` }}
+            >
+              <span className="hot-zone-label">2×</span>
+            </div>
+          )}
+          {bombPos && (
+            <button
+              className="bomb-btn"
+              style={{ left: `${bombPos.x}%`, top: `${bombPos.y}%` }}
+              onClick={handleBombClick}
+            >
+              💣
+            </button>
+          )}
+          <button
+            className={`click-btn big-click btn-size-${settings.buttonSize}${isGhost ? ' ghost' : ''}`}
+            style={
+              isMoving
+                ? {
+                    position: 'absolute',
+                    left: `${buttonPos.x}%`,
+                    top: `${buttonPos.y}%`,
+                    transform: `translate(-50%, -50%) scale(${shrinkScale})`,
+                    transition: 'none',
+                  }
+                : settings.shrinkMode
+                ? { transform: `scale(${shrinkScale})` }
+                : undefined
+            }
+            onClick={handleClick}
+          >
+            CLICK!
+          </button>
+        </div>
+      )}
+
+      {phase === 'ended' && (
+        <div className="result-card">
+          <p className="result-win">Score: {score}</p>
+          {submitted && <p className="solo-saved">Saved to leaderboard!</p>}
+          {submitError && <p className="solo-error">{submitError}</p>}
+          {!submitted && !submitError && <p className="muted">Saving…</p>}
+          <div className="row gap" style={{ justifyContent: 'center' }}>
+            <button className="btn-primary mt" onClick={onBack}>Back to Lobby</button>
+            <button className="btn-secondary mt" onClick={() => {
+              setScore(0); setPhase('countdown'); setCountdown(3); setTimeLeft(settings.duration)
+              setSubmitted(false); setSubmitError(null)
+            }}>Play Again</button>
+          </div>
         </div>
       )}
     </div>
