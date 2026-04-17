@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { trpc, trpcClient } from './trpc'
+import { GameSettingsPanel, defaultSettings, settingsSummary } from './components/GameSettingsPanel'
+import type { GameSettings } from './components/GameSettingsPanel'
 
 // ── Solo score submission helper ──────────────────────────────────────────────
 
@@ -13,32 +15,6 @@ async function submitSoloScore(player: string, score: number) {
 type LobbyUser = { id: string; name: string }
 
 type GameState = 'waiting' | 'countdown' | 'playing' | 'ended'
-
-type GameSettings = {
-  duration: 15 | 30 | 45 | 60
-  movingButton: boolean
-  moveSpeed: number  // pixels per second, range 50–500, default 150
-  buttonSize: 'tiny' | 'small' | 'normal' | 'large'
-  ghostMode: boolean
-  shrinkMode: boolean
-  gravityMode: boolean
-  hotZone: boolean
-  bombMode: boolean
-}
-
-function defaultSettings(): GameSettings {
-  return {
-    duration: 30,
-    movingButton: false,
-    moveSpeed: 150,
-    buttonSize: 'normal',
-    ghostMode: false,
-    shrinkMode: false,
-    gravityMode: false,
-    hotZone: false,
-    bombMode: false,
-  }
-}
 
 type ServerMsg =
   | { type: 'assigned_id'; id: string }
@@ -60,24 +36,13 @@ type ServerMsg =
     }
   | { type: 'game_end'; gameId: string; scores: Record<string, number>; winnerId: string | null }
 
-function settingsSummary(s: GameSettings): string {
-  const parts: string[] = [`${s.duration}s`]
-  if (s.movingButton) parts.push('Moving')
-  if (s.ghostMode) parts.push('Ghost')
-  if (s.shrinkMode) parts.push('Shrink')
-  if (s.gravityMode) parts.push('Gravity')
-  if (s.hotZone) parts.push('Hot Zone')
-  if (s.bombMode) parts.push('Bombs')
-  if (s.buttonSize !== 'normal') parts.push(s.buttonSize.charAt(0).toUpperCase() + s.buttonSize.slice(1) + ' btn')
-  return parts.join(' · ')
-}
-
 // ── Routing ───────────────────────────────────────────────────────────────────
 
 type View =
   | { kind: 'lobby' }
   | { kind: 'game'; gameId: string }
   | { kind: 'leaderboard' }
+  | { kind: 'solo_lobby'; playerName: string }
   | { kind: 'solo'; playerName: string; settings: GameSettings }
 
 function getView(): View {
@@ -266,6 +231,16 @@ export default function App() {
     return <LeaderboardView onBack={() => navigate('/game/')} />
   }
 
+  if (view.kind === 'solo_lobby') {
+    return (
+      <SoloLobbyView
+        playerName={view.playerName}
+        onStart={(settings) => setView({ kind: 'solo', playerName: view.playerName, settings })}
+        onBack={() => setView({ kind: 'lobby' })}
+      />
+    )
+  }
+
   if (view.kind === 'solo') {
     return (
       <SoloGameView
@@ -306,7 +281,7 @@ export default function App() {
       declinedNotice={declinedNotice}
       sendWs={sendWs}
       onGoLeaderboard={() => navigate('/game/leaderboard')}
-      onPlaySolo={(name, settings) => setView({ kind: 'solo', playerName: name, settings })}
+      onPlaySolo={(name) => setView({ kind: 'solo_lobby', playerName: name })}
       pendingSettings={pendingSettings}
       setPendingSettings={setPendingSettings}
     />
@@ -342,7 +317,7 @@ function LobbyView({
   declinedNotice: string | null
   sendWs: (msg: unknown) => void
   onGoLeaderboard: () => void
-  onPlaySolo: (name: string, settings: GameSettings) => void
+  onPlaySolo: (name: string) => void
   pendingSettings: GameSettings
   setPendingSettings: (s: GameSettings) => void
 }) {
@@ -364,7 +339,7 @@ function LobbyView({
       sendWs({ type: 'join', name })
       setJoined(true)
     }
-    onPlaySolo(name, pendingSettings)
+    onPlaySolo(name)
   }
 
   const handleChallenge = (targetId: string) => {
@@ -378,11 +353,6 @@ function LobbyView({
   }
 
   const otherUsers = lobbyUsers.filter(u => u.id !== myId)
-
-  // Helper to patch a single settings field
-  const patchSettings = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => {
-    setPendingSettings({ ...pendingSettings, [key]: value })
-  }
 
   return (
     <div className="container">
@@ -464,115 +434,7 @@ function LobbyView({
           {/* ── Game Settings ── */}
           <section className="card">
             <h2>Game Settings</h2>
-
-            <div className="settings-row">
-              <span className="settings-label">Duration</span>
-              <div className="seg-control">
-                {([15, 30, 45, 60] as const).map(d => (
-                  <button
-                    key={d}
-                    className={`seg-btn${pendingSettings.duration === d ? ' seg-btn-active' : ''}`}
-                    onClick={() => patchSettings('duration', d)}
-                  >{d}s</button>
-                ))}
-              </div>
-            </div>
-
-            <div className="settings-row">
-              <span className="settings-label">Button size</span>
-              <div className="seg-control">
-                {(['tiny', 'small', 'normal', 'large'] as const).map(s => (
-                  <button
-                    key={s}
-                    className={`seg-btn${pendingSettings.buttonSize === s ? ' seg-btn-active' : ''}`}
-                    onClick={() => patchSettings('buttonSize', s)}
-                  >{s}</button>
-                ))}
-              </div>
-            </div>
-
-            <div className="settings-row">
-              <label className="settings-toggle">
-                <span className="settings-label">Moving button</span>
-                <input
-                  type="checkbox"
-                  checked={pendingSettings.movingButton}
-                  disabled={pendingSettings.gravityMode}
-                  onChange={e => patchSettings('movingButton', e.target.checked)}
-                />
-              </label>
-            </div>
-
-            {pendingSettings.movingButton && (
-              <div className="settings-row settings-indent">
-                <span className="settings-label">Speed <span className="settings-value">{pendingSettings.moveSpeed} px/s</span></span>
-                <input
-                  type="range"
-                  min={50}
-                  max={500}
-                  step={10}
-                  value={pendingSettings.moveSpeed}
-                  onChange={e => patchSettings('moveSpeed', Number(e.target.value))}
-                  className="settings-slider"
-                />
-              </div>
-            )}
-
-            <div className="settings-row">
-              <label className="settings-toggle">
-                <span className="settings-label">Gravity mode</span>
-                <input
-                  type="checkbox"
-                  checked={pendingSettings.gravityMode}
-                  disabled={pendingSettings.movingButton}
-                  onChange={e => patchSettings('gravityMode', e.target.checked)}
-                />
-              </label>
-            </div>
-
-            <div className="settings-row">
-              <label className="settings-toggle">
-                <span className="settings-label">Ghost mode</span>
-                <input
-                  type="checkbox"
-                  checked={pendingSettings.ghostMode}
-                  onChange={e => patchSettings('ghostMode', e.target.checked)}
-                />
-              </label>
-            </div>
-
-            <div className="settings-row">
-              <label className="settings-toggle">
-                <span className="settings-label">Shrink mode</span>
-                <input
-                  type="checkbox"
-                  checked={pendingSettings.shrinkMode}
-                  onChange={e => patchSettings('shrinkMode', e.target.checked)}
-                />
-              </label>
-            </div>
-
-            <div className="settings-row">
-              <label className="settings-toggle">
-                <span className="settings-label">Hot zone</span>
-                <input
-                  type="checkbox"
-                  checked={pendingSettings.hotZone}
-                  onChange={e => patchSettings('hotZone', e.target.checked)}
-                />
-              </label>
-            </div>
-
-            <div className="settings-row">
-              <label className="settings-toggle">
-                <span className="settings-label">Bomb mode</span>
-                <input
-                  type="checkbox"
-                  checked={pendingSettings.bombMode}
-                  onChange={e => patchSettings('bombMode', e.target.checked)}
-                />
-              </label>
-            </div>
+            <GameSettingsPanel settings={pendingSettings} onChange={setPendingSettings} />
           </section>
 
           <section className="card you-card">
@@ -953,6 +815,46 @@ function GameView({
           <button className="btn-primary mt" onClick={onLeave}>Back to Lobby</button>
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Solo Lobby View ───────────────────────────────────────────────────────────
+
+function SoloLobbyView({
+  playerName,
+  onStart,
+  onBack,
+}: {
+  playerName: string
+  onStart: (settings: GameSettings) => void
+  onBack: () => void
+}) {
+  const [settings, setSettings] = useState<GameSettings>(defaultSettings)
+
+  return (
+    <div className="container">
+      <div className="game-header">
+        <button className="btn-ghost" onClick={onBack}>← Back</button>
+        <h1>Solo Run</h1>
+      </div>
+
+      <section className="card you-card">
+        <span className="muted-label">Playing as</span>
+        <span className="your-name">{playerName}</span>
+      </section>
+
+      <section className="card">
+        <h2>Game Settings</h2>
+        <GameSettingsPanel settings={settings} onChange={setSettings} />
+      </section>
+
+      <button
+        className="btn-primary btn-start-solo"
+        onClick={() => onStart(settings)}
+      >
+        Start
+      </button>
     </div>
   )
 }

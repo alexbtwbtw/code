@@ -1063,6 +1063,14 @@ button {
   border-radius: 6px;
 }
 
+/* Full-width prominent Start button on the solo lobby screen */
+.btn-start-solo {
+  width: 100%;
+  padding: 0.9rem 2.5rem;
+  font-size: 1.15rem;
+  margin-top: 0.5rem;
+}
+
 /* Header actions row (solo + leaderboard buttons) */
 .lobby-header-actions {
   display: flex;
