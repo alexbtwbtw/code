@@ -44,6 +44,8 @@ type View =
   | { kind: 'leaderboard' }
   | { kind: 'solo_lobby'; playerName: string }
   | { kind: 'solo'; playerName: string; settings: GameSettings }
+  | { kind: 'local-setup' }
+  | { kind: 'local-game'; player1: string; player2: string; settings: GameSettings }
 
 function getView(): View {
   const path = window.location.pathname
@@ -267,6 +269,26 @@ export default function App() {
     )
   }
 
+  if (view.kind === 'local-setup') {
+    return (
+      <LocalSetupView
+        onStart={(p1, p2, settings) => setView({ kind: 'local-game', player1: p1, player2: p2, settings })}
+        onBack={() => setView({ kind: 'lobby' })}
+      />
+    )
+  }
+
+  if (view.kind === 'local-game') {
+    return (
+      <LocalGameView
+        player1={view.player1}
+        player2={view.player2}
+        settings={view.settings}
+        onLeave={() => setView({ kind: 'lobby' })}
+      />
+    )
+  }
+
   // Lobby view
   return (
     <LobbyView
@@ -282,6 +304,7 @@ export default function App() {
       sendWs={sendWs}
       onGoLeaderboard={() => navigate('/game/leaderboard')}
       onPlaySolo={(name) => setView({ kind: 'solo_lobby', playerName: name })}
+      onGoLocalSetup={() => setView({ kind: 'local-setup' })}
       pendingSettings={pendingSettings}
       setPendingSettings={setPendingSettings}
     />
@@ -303,6 +326,7 @@ function LobbyView({
   sendWs,
   onGoLeaderboard,
   onPlaySolo,
+  onGoLocalSetup,
   pendingSettings,
   setPendingSettings,
 }: {
@@ -318,6 +342,7 @@ function LobbyView({
   sendWs: (msg: unknown) => void
   onGoLeaderboard: () => void
   onPlaySolo: (name: string) => void
+  onGoLocalSetup: () => void
   pendingSettings: GameSettings
   setPendingSettings: (s: GameSettings) => void
 }) {
@@ -361,9 +386,22 @@ function LobbyView({
         <p className="lobby-subtitle">Real-time 1v1 clicking frenzy</p>
       </div>
 
+      {/* Local 2-Player entry point — always visible */}
+      <section className="card local-cta">
+        <div className="local-cta-content">
+          <div>
+            <div className="local-cta-title">Local 2-Player</div>
+            <div className="local-cta-desc">Two players, one screen — no internet needed</div>
+          </div>
+          <button className="btn-local" onClick={onGoLocalSetup}>
+            Play Local
+          </button>
+        </div>
+      </section>
+
       {!joined ? (
         <section className="card">
-          <h2>Join Lobby</h2>
+          <h2>Join Online Lobby</h2>
           <div className="row gap">
             <input
               value={nameInput}
@@ -442,6 +480,380 @@ function LobbyView({
             <span className="your-name">{myName}</span>
           </section>
         </>
+      )}
+    </div>
+  )
+}
+
+// ── Local Setup View ──────────────────────────────────────────────────────────
+
+function LocalSetupView({
+  onStart,
+  onBack,
+}: {
+  onStart: (player1: string, player2: string, settings: GameSettings) => void
+  onBack: () => void
+}) {
+  const [p1, setP1] = useState('')
+  const [p2, setP2] = useState('')
+  const [settings, setSettings] = useState<GameSettings>(defaultSettings)
+
+  const patchSettings = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => {
+    setSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  const canStart = p1.trim().length > 0 && p2.trim().length > 0
+
+  return (
+    <div className="container">
+      <div className="game-header">
+        <button className="btn-ghost" onClick={onBack}>← Back</button>
+        <h1>Local 2-Player</h1>
+      </div>
+
+      <section className="card">
+        <h2>Player Names</h2>
+        <div className="local-names-grid">
+          <div className="local-name-field">
+            <label className="local-name-label local-name-left">Left Player (A key)</label>
+            <input
+              value={p1}
+              onChange={e => setP1(e.target.value)}
+              placeholder="Player 1"
+              maxLength={30}
+              className="local-name-input"
+            />
+          </div>
+          <div className="local-name-field">
+            <label className="local-name-label local-name-right">Right Player (L key)</label>
+            <input
+              value={p2}
+              onChange={e => setP2(e.target.value)}
+              placeholder="Player 2"
+              maxLength={30}
+              className="local-name-input"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>Game Settings</h2>
+
+        <div className="settings-row">
+          <span className="settings-label">Duration</span>
+          <div className="seg-control">
+            {([15, 30, 45, 60] as const).map(d => (
+              <button
+                key={d}
+                className={`seg-btn${settings.duration === d ? ' seg-btn-active' : ''}`}
+                onClick={() => patchSettings('duration', d)}
+              >{d}s</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-row">
+          <span className="settings-label">Button size</span>
+          <div className="seg-control">
+            {(['tiny', 'small', 'normal', 'large'] as const).map(s => (
+              <button
+                key={s}
+                className={`seg-btn${settings.buttonSize === s ? ' seg-btn-active' : ''}`}
+                onClick={() => patchSettings('buttonSize', s)}
+              >{s}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-row">
+          <label className="settings-toggle">
+            <span className="settings-label">Ghost mode</span>
+            <input
+              type="checkbox"
+              checked={settings.ghostMode}
+              onChange={e => patchSettings('ghostMode', e.target.checked)}
+            />
+          </label>
+        </div>
+
+        <div className="settings-row">
+          <label className="settings-toggle">
+            <span className="settings-label">Shrink mode</span>
+            <input
+              type="checkbox"
+              checked={settings.shrinkMode}
+              onChange={e => patchSettings('shrinkMode', e.target.checked)}
+            />
+          </label>
+        </div>
+      </section>
+
+      <button
+        className="btn-primary btn-start-local"
+        disabled={!canStart}
+        onClick={() => onStart(p1.trim(), p2.trim(), settings)}
+      >
+        Start Game
+      </button>
+    </div>
+  )
+}
+
+// ── Local Game View ───────────────────────────────────────────────────────────
+// Entirely client-side — no WebSocket. Two players on the same device.
+// Left player: A key + left tap zone. Right player: L key + right tap zone.
+
+type LocalPhase = 'countdown' | 'playing' | 'ended'
+
+function LocalGameView({
+  player1,
+  player2,
+  settings,
+  onLeave,
+}: {
+  player1: string
+  player2: string
+  settings: GameSettings
+  onLeave: () => void
+}) {
+  const [phase, setPhase] = useState<LocalPhase>('countdown')
+  const [countdown, setCountdown] = useState(3)
+  const [timeLeft, setTimeLeft] = useState<number>(settings.duration)
+  const [score1, setScore1] = useState(0)
+  const [score2, setScore2] = useState(0)
+  // Ghost mode: track button visibility per side
+  const [ghost1, setGhost1] = useState(false)
+  const [ghost2, setGhost2] = useState(false)
+  // Shrink scale (shared timer)
+  const [shrinkScale, setShrinkScale] = useState(1)
+  // Save-to-leaderboard state
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const score1Ref = useRef(0)
+  const score2Ref = useRef(0)
+  const phaseRef = useRef<LocalPhase>('countdown')
+
+  // Keep refs in sync
+  useEffect(() => { score1Ref.current = score1 }, [score1])
+  useEffect(() => { score2Ref.current = score2 }, [score2])
+  useEffect(() => { phaseRef.current = phase }, [phase])
+
+  // ── Countdown ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'countdown') return
+    if (countdown <= 0) {
+      setPhase('playing')
+      setTimeLeft(settings.duration)
+      return
+    }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [phase, countdown, settings.duration])
+
+  // ── Game timer ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'playing') return
+    if (timeLeft <= 0) {
+      setPhase('ended')
+      return
+    }
+    const t = setTimeout(() => {
+      setTimeLeft(s => s - 1)
+      if (settings.shrinkMode) {
+        setShrinkScale(0.3 + ((timeLeft - 1) / settings.duration) * 1.2)
+      }
+    }, 1000)
+    return () => clearTimeout(t)
+  }, [phase, timeLeft, settings.duration, settings.shrinkMode])
+
+  // ── Ghost mode ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'playing' || !settings.ghostMode) { setGhost1(false); setGhost2(false); return }
+    const id = setInterval(() => {
+      setGhost1(true); setGhost2(true)
+      setTimeout(() => { setGhost1(false); setGhost2(false) }, 500)
+    }, 3000)
+    return () => clearInterval(id)
+  }, [phase, settings.ghostMode])
+
+  // ── Key handlers ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (phaseRef.current !== 'playing') return
+      // Prevent A/L from triggering browser shortcuts while in game
+      if (e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        setScore1(s => s + 1)
+      } else if (e.key.toLowerCase() === 'l') {
+        e.preventDefault()
+        setScore2(s => s + 1)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [])
+
+  const handleTap1 = () => { if (phase === 'playing') setScore1(s => s + 1) }
+  const handleTap2 = () => { if (phase === 'playing') setScore2(s => s + 1) }
+
+  // ── Derive winner ──────────────────────────────────────────────────────────
+  const winnerId: 1 | 2 | null = phase === 'ended'
+    ? score1 > score2 ? 1 : score2 > score1 ? 2 : null
+    : null
+
+  const winnerName = winnerId === 1 ? player1 : winnerId === 2 ? player2 : null
+  const winnerScore = winnerId === 1 ? score1 : winnerId === 2 ? score2 : null
+
+  // ── Save to leaderboard ────────────────────────────────────────────────────
+  const qc = useQueryClient()
+  const addScore = useMutation({
+    mutationFn: (vars: { player: string; score: number }) =>
+      trpcClient.scores.add.mutate(vars),
+    onSuccess: () => {
+      void qc.invalidateQueries()
+      setSaved(true)
+      setSaving(false)
+    },
+    onError: () => setSaving(false),
+  })
+
+  const handleSave = () => {
+    if (!winnerName || winnerScore === null || saved || saving) return
+    setSaving(true)
+    addScore.mutate({ player: winnerName, score: winnerScore })
+  }
+
+  // ── Button size class ──────────────────────────────────────────────────────
+  const btnSizeClass = `btn-size-${settings.buttonSize}`
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <div className="local-game-root">
+      {/* ── Status bar ── */}
+      <div className="local-status-bar">
+        <button className="btn-ghost local-leave-btn" onClick={onLeave}>← Lobby</button>
+        <div className="local-timer-area">
+          {phase === 'countdown' && (
+            <span className="countdown">{countdown}</span>
+          )}
+          {phase === 'playing' && (
+            <span className={`timer${timeLeft < 10 ? ' timer-low' : ''}`}>{timeLeft}s</span>
+          )}
+          {phase === 'ended' && (
+            <span className="ended-label">ENDED</span>
+          )}
+        </div>
+        <div style={{ width: '60px' }} /> {/* spacer to center timer */}
+      </div>
+
+      {/* ── Split playing area ── */}
+      <div className="local-split">
+        {/* Left player */}
+        <div
+          className={`local-side local-side-left${phase === 'playing' ? ' local-side-active' : ''}`}
+          onPointerDown={e => { e.preventDefault(); handleTap1() }}
+        >
+          <div className="local-side-header">
+            <div className="local-player-name">{player1}</div>
+            <div className="local-score">{score1}</div>
+            <div className="local-key-hint">[A]</div>
+          </div>
+          {phase === 'playing' && (
+            <div className="local-btn-wrap">
+              <button
+                className={`click-btn big-click ${btnSizeClass}${ghost1 ? ' ghost' : ''}`}
+                style={settings.shrinkMode ? { transform: `scale(${shrinkScale})` } : undefined}
+                onPointerDown={e => { e.preventDefault(); e.stopPropagation(); handleTap1() }}
+              >
+                CLICK!
+              </button>
+            </div>
+          )}
+          {phase === 'countdown' && (
+            <div className="local-countdown-overlay">
+              <span className="countdown-big">{countdown}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="local-divider" />
+
+        {/* Right player */}
+        <div
+          className={`local-side local-side-right${phase === 'playing' ? ' local-side-active' : ''}`}
+          onPointerDown={e => { e.preventDefault(); handleTap2() }}
+        >
+          <div className="local-side-header">
+            <div className="local-player-name">{player2}</div>
+            <div className="local-score">{score2}</div>
+            <div className="local-key-hint">[L]</div>
+          </div>
+          {phase === 'playing' && (
+            <div className="local-btn-wrap">
+              <button
+                className={`click-btn big-click ${btnSizeClass}${ghost2 ? ' ghost' : ''}`}
+                style={settings.shrinkMode ? { transform: `scale(${shrinkScale})` } : undefined}
+                onPointerDown={e => { e.preventDefault(); e.stopPropagation(); handleTap2() }}
+              >
+                CLICK!
+              </button>
+            </div>
+          )}
+          {phase === 'countdown' && (
+            <div className="local-countdown-overlay">
+              <span className="countdown-big">{countdown}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── End screen ── */}
+      {phase === 'ended' && (
+        <div className="local-result-overlay">
+          <div className="result-card local-result-card">
+            {winnerId === null ? (
+              <p className="result-tie">It's a tie! {score1} — {score2}</p>
+            ) : (
+              <>
+                <p className="result-win">{winnerName} wins!</p>
+                <p className="local-scores-summary">
+                  {player1}: <strong>{score1}</strong> &nbsp;·&nbsp; {player2}: <strong>{score2}</strong>
+                </p>
+              </>
+            )}
+
+            <div className="local-result-actions">
+              {winnerName && !saved && (
+                <button
+                  className="btn-primary"
+                  onClick={handleSave}
+                  disabled={saving || saved}
+                >
+                  {saving ? 'Saving…' : 'Save winner to Leaderboard'}
+                </button>
+              )}
+              {saved && <p className="local-saved-notice">Saved to leaderboard!</p>}
+              <button className="btn-secondary" onClick={onLeave}>Back to Lobby</button>
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setPhase('countdown')
+                  setCountdown(3)
+                  setTimeLeft(settings.duration)
+                  setScore1(0)
+                  setScore2(0)
+                  setShrinkScale(1)
+                  setSaved(false)
+                }}
+              >
+                Play Again
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
