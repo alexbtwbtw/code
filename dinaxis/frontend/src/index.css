@@ -62,7 +62,7 @@ body {
 
 .card-flush {
   padding: 0;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 /* ── Stat card ── */
@@ -171,6 +171,11 @@ body {
   font-size: 0.75rem;
 }
 
+@media (max-width: 480px) {
+  .btn    { min-height: 44px; padding: 0 1.25rem; }
+  .btn-sm { min-height: 36px; padding: 0 1rem; }
+}
+
 /* ── Inputs ── */
 .input {
   display: block;
@@ -251,6 +256,10 @@ body {
   padding: 2rem 2.5rem;
   max-width: 1280px;
   margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  .page { padding: 1rem; }
 }
 
 /* ── Top navbar helpers ── */
@@ -347,10 +356,22 @@ body {
   gap: 1.5rem;
 }
 
+@media (max-width: 540px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
+}
+
+@media (max-width: 700px) {
+  .grid-3 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .stat-cards-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Empty state ── */
@@ -402,7 +423,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 2rem;
-  min-width: 500px;
+  min-width: min(500px, 95vw);
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;

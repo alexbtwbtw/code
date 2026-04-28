@@ -198,6 +198,8 @@ function StatusStepper({ claim }: { claim: any }) {
       border: '1px solid var(--border)',
       marginBottom: '1rem',
       overflowX: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      paddingBottom: '0.5rem',
     }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       {LINEAR_STATUSES.map((status, idx) => (

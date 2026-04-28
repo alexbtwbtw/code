@@ -209,7 +209,7 @@ export default function Reports({ onNavigate: _ }: Props) {
 
       {/* ── Section 1: KPI row ── */}
       <div className="section">
-        <div style={{ display: 'flex', gap: '1.25rem' }}>
+        <div className="stat-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
           <div className="stat-card">
             <div className="stat-card-value">{stats ? String(stats.total) : '—'}</div>
             <div className="stat-card-label">Total de Sinistros</div>

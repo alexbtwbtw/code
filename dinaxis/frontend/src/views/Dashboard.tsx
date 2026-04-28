@@ -101,7 +101,7 @@ export default function Dashboard({ onNavigate }: Props) {
 
       {/* ── Stats row ── */}
       <div className="section">
-        <div style={{ display: 'flex', gap: '1.25rem' }}>
+        <div className="stat-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
           <div className="stat-card">
             <div className="stat-card-value">{String(openCount)}</div>
             <div className="stat-card-label">Sinistros Abertos</div>

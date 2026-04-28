@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import type { Page } from '../App'
 
 interface Props {
@@ -80,6 +80,13 @@ export default function Layout({ page, onNavigate, children }: Props) {
   const { theme, toggle } = useTheme()
   const isClaimView = page.view === 'claim'
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 600)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 600)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Top navbar */}
@@ -145,7 +152,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
           </div>
 
           {/* Nav links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1 }}>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {navItems.map(item => {
               const isActive =
                 page.view === item.page.view ||
@@ -244,8 +251,8 @@ export default function Layout({ page, onNavigate, children }: Props) {
 
       {/* Body below navbar */}
       <div style={{ display: 'flex', flex: 1, paddingTop: '56px' }}>
-        {/* Claim section sidebar — only visible in claim view */}
-        {isClaimView && (
+        {/* Claim section sidebar — only visible in claim view, hidden on mobile */}
+        {isClaimView && !isMobile && (
           <aside
             style={{
               width: '180px',
@@ -347,7 +354,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
             overflow: 'auto',
             background: 'var(--bg)',
             minHeight: 'calc(100vh - 56px)',
-            marginLeft: isClaimView ? '180px' : '0',
+            marginLeft: isClaimView && !isMobile ? '180px' : '0',
           }}
         >
           {children}

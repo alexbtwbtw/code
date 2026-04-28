@@ -240,6 +240,7 @@ export default function ClaimsList({ onNavigate }: { onNavigate: (p: Page) => vo
         </div>
       ) : (
         <div className="card card-flush">
+          <div style={{ overflowX: 'auto' }}>
           <table className="table">
             <thead>
               <tr>
@@ -298,6 +299,7 @@ export default function ClaimsList({ onNavigate }: { onNavigate: (p: Page) => vo
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
