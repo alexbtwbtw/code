@@ -1,0 +1,162 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: DINAXIS
+      - generic [ref=e7]: Portal de Sinistros
+    - navigation [ref=e8]:
+      - button "Painel" [ref=e9] [cursor=pointer]
+      - button "Sinistros" [ref=e10] [cursor=pointer]
+      - button "Seguradoras" [ref=e11] [cursor=pointer]
+      - button "Relatórios" [ref=e12] [cursor=pointer]
+  - main [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - heading "Sinistros" [level=1] [ref=e16]
+        - button "+ Novo Sinistro" [ref=e17] [cursor=pointer]
+      - generic [ref=e18]:
+        - searchbox "Buscar por nº, segurado ou endereço..." [ref=e19]
+        - combobox [ref=e20]:
+          - option "Todos os status" [selected]
+          - option "Novo"
+          - option "Atribuído"
+          - option "Vistoria Agendada"
+          - option "Vistoriado"
+          - option "Relatório Pendente"
+          - option "Submetido"
+          - option "Encerrado"
+          - option "Contestado"
+        - combobox [ref=e21]:
+          - option "Todos os tipos" [selected]
+          - option "Dano à Propriedade"
+          - option "Responsabilidade Civil"
+          - option "Automóvel"
+          - option "Inundação"
+          - option "Incêndio"
+          - option "Furto/Roubo"
+          - option "Outro"
+        - combobox [ref=e22]:
+          - option "Mais recentes" [selected]
+          - option "Mais antigos"
+          - option "Maior valor"
+          - option "Menor valor"
+      - table [ref=e24]:
+        - rowgroup [ref=e25]:
+          - row "Nº do Sinistro Segurado Endereço do Imóvel Tipo Status Valor Est. Data de Abertura" [ref=e26]:
+            - columnheader "Nº do Sinistro" [ref=e27]
+            - columnheader "Segurado" [ref=e28]
+            - columnheader "Endereço do Imóvel" [ref=e29]
+            - columnheader "Tipo" [ref=e30]
+            - columnheader "Status" [ref=e31]
+            - columnheader "Valor Est." [ref=e32]
+            - columnheader "Data de Abertura" [ref=e33]
+        - rowgroup [ref=e34]:
+          - row "CLM-2024-0010 Anna & Tom Fischer 88 Creek Side Ln, Nashville TN Inundação Novo $67,000 2024-04-25" [ref=e35] [cursor=pointer]:
+            - cell "CLM-2024-0010" [ref=e36]:
+              - button "CLM-2024-0010" [ref=e37]
+            - cell "Anna & Tom Fischer" [ref=e38]
+            - cell "88 Creek Side Ln, Nashville TN" [ref=e39]
+            - cell "Inundação" [ref=e40]:
+              - generic [ref=e41]: Inundação
+            - cell "Novo" [ref=e42]:
+              - generic [ref=e43]: Novo
+            - cell "$67,000" [ref=e44]
+            - cell "2024-04-25" [ref=e45]
+          - row "CLM-2024-0008 Carlos Mendez 215 Sunset Blvd, Miami FL Dano à Propriedade Novo $5,500 2024-04-20" [ref=e46] [cursor=pointer]:
+            - cell "CLM-2024-0008" [ref=e47]:
+              - button "CLM-2024-0008" [ref=e48]
+            - cell "Carlos Mendez" [ref=e49]
+            - cell "215 Sunset Blvd, Miami FL" [ref=e50]
+            - cell "Dano à Propriedade" [ref=e51]:
+              - generic [ref=e52]: Dano à Propriedade
+            - cell "Novo" [ref=e53]:
+              - generic [ref=e54]: Novo
+            - cell "$5,500" [ref=e55]
+            - cell "2024-04-20" [ref=e56]
+          - row "CLM-2024-0007 Emma Wilson 78 Birchwood Dr, Seattle WA Automóvel Atribuído $12,400 2024-04-10" [ref=e57] [cursor=pointer]:
+            - cell "CLM-2024-0007" [ref=e58]:
+              - button "CLM-2024-0007" [ref=e59]
+            - cell "Emma Wilson" [ref=e60]
+            - cell "78 Birchwood Dr, Seattle WA" [ref=e61]
+            - cell "Automóvel" [ref=e62]:
+              - generic [ref=e63]: Automóvel
+            - cell "Atribuído" [ref=e64]:
+              - generic [ref=e65]: Atribuído
+            - cell "$12,400" [ref=e66]
+            - cell "2024-04-10" [ref=e67]
+          - row "CLM-2024-0006 Sunrise Cafe 450 Main St, Denver CO Dano à Propriedade Vistoria Agendada $31,000 2024-04-02" [ref=e68] [cursor=pointer]:
+            - cell "CLM-2024-0006" [ref=e69]:
+              - button "CLM-2024-0006" [ref=e70]
+            - cell "Sunrise Cafe" [ref=e71]
+            - cell "450 Main St, Denver CO" [ref=e72]
+            - cell "Dano à Propriedade" [ref=e73]:
+              - generic [ref=e74]: Dano à Propriedade
+            - cell "Vistoria Agendada" [ref=e75]:
+              - generic [ref=e76]: Vistoria Agendada
+            - cell "$31,000" [ref=e77]
+            - cell "2024-04-02" [ref=e78]
+          - row "CLM-2024-0005 Marcus Johnson 1201 W 5th St, Austin TX Furto/Roubo Relatório Pendente $8,900 2024-03-15" [ref=e79] [cursor=pointer]:
+            - cell "CLM-2024-0005" [ref=e80]:
+              - button "CLM-2024-0005" [ref=e81]
+            - cell "Marcus Johnson" [ref=e82]
+            - cell "1201 W 5th St, Austin TX" [ref=e83]
+            - cell "Furto/Roubo" [ref=e84]:
+              - generic [ref=e85]: Furto/Roubo
+            - cell "Relatório Pendente" [ref=e86]:
+              - generic [ref=e87]: Relatório Pendente
+            - cell "$8,900" [ref=e88]
+            - cell "2024-03-15" [ref=e89]
+          - row "CLM-2024-0004 Patricia Walton 33 River Rd, New Orleans LA Inundação Vistoriado $42,000 2024-03-01" [ref=e90] [cursor=pointer]:
+            - cell "CLM-2024-0004" [ref=e91]:
+              - button "CLM-2024-0004" [ref=e92]
+            - cell "Patricia Walton" [ref=e93]
+            - cell "33 River Rd, New Orleans LA" [ref=e94]
+            - cell "Inundação" [ref=e95]:
+              - generic [ref=e96]: Inundação
+            - cell "Vistoriado" [ref=e97]:
+              - generic [ref=e98]: Vistoriado
+            - cell "$42,000" [ref=e99]
+            - cell "2024-03-01" [ref=e100]
+          - row "CLM-2024-0003 TechCorp LLC 500 Commerce Blvd, Atlanta GA Responsabilidade Civil Contestado $85,000 2024-02-14" [ref=e101] [cursor=pointer]:
+            - cell "CLM-2024-0003" [ref=e102]:
+              - button "CLM-2024-0003" [ref=e103]
+            - cell "TechCorp LLC" [ref=e104]
+            - cell "500 Commerce Blvd, Atlanta GA" [ref=e105]
+            - cell "Responsabilidade Civil" [ref=e106]:
+              - generic [ref=e107]: Responsabilidade Civil
+            - cell "Contestado" [ref=e108]:
+              - generic [ref=e109]: Contestado
+            - cell "$85,000" [ref=e110]
+            - cell "2024-02-14" [ref=e111]
+          - row "CLM-2024-0002 Robert Kim 892 Oak Ave, Portland OR Incêndio Submetido $124,000 2024-02-01" [ref=e112] [cursor=pointer]:
+            - cell "CLM-2024-0002" [ref=e113]:
+              - button "CLM-2024-0002" [ref=e114]
+            - cell "Robert Kim" [ref=e115]
+            - cell "892 Oak Ave, Portland OR" [ref=e116]
+            - cell "Incêndio" [ref=e117]:
+              - generic [ref=e118]: Incêndio
+            - cell "Submetido" [ref=e119]:
+              - generic [ref=e120]: Submetido
+            - cell "$124,000" [ref=e121]
+            - cell "2024-02-01" [ref=e122]
+          - row "CLM-2024-0001 John & Mary Harrington 47 Maple St, Springfield IL Dano à Propriedade Encerrado $18,500 2024-01-15" [ref=e123] [cursor=pointer]:
+            - cell "CLM-2024-0001" [ref=e124]:
+              - button "CLM-2024-0001" [ref=e125]
+            - cell "John & Mary Harrington" [ref=e126]
+            - cell "47 Maple St, Springfield IL" [ref=e127]
+            - cell "Dano à Propriedade" [ref=e128]:
+              - generic [ref=e129]: Dano à Propriedade
+            - cell "Encerrado" [ref=e130]:
+              - generic [ref=e131]: Encerrado
+            - cell "$18,500" [ref=e132]
+            - cell "2024-01-15" [ref=e133]
+          - row "CLM-2024-0009 Highland Properties 3300 Corporate Dr, Chicago IL Incêndio Encerrado $275,000 2023-11-01" [ref=e134] [cursor=pointer]:
+            - cell "CLM-2024-0009" [ref=e135]:
+              - button "CLM-2024-0009" [ref=e136]
+            - cell "Highland Properties" [ref=e137]
+            - cell "3300 Corporate Dr, Chicago IL" [ref=e138]
+            - cell "Incêndio" [ref=e139]:
+              - generic [ref=e140]: Incêndio
+            - cell "Encerrado" [ref=e141]:
+              - generic [ref=e142]: Encerrado
+            - cell "$275,000" [ref=e143]
+            - cell "2023-11-01" [ref=e144]

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { db } from '../db'
+import { logAudit } from '../lib/audit'
 import { Claim, ClaimStatus, ClaimType, RawClaim, mapClaim, CustomClaimType, RawCustomClaimType, mapCustomClaimType } from '../types/claims'
 import {
   createClaimSchema,
@@ -46,9 +47,13 @@ export function listClaims(input: z.infer<typeof listClaimsSchema>): Claim[] {
   }
   const orderBy = orderMap[input.sortBy] ?? 'date_opened DESC'
 
+  const page = input.page ?? 1
+  const pageSize = input.pageSize ?? 50
+  const offset = (page - 1) * pageSize
+
   const rows = db
-    .prepare(`SELECT * FROM claims ${where} ORDER BY ${orderBy}`)
-    .all(...values) as RawClaim[]
+    .prepare(`SELECT * FROM claims ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`)
+    .all(...values, pageSize, offset) as RawClaim[]
 
   return rows.map(mapClaim)
 }
@@ -115,7 +120,9 @@ export function createClaim(input: z.infer<typeof createClaimSchema>): Claim {
   const row = db
     .prepare('SELECT * FROM claims WHERE id = ?')
     .get(result.lastInsertRowid) as RawClaim
-  return mapClaim(row)
+  const claim = mapClaim(row)
+  logAudit('CREATE', 'claim', claim.id, { claimNumber: input.claimNumber })
+  return claim
 }
 
 export function updateClaim(
@@ -160,12 +167,14 @@ export function updateClaim(
   db.prepare(
     `UPDATE claims SET ${setClauses.join(', ')} WHERE id = ?`,
   ).run(...values)
+  logAudit('UPDATE', 'claim', id)
 
   return getClaimById(id)
 }
 
 export function deleteClaim(id: number): { deleted: boolean } {
   const result = db.prepare('DELETE FROM claims WHERE id = ?').run(id)
+  if (result.changes > 0) logAudit('DELETE', 'claim', id)
   return { deleted: result.changes > 0 }
 }
 

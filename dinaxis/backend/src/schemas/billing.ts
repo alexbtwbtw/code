@@ -4,10 +4,10 @@ export const BILLING_CATEGORIES = ['travel', 'expert', 'photos', 'admin', 'fees'
 
 export const createBillingItemSchema = z.object({
   claimId: z.number().int().positive(),
-  description: z.string().min(1),
+  description: z.string().min(1).max(500),
   category: z.enum(BILLING_CATEGORIES).default('other'),
   amount: z.number().min(0).default(0),
-  notes: z.string().default(''),
+  notes: z.string().max(5000).default(''),
 })
 
 export const updateBillingItemSchema = createBillingItemSchema.partial().omit({ claimId: true })

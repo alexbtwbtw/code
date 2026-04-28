@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { db } from '../db'
+import { logAudit } from '../lib/audit'
 import { Insurer, RawInsurer, mapInsurer, InsurerContact, RawInsurerContact, mapInsurerContact } from '../types/insurers'
 import { createInsurerSchema, updateInsurerSchema, createInsurerContactSchema, updateInsurerContactSchema } from '../schemas/insurers'
 
@@ -46,6 +47,7 @@ export function createInsurer(input: z.infer<typeof createInsurerSchema>): Insur
     .get(result.lastInsertRowid) as RawInsurer
   const insurer = mapInsurer(row)
   insurer.contacts = []
+  logAudit('CREATE', 'insurer', insurer.id, { name: input.name })
   return insurer
 }
 
@@ -82,12 +84,14 @@ export function updateInsurer(
   db.prepare(
     `UPDATE insurers SET ${setClauses.join(', ')} WHERE id = ?`,
   ).run(...values)
+  logAudit('UPDATE', 'insurer', id)
 
   return getInsurerById(id)
 }
 
 export function deleteInsurer(id: number): { deleted: boolean } {
   const result = db.prepare('DELETE FROM insurers WHERE id = ?').run(id)
+  if (result.changes > 0) logAudit('DELETE', 'insurer', id)
   return { deleted: result.changes > 0 }
 }
 
@@ -115,7 +119,9 @@ export function addInsurerContact(input: z.infer<typeof createInsurerContactSche
   const row = db
     .prepare('SELECT * FROM insurer_contacts WHERE id = ?')
     .get(result.lastInsertRowid) as RawInsurerContact
-  return mapInsurerContact(row)
+  const contact = mapInsurerContact(row)
+  logAudit('CREATE', 'insurerContact', contact.id, { insurerId: input.insurerId })
+  return contact
 }
 
 export function updateInsurerContact(
@@ -148,6 +154,7 @@ export function updateInsurerContact(
 
   values.push(id)
   db.prepare(`UPDATE insurer_contacts SET ${setClauses.join(', ')} WHERE id = ?`).run(...values)
+  logAudit('UPDATE', 'insurerContact', id)
 
   const row = db.prepare('SELECT * FROM insurer_contacts WHERE id = ?').get(id) as RawInsurerContact | undefined
   return row ? mapInsurerContact(row) : null
@@ -155,6 +162,7 @@ export function updateInsurerContact(
 
 export function deleteInsurerContact(id: number): { deleted: boolean } {
   const result = db.prepare('DELETE FROM insurer_contacts WHERE id = ?').run(id)
+  if (result.changes > 0) logAudit('DELETE', 'insurerContact', id)
   return { deleted: result.changes > 0 }
 }
 

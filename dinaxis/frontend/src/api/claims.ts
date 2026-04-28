@@ -8,10 +8,13 @@ export type ListClaimsParams = {
   claimType?: ClaimType
   insurerId?: number
   sortBy?: 'newest' | 'oldest' | 'value_desc' | 'value_asc'
+  page?: number
+  pageSize?: number
 }
 
 export function useClaimsList(params: ListClaimsParams = {}) {
-  return useQuery(trpc.claims.list.queryOptions(params))
+  const { page = 1, pageSize = 50, ...rest } = params
+  return useQuery(trpc.claims.list.queryOptions({ ...rest, page, pageSize }))
 }
 
 export function useClaimById(id: number) {

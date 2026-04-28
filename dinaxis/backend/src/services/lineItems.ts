@@ -3,6 +3,7 @@ import { db } from '../db'
 import { LineItem, RawLineItem, mapLineItem, LineItemPhoto, RawLineItemPhoto, mapLineItemPhoto } from '../types/lineItems'
 import { createLineItemSchema, updateLineItemSchema } from '../schemas/lineItems'
 import { getStorageAdapter } from '../lib/storage'
+import { logAudit } from '../lib/audit'
 
 export function getLineItemsByClaimId(claimId: number): LineItem[] {
   const rows = db
@@ -40,6 +41,7 @@ export function createLineItem(input: z.infer<typeof createLineItemSchema>): Lin
     .prepare<[number], RawLineItem>(`SELECT * FROM line_items WHERE id = ?`)
     .get(result.id)
   if (!row) throw new Error('Line item not found after insert')
+  logAudit('CREATE', 'lineItem', result.id, { claimId: input.claimId })
   return mapLineItem(row)
 }
 
@@ -62,12 +64,14 @@ export function updateLineItem(
   const values = keys.map((k) => (input as Record<string, unknown>)[k] ?? null)
 
   db.prepare(`UPDATE line_items SET ${setClauses} WHERE id = ?`).run(...values, id)
+  logAudit('UPDATE', 'lineItem', id)
 
   return getLineItemById(id)
 }
 
 export function deleteLineItem(id: number): { deleted: boolean } {
   const result = db.prepare(`DELETE FROM line_items WHERE id = ?`).run(id)
+  if (result.changes > 0) logAudit('DELETE', 'lineItem', id)
   return { deleted: result.changes > 0 }
 }
 
@@ -104,6 +108,7 @@ export function createLineItemPhoto(data: {
     .prepare<[string], RawLineItemPhoto>(`SELECT * FROM line_item_photos WHERE id = ?`)
     .get(data.id)
   if (!row) throw new Error('Line item photo not found after insert')
+  logAudit('CREATE', 'lineItemPhoto', data.id, { lineItemId: data.lineItemId, filename: data.filename })
   return mapLineItemPhoto(row)
 }
 
@@ -112,10 +117,12 @@ export function deleteLineItemPhoto(id: string): { deleted: boolean; storageKey?
   if (!photo) return { deleted: false }
   try {
     getStorageAdapter().delete(photo.storageKey)
-  } catch {
-    // storage delete failures should not block DB delete
+  } catch (err) {
+    console.error(`[audit] storage delete failed for lineItemPhoto ${id} (key: ${photo.storageKey}):`, err)
+    return { deleted: false }
   }
   const result = db.prepare(`DELETE FROM line_item_photos WHERE id = ?`).run(id)
+  logAudit('DELETE', 'lineItemPhoto', id, { lineItemId: photo.lineItemId })
   return { deleted: result.changes > 0, storageKey: photo.storageKey, storageAdapter: photo.storageAdapter }
 }
 

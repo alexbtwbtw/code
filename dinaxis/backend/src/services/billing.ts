@@ -1,4 +1,5 @@
 import { db } from '../db'
+import { logAudit } from '../lib/audit'
 import { mapBillingItem, type BillingItem, type RawBillingItem } from '../types/billing'
 import type { createBillingItemSchema, updateBillingItemSchema } from '../schemas/billing'
 import type { z } from 'zod'
@@ -17,7 +18,9 @@ export function createBillingItem(input: z.infer<typeof createBillingItemSchema>
   const result = db.prepare(
     'INSERT INTO billing_items (claim_id, description, category, amount, notes) VALUES (?, ?, ?, ?, ?)'
   ).run(input.claimId, input.description, input.category, input.amount, input.notes)
-  return getBillingItemById(Number(result.lastInsertRowid))!
+  const id = Number(result.lastInsertRowid)
+  logAudit('CREATE', 'billingItem', id, { claimId: input.claimId, category: input.category })
+  return getBillingItemById(id)!
 }
 
 export function updateBillingItem(id: number, input: z.infer<typeof updateBillingItemSchema>): BillingItem | null {
@@ -29,11 +32,13 @@ export function updateBillingItem(id: number, input: z.infer<typeof updateBillin
   const setClauses = fields.map(([k]) => `${colMap[k]} = ?`).join(', ')
   const values = fields.map(([, v]) => v)
   db.prepare(`UPDATE billing_items SET ${setClauses} WHERE id = ?`).run(...values, id)
+  logAudit('UPDATE', 'billingItem', id)
   return getBillingItemById(id)
 }
 
 export function deleteBillingItem(id: number): { deleted: boolean } {
   const result = db.prepare('DELETE FROM billing_items WHERE id = ?').run(id)
+  if (result.changes > 0) logAudit('DELETE', 'billingItem', id)
   return { deleted: result.changes > 0 }
 }
 

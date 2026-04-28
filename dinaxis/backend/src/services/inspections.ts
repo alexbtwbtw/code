@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { db } from '../db'
+import { logAudit } from '../lib/audit'
 import { Inspection, RawInspection, mapInspection } from '../types/inspections'
 import { createInspectionSchema, updateInspectionSchema } from '../schemas/inspections'
 
@@ -40,6 +41,7 @@ export function createInspection(input: z.infer<typeof createInspectionSchema>):
     .prepare<[number], RawInspection>(`SELECT * FROM inspections WHERE id = ?`)
     .get(result.id)
   if (!row) throw new Error('Inspection not found after insert')
+  logAudit('CREATE', 'inspection', result.id, { claimId: input.claimId })
   return mapInspection(row)
 }
 
@@ -63,12 +65,14 @@ export function updateInspection(
   const values = keys.map((k) => (input as Record<string, unknown>)[k] ?? null)
 
   db.prepare(`UPDATE inspections SET ${setClauses} WHERE id = ?`).run(...values, id)
+  logAudit('UPDATE', 'inspection', id)
 
   return getInspectionById(id)
 }
 
 export function deleteInspection(id: number): { deleted: boolean } {
   const result = db.prepare(`DELETE FROM inspections WHERE id = ?`).run(id)
+  if (result.changes > 0) logAudit('DELETE', 'inspection', id)
   return { deleted: result.changes > 0 }
 }
 
