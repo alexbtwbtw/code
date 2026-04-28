@@ -1002,9 +1002,9 @@ const BILLING_CATEGORY_LABELS: Record<string, string> = {
   other:   'Outro',
 }
 
-const brlFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const eurFmt = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' })
 function formatBRL(v: number) {
-  return brlFmt.format(v)
+  return eurFmt.format(v)
 }
 
 interface BillingFormState {
@@ -1179,7 +1179,7 @@ function BillingSection({ claimId }: { claimId: number }) {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Valor (R$)</label>
+                  <label>Valor (€)</label>
                   <input className="input" type="number" min="0" step="0.01" value={form.amount} onChange={e => setField('amount', e.target.value)} placeholder="0,00" />
                 </div>
               </div>
