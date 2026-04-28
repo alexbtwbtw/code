@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Page } from '../App'
 import { useClaimById, useUpdateClaim, useDeleteClaim, useCustomClaimTypes } from '../api/claims'
@@ -68,6 +68,149 @@ function FieldPair({ label, value }: { label: string; value: React.ReactNode }) 
         {label}
       </dt>
       <dd style={{ margin: 0, fontWeight: 500 }}>{value ?? '—'}</dd>
+    </div>
+  )
+}
+
+// ─── Status Stepper ───────────────────────────────────────────────────────────
+
+const LINEAR_STATUSES = ['new', 'assigned', 'inspection_scheduled', 'inspected', 'report_pending', 'submitted', 'closed']
+const DISPUTED_STATUS = 'disputed'
+
+function StatusStepper({ claim }: { claim: any }) {
+  const updateClaim = useUpdateClaim()
+
+  const currentStatus: string = claim.status
+  const currentLinearIdx = LINEAR_STATUSES.indexOf(currentStatus)
+
+  async function handleStepClick(status: string) {
+    if (status === currentStatus || updateClaim.isPending) return
+    await updateClaim.mutateAsync({ id: claim.id, status: status as any })
+  }
+
+  const circleBase: React.CSSProperties = {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    transition: 'box-shadow 0.15s, background 0.15s',
+    cursor: 'pointer',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    border: '2px solid transparent',
+  }
+
+  function getCircleStyle(status: string, idx: number): React.CSSProperties {
+    const isPending = updateClaim.isPending && updateClaim.variables?.status === status
+    if (status === currentStatus) {
+      return {
+        ...circleBase,
+        background: 'var(--accent)',
+        color: '#fff',
+        boxShadow: '0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent)',
+        border: '2px solid var(--accent)',
+        cursor: isPending ? 'wait' : 'default',
+      }
+    }
+    // completed (linear only)
+    if (idx >= 0 && idx < currentLinearIdx) {
+      return {
+        ...circleBase,
+        background: 'var(--accent)',
+        color: '#fff',
+        border: '2px solid var(--accent)',
+        cursor: updateClaim.isPending ? 'not-allowed' : 'pointer',
+      }
+    }
+    // upcoming
+    return {
+      ...circleBase,
+      background: 'var(--surface-2)',
+      color: 'var(--text-muted)',
+      border: '2px solid var(--surface-2)',
+      cursor: updateClaim.isPending ? 'not-allowed' : 'pointer',
+    }
+  }
+
+  function getLabelStyle(status: string, idx: number): React.CSSProperties {
+    const isCurrent = status === currentStatus
+    const isCompleted = idx >= 0 && idx < currentLinearIdx
+    return {
+      fontSize: '0.7rem',
+      textAlign: 'center' as const,
+      marginTop: '0.35rem',
+      color: (isCurrent || isCompleted) ? 'var(--text)' : 'var(--text-muted)',
+      fontWeight: isCurrent ? 600 : 400,
+      maxWidth: '72px',
+      lineHeight: 1.2,
+    }
+  }
+
+  function StepCircle({ status, idx }: { status: string; idx: number }) {
+    const isPending = updateClaim.isPending && updateClaim.variables?.status === status
+    const isCompleted = idx >= 0 && idx < currentLinearIdx
+    const isCurrent = status === currentStatus
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', userSelect: 'none' }}>
+        <div
+          style={getCircleStyle(status, idx)}
+          onClick={() => handleStepClick(status)}
+          title={PT_LABELS[status] ?? status}
+        >
+          {isPending
+            ? <span style={{ display: 'inline-block', width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+            : isCompleted || isCurrent
+              ? '✓'
+              : null}
+        </div>
+        <div style={getLabelStyle(status, idx)}>{PT_LABELS[status] ?? status}</div>
+      </div>
+    )
+  }
+
+  const connectorStyle: React.CSSProperties = {
+    flex: 1,
+    height: '2px',
+    background: 'var(--surface-2)',
+    alignSelf: 'flex-start',
+    marginTop: '13px',
+    minWidth: '8px',
+  }
+
+  const connectorFilledStyle: React.CSSProperties = {
+    ...connectorStyle,
+    background: 'var(--accent)',
+  }
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 0,
+      padding: '1rem 1.25rem 0.75rem',
+      background: 'var(--surface-1, var(--surface))',
+      borderRadius: '0.5rem',
+      border: '1px solid var(--border)',
+      marginBottom: '1rem',
+      overflowX: 'auto',
+    }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      {LINEAR_STATUSES.map((status, idx) => (
+        <React.Fragment key={status}>
+          {idx > 0 && (
+            <div style={idx <= currentLinearIdx ? connectorFilledStyle : connectorStyle} />
+          )}
+          <StepCircle status={status} idx={idx} />
+        </React.Fragment>
+      ))}
+      {/* Disputed separator */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: '0', paddingLeft: '0.75rem', gap: 0 }}>
+        <div style={{ width: '1px', height: '28px', background: 'var(--border)', alignSelf: 'flex-start', marginRight: '0.75rem', flexShrink: 0 }} />
+        <StepCircle status={DISPUTED_STATUS} idx={-1} />
+      </div>
     </div>
   )
 }
@@ -1642,6 +1785,9 @@ export default function ClaimDetail({ id, onNavigate }: { id: string; onNavigate
           </button>
         </div>
       </div>
+
+      {/* Status Stepper */}
+      <StatusStepper claim={claim} />
 
       {/* Section 1 — Overview */}
       <div id="visao-geral" className="section">
