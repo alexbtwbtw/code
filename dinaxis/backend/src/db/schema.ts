@@ -225,6 +225,33 @@ export function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_line_item_photos_item ON line_item_photos(line_item_id);
   `, 'create.line_item_photos')
   runMigration(`
+    CREATE TABLE IF NOT EXISTS experts (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      name        TEXT NOT NULL,
+      specialty   TEXT NOT NULL DEFAULT '',
+      email       TEXT NOT NULL DEFAULT '',
+      phone       TEXT NOT NULL DEFAULT '',
+      notes       TEXT NOT NULL DEFAULT '',
+      created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS claim_experts (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      claim_id     INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
+      expert_id    INTEGER NOT NULL REFERENCES experts(id) ON DELETE CASCADE,
+      role         TEXT NOT NULL DEFAULT '',
+      work_summary TEXT NOT NULL DEFAULT '',
+      added_at     TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(claim_id, expert_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_claim_experts_claim  ON claim_experts(claim_id);
+    CREATE INDEX IF NOT EXISTS idx_claim_experts_expert ON claim_experts(expert_id);
+  `, 'create.experts')
+  runMigration(
+    `ALTER TABLE inspections ADD COLUMN expert_id INTEGER REFERENCES experts(id) ON DELETE SET NULL`,
+    'inspections.expert_id'
+  )
+  runMigration(`
     CREATE TABLE IF NOT EXISTS invoices (
       id              TEXT PRIMARY KEY,
       claim_id        INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,

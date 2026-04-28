@@ -5,6 +5,7 @@ import ClaimsList from './views/ClaimsList'
 import ClaimDetail from './views/ClaimDetail'
 import Insurers from './views/Insurers'
 import Reports from './views/Reports'
+import Experts from './views/Experts'
 
 export type Page =
   | { view: 'dashboard' }
@@ -12,6 +13,7 @@ export type Page =
   | { view: 'claim'; id: string }
   | { view: 'insurers' }
   | { view: 'reports' }
+  | { view: 'experts' }
 
 function pageToPath(p: Page): string {
   switch (p.view) {
@@ -20,6 +22,7 @@ function pageToPath(p: Page): string {
     case 'claim':     return `/dinaxis/claims/${p.id}`
     case 'insurers':  return '/dinaxis/insurers'
     case 'reports':   return '/dinaxis/reports'
+    case 'experts':   return '/dinaxis/experts'
   }
 }
 
@@ -30,6 +33,7 @@ function pathToPage(path: string): Page {
   if (p.startsWith('/claims/')) return { view: 'claim', id: p.replace('/claims/', '') }
   if (p === '/insurers') return { view: 'insurers' }
   if (p === '/reports') return { view: 'reports' }
+  if (p === '/experts') return { view: 'experts' }
   return { view: 'dashboard' }
 }
 
@@ -62,6 +66,7 @@ export default function App() {
       {page.view === 'claim'     && <ClaimDetail id={page.id} onNavigate={navigate} />}
       {page.view === 'insurers'  && <Insurers onNavigate={navigate} />}
       {page.view === 'reports'   && <Reports onNavigate={navigate} />}
+      {page.view === 'experts'   && <Experts onNavigate={navigate} />}
     </Layout>
   )
 }

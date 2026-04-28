@@ -7,6 +7,7 @@ export interface RawInspection {
   adjuster_notes: string
   latitude: number | null
   longitude: number | null
+  expert_id: number | null
   created_at: string
 }
 
@@ -19,6 +20,7 @@ export interface Inspection {
   adjusterNotes: string
   latitude: number | null
   longitude: number | null
+  expertId: number | null
   createdAt: string
 }
 
@@ -32,6 +34,7 @@ export function mapInspection(r: RawInspection): Inspection {
     adjusterNotes: r.adjuster_notes,
     latitude: r.latitude,
     longitude: r.longitude,
+    expertId: r.expert_id ?? null,
     createdAt: r.created_at,
   }
 }

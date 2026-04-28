@@ -23,8 +23,8 @@ export function getInspectionById(id: number): Inspection | null {
 export function createInspection(input: z.infer<typeof createInspectionSchema>): Inspection {
   const result = db
     .prepare<unknown[], { id: number }>(
-      `INSERT INTO inspections (claim_id, scheduled_date, completed_date, findings, adjuster_notes, latitude, longitude)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO inspections (claim_id, scheduled_date, completed_date, findings, adjuster_notes, latitude, longitude, expert_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        RETURNING id`
     )
     .get(
@@ -35,6 +35,7 @@ export function createInspection(input: z.infer<typeof createInspectionSchema>):
       input.adjusterNotes ?? '',
       input.latitude ?? null,
       input.longitude ?? null,
+      input.expertId ?? null,
     )
   if (!result) throw new Error('Failed to create inspection')
   const row = db
@@ -56,6 +57,7 @@ export function updateInspection(
     adjusterNotes: 'adjuster_notes',
     latitude: 'latitude',
     longitude: 'longitude',
+    expertId: 'expert_id',
   }
 
   const keys = Object.keys(input).filter((k) => k in fieldMap)

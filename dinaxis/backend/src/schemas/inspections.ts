@@ -8,6 +8,7 @@ export const createInspectionSchema = z.object({
   adjusterNotes: z.string().max(10000).default(''),
   latitude: z.number().nullable().default(null),
   longitude: z.number().nullable().default(null),
+  expertId: z.number().int().positive().nullable().default(null),
 })
 
 export const updateInspectionSchema = createInspectionSchema.partial().omit({ claimId: true })

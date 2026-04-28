@@ -138,21 +138,23 @@ export default function Layout({ page, onNavigate, children }: Props) {
               >
                 DINAXIS
               </span>
-              <span
-                style={{
-                  fontSize: '0.6rem',
-                  color: 'var(--text-muted)',
-                  letterSpacing: '0.03em',
-                  marginTop: '1px',
-                }}
-              >
-                Portal de Sinistros
-              </span>
+              {!isMobile && (
+                <span
+                  style={{
+                    fontSize: '0.6rem',
+                    color: 'var(--text-muted)',
+                    letterSpacing: '0.03em',
+                    marginTop: '1px',
+                  }}
+                >
+                  Portal de Sinistros
+                </span>
+              )}
             </div>
           </div>
 
           {/* Nav links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0' : '0.25rem', flex: 1, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {navItems.map(item => {
               const isActive =
                 page.view === item.page.view ||
@@ -191,7 +193,7 @@ export default function Layout({ page, onNavigate, children }: Props) {
                   }}
                 >
                   {item.icon}
-                  {item.label}
+                  {!isMobile && item.label}
                 </button>
               )
             })}
@@ -215,9 +217,11 @@ export default function Layout({ page, onNavigate, children }: Props) {
                 fontSize: '0.75rem',
               }}
             >
-              <span style={{ whiteSpace: 'nowrap' }}>
-                {theme === 'dark' ? 'Escuro' : 'Claro'}
-              </span>
+              {!isMobile && (
+                <span style={{ whiteSpace: 'nowrap' }}>
+                  {theme === 'dark' ? 'Escuro' : 'Claro'}
+                </span>
+              )}
               {/* Toggle pill */}
               <div style={{
                 width: '32px',
