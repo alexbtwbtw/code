@@ -23,7 +23,23 @@ export const createClaimSchema = z.object({
   description: z.string().max(10000).default(''),
 })
 
-export const updateClaimSchema = createClaimSchema.partial().omit({ claimNumber: true })
+export const updateClaimSchema = z.object({
+  insurerId: z.number().int().positive().nullable().optional(),
+  claimantName: z.string().max(200).optional(),
+  claimantEmail: z.string().max(200).optional(),
+  claimantPhone: z.string().max(50).optional(),
+  propertyAddress: z.string().max(500).optional(),
+  propertyType: z.enum(PROPERTY_TYPES).optional(),
+  claimType: z.enum(CLAIM_TYPES).optional(),
+  customTypeName: z.string().max(200).optional(),
+  status: z.enum(CLAIM_STATUSES).optional(),
+  dateOpened: z.string().optional(),
+  dateClosed: z.string().nullable().optional(),
+  estimatedValue: z.number().nullable().optional(),
+  finalSettlement: z.number().nullable().optional(),
+  adjusterNotes: z.string().max(10000).optional(),
+  description: z.string().max(10000).optional(),
+})
 
 export const listClaimsSchema = z.object({
   search: z.string().optional(),
