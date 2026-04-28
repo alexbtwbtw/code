@@ -7,108 +7,108 @@ export function seedLineItems(claimIds: number[]): void {
   `)
 
   const lineItems = [
-    // Claim 1 — property damage (closed)
+    // Sinistro 1 — danos materiais (encerrado)
     {
       claim_id: claimIds[0],
-      description: 'Roof repair — shingle replacement and flashing',
+      description: 'Reparação do telhado — substituição de telhas e remate de chaminé',
       category: 'structure',
       estimated_cost: 8500,
       approved_cost: 7800,
-      notes: 'Licensed roofing contractor. Includes materials and labor.',
+      notes: 'Empreiteiro de coberturas certificado. Inclui materiais e mão de obra.',
     },
     {
       claim_id: claimIds[0],
-      description: 'Water damage remediation — master bedroom ceiling',
+      description: 'Remediação de danos por água — teto do quarto principal',
       category: 'structure',
       estimated_cost: 7000,
       approved_cost: 6500,
-      notes: 'Includes drying, mold inspection, and ceiling replacement.',
+      notes: 'Inclui secagem, inspeção de bolores e substituição do teto.',
     },
     {
       claim_id: claimIds[0],
-      description: 'Interior drywall and paint repair',
+      description: 'Reparação de pladur e pintura interiores',
       category: 'structure',
       estimated_cost: 3000,
       approved_cost: 1900,
-      notes: 'Partial approval — cosmetic scope reduced after re-inspection.',
+      notes: 'Aprovação parcial — âmbito cosmético reduzido após nova vistoria.',
     },
 
-    // Claim 2 — fire (submitted)
+    // Sinistro 2 — incêndio (submetido)
     {
       claim_id: claimIds[1],
-      description: 'Structural fire damage repair — kitchen and dining',
+      description: 'Reparação estrutural de danos por incêndio — cozinha e sala de jantar',
       category: 'structure',
       estimated_cost: 80000,
       approved_cost: null,
-      notes: 'Includes framing, sheathing, and exterior wall rebuild.',
+      notes: 'Inclui estrutura, revestimento e reconstrução da parede exterior.',
     },
     {
       claim_id: claimIds[1],
-      description: 'Smoke and soot cleanup throughout first floor',
+      description: 'Limpeza de fumo e fuligem em todo o rés-do-chão',
       category: 'contents',
       estimated_cost: 18000,
       approved_cost: null,
-      notes: 'Professional remediation company required. HVAC duct cleaning included.',
+      notes: 'Empresa de remediação profissional necessária. Inclui limpeza de condutas de climatização.',
     },
     {
       claim_id: claimIds[1],
-      description: 'Temporary housing allowance',
+      description: 'Subsídio de alojamento temporário',
       category: 'other',
       estimated_cost: 26000,
       approved_cost: null,
-      notes: 'Estimated 3-month displacement at $8,667/month.',
+      notes: 'Estimativa de 3 meses de deslocação a €8.667/mês.',
     },
 
-    // Claim 4 — flood (inspected)
+    // Sinistro 4 — inundação (vistoriado)
     {
       claim_id: claimIds[3],
-      description: 'Flood remediation — drying, mold treatment, drywall removal',
+      description: 'Remediação de inundação — secagem, tratamento de bolores e remoção de pladur',
       category: 'structure',
       estimated_cost: 22000,
       approved_cost: null,
-      notes: 'Full ground-floor remediation required before rebuild.',
+      notes: 'Remediação completa do rés-do-chão necessária antes da reconstrução.',
     },
     {
       claim_id: claimIds[3],
-      description: 'Flooring replacement — ground floor',
+      description: 'Substituição de pavimento — rés-do-chão',
       category: 'structure',
       estimated_cost: 12000,
       approved_cost: null,
-      notes: 'Hardwood floor destroyed. Replacement with equivalent material.',
+      notes: 'Soalho de madeira destruído. Substituição por material equivalente.',
     },
     {
       claim_id: claimIds[3],
-      description: 'Electrical inspection and outlet replacement',
+      description: 'Inspeção elétrica e substituição de tomadas',
       category: 'structure',
       estimated_cost: 8000,
       approved_cost: null,
-      notes: 'All outlets below 18-inch waterline to be replaced. Licensed electrician required.',
+      notes: 'Todas as tomadas abaixo da linha de água de 45 cm a substituir. Eletricista certificado obrigatório.',
     },
 
-    // Claim 9 — fire (closed)
+    // Sinistro 9 — incêndio (encerrado)
     {
       claim_id: claimIds[8],
-      description: 'Building reconstruction — floors 3 and 4',
+      description: 'Reconstrução do edifício — pisos 3 e 4',
       category: 'structure',
       estimated_cost: 220000,
       approved_cost: 210000,
-      notes: 'Includes structural repairs, MEP systems, and interior finishes.',
+      notes: 'Inclui reparações estruturais, instalações MEP e acabamentos interiores.',
     },
     {
       claim_id: claimIds[8],
-      description: 'Contents replacement — server room and offices',
+      description: 'Substituição de conteúdos — sala de servidores e escritórios',
       category: 'contents',
       estimated_cost: 35000,
       approved_cost: 32000,
-      notes: 'IT equipment, furniture, and fixtures. Depreciation applied.',
+      notes: 'Equipamentos informáticos, mobiliário e instalações. Depreciação aplicada.',
     },
     {
       claim_id: claimIds[8],
-      description: 'Business interruption loss',
+      description: 'Perda por interrupção de atividade',
       category: 'other',
       estimated_cost: 20000,
       approved_cost: 18000,
-      notes: 'Covers 6-week closure period. Verified against financial records.',
+      notes: 'Cobre o período de encerramento de 6 semanas. Verificado com base em registos financeiros.',
     },
   ]
 

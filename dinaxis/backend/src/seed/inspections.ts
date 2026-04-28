@@ -10,43 +10,43 @@ export function seedInspections(claimIds: number[]): void {
   `)
 
   const inspections = [
-    // Claim 1 (closed) — completed inspection
+    // Sinistro 1 (encerrado) — vistoria concluída
     {
       claim_id: claimIds[0],
       scheduled_date: '2024-01-22',
       completed_date: '2024-01-22',
-      findings: 'Roof inspection confirmed hail damage across approximately 60% of shingle surface. Gutters dented along north and east elevations. Interior ceiling stain in master bedroom measured 2ft x 3ft, consistent with active leak above. No structural damage to rafters or decking.',
-      adjuster_notes: 'Damage consistent with reported storm event. Weather records confirm hail on 2024-01-13.',
+      findings: 'Vistoria ao telhado confirmou danos por granizo em aproximadamente 60% da superfície de telhas. Caleiras amassadas nas fachadas norte e este. Mancha de humidade no teto do quarto principal com dimensão de 60 cm x 90 cm, consistente com infiltração ativa por cima. Sem danos estruturais nas asnas ou no forro.',
+      adjuster_notes: 'Danos consistentes com o evento de tempestade reportado. Registos meteorológicos confirmam granizo em 2024-01-13.',
       latitude: null,
       longitude: null,
     },
-    // Claim 2 (submitted) — completed inspection
+    // Sinistro 2 (submetido) — vistoria concluída
     {
       claim_id: claimIds[1],
       scheduled_date: '2024-02-10',
       completed_date: '2024-02-10',
-      findings: 'Kitchen and dining area sustained heavy fire and smoke damage. Rear exterior wall charred through to sheathing. First floor smoke damage throughout. HVAC system contaminated with smoke residue.',
-      adjuster_notes: 'Fire origin confirmed at range. Spread consistent with report. Structural engineer assessment recommended for rear wall.',
+      findings: 'A cozinha e a sala de jantar sofreram danos graves por fogo e fumo. A parede exterior traseira apresenta carbonização até ao revestimento estrutural. Danos por fumo em todo o rés-do-chão. Sistema de climatização contaminado com resíduos de fumo.',
+      adjuster_notes: 'Origem do incêndio confirmada no fogão. Propagação consistente com o relatório. Recomendada avaliação por engenheiro de estruturas para a parede traseira.',
       latitude: null,
       longitude: null,
     },
-    // Claim 4 (inspected) — completed inspection with GPS
+    // Sinistro 4 (vistoriado) — vistoria concluída com GPS
     {
       claim_id: claimIds[3],
       scheduled_date: '2024-03-12',
       completed_date: '2024-03-12',
-      findings: 'Water line visible at 18 inches on all interior ground-floor walls. Hardwood flooring buckled and warped throughout. Drywall saturated up to waterline — mold growth beginning in northeast corner. Electrical outlets below water line require full replacement. HVAC air handler on ground floor destroyed.',
-      adjuster_notes: 'Damage consistent with reported flood depth. Recommend mold remediation before any rebuild begins.',
-      latitude: 29.9511,
-      longitude: -90.0715,
+      findings: 'Linha de água visível a 45 centímetros em todas as paredes interiores do rés-do-chão. Soalho de madeira empenado e deformado por toda a área. Paredes em pladur saturadas até à linha de água — início de desenvolvimento de bolores no canto nordeste. Tomadas elétricas abaixo da linha de água requerem substituição total. Unidade de tratamento de ar do rés-do-chão destruída.',
+      adjuster_notes: 'Danos consistentes com a profundidade de inundação reportada. Recomenda-se remediação de bolores antes do início de qualquer reconstrução.',
+      latitude: 38.7169,
+      longitude: -9.1399,
     },
-    // Claim 6 (inspection_scheduled) — scheduled, not yet completed
+    // Sinistro 6 (vistoria agendada) — agendada, ainda não concluída
     {
       claim_id: claimIds[5],
       scheduled_date: '2024-05-05',
       completed_date: null,
       findings: '',
-      adjuster_notes: 'Inspection booked with commercial assessor. Owner will provide access.',
+      adjuster_notes: 'Vistoria reservada com perito comercial. O proprietário disponibilizará acesso.',
       latitude: null,
       longitude: null,
     },

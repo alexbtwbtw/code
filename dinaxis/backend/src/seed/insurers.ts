@@ -13,25 +13,25 @@ export function seedInsurers(): number[] {
 
   const insurers = [
     {
-      name: 'State Farm Insurance',
-      contact_name: 'John Miller',
-      email: 'john.miller@statefarm.com',
-      phone: '(555) 123-4001',
-      address: '1 State Farm Plaza, Bloomington IL',
+      name: 'Fidelidade Seguros',
+      contact_name: 'João Ferreira',
+      email: 'joao.ferreira@fidelidade.pt',
+      phone: '+351 213 100 001',
+      address: 'Largo do Calhariz, 30, Lisboa',
     },
     {
-      name: 'Allstate Insurance',
-      contact_name: 'Sarah Chen',
-      email: 'sarah.chen@allstate.com',
-      phone: '(555) 123-4002',
-      address: '2775 Sanders Rd, Northbrook IL',
+      name: 'Tranquilidade Seguros',
+      contact_name: 'Ana Rodrigues',
+      email: 'ana.rodrigues@tranquilidade.pt',
+      phone: '+351 213 100 002',
+      address: 'Av. da Liberdade, 242, Lisboa',
     },
     {
-      name: 'Liberty Mutual',
-      contact_name: 'David Torres',
-      email: 'david.torres@libertymutual.com',
-      phone: '(555) 123-4003',
-      address: '175 Berkeley St, Boston MA',
+      name: 'Allianz Portugal',
+      contact_name: 'David Sousa',
+      email: 'david.sousa@allianz.pt',
+      phone: '+351 213 100 003',
+      address: 'Rua Andrade Corvo, 32, Lisboa',
     },
   ]
 
@@ -41,18 +41,18 @@ export function seedInsurers(): number[] {
     ids.push(result.lastInsertRowid as number)
   }
 
-  const [stateFarmId, allstateId, libertyId] = ids
+  const [fidelidadeId, tranquilidadeId, allianzId] = ids
 
-  // State Farm contacts
-  insertContact.run({ insurer_id: stateFarmId, name: 'John Miller', title: 'Gerente de Sinistros', email: 'john.miller@statefarm.com', phone: '(555) 123-4001', is_primary: 1 })
-  insertContact.run({ insurer_id: stateFarmId, name: 'Sarah Johnson', title: 'Supervisora', email: 'sarah.johnson@statefarm.com', phone: '(555) 123-4002', is_primary: 0 })
+  // Fidelidade contacts
+  insertContact.run({ insurer_id: fidelidadeId, name: 'João Ferreira', title: 'Gerente de Sinistros', email: 'joao.ferreira@fidelidade.pt', phone: '+351 213 100 001', is_primary: 1 })
+  insertContact.run({ insurer_id: fidelidadeId, name: 'Sofia Martins', title: 'Supervisora', email: 'sofia.martins@fidelidade.pt', phone: '+351 213 100 002', is_primary: 0 })
 
-  // Allstate contacts
-  insertContact.run({ insurer_id: allstateId, name: 'Sarah Chen', title: 'Diretora de Operações', email: 'sarah.chen@allstate.com', phone: '(555) 123-4002', is_primary: 1 })
+  // Tranquilidade contacts
+  insertContact.run({ insurer_id: tranquilidadeId, name: 'Ana Rodrigues', title: 'Diretora de Operações', email: 'ana.rodrigues@tranquilidade.pt', phone: '+351 213 100 002', is_primary: 1 })
 
-  // Liberty Mutual contacts
-  insertContact.run({ insurer_id: libertyId, name: 'David Torres', title: 'Coordenador de Sinistros', email: 'david.torres@libertymutual.com', phone: '(555) 123-4003', is_primary: 1 })
-  insertContact.run({ insurer_id: libertyId, name: 'Ana Lima', title: 'Analista', email: 'ana.lima@libertymutual.com', phone: '(555) 123-4004', is_primary: 0 })
+  // Allianz contacts
+  insertContact.run({ insurer_id: allianzId, name: 'David Sousa', title: 'Coordenador de Sinistros', email: 'david.sousa@allianz.pt', phone: '+351 213 100 003', is_primary: 1 })
+  insertContact.run({ insurer_id: allianzId, name: 'Ana Lima', title: 'Analista', email: 'ana.lima@allianz.pt', phone: '+351 213 100 004', is_primary: 0 })
 
   return ids
 }
