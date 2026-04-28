@@ -54,6 +54,9 @@ jobs:
           aws s3 sync home/frontend/dist/ s3://${{ vars.FRONTEND_BUCKET_NAME }}/ \
             --cache-control "no-cache,no-store,must-revalidate" \
             --exclude "assets/*" \
+            --exclude "coba/*" \
+            --exclude "game/*" \
+            --exclude "dinaxis/*" \
             --delete
 
       # ── CloudFront invalidation ────────────────────────────────────────────
