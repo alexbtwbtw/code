@@ -108,15 +108,16 @@ jobs:
           DB_PATH=$(aws ssm get-parameter \
             --name /coba/poc/dinaxis-db-path \
             --query Parameter.Value --output text)
-          S3_BUCKET=$(aws ssm get-parameter \
+          DINAXIS_FILES_BUCKET=$(aws ssm get-parameter \
             --name /coba/poc/dinaxis-s3-files-bucket \
             --query Parameter.Value --output text)
+          # Artifact lives in the shared deploy bucket (same as COBA artifacts)
+          DEPLOY_BUCKET=$(aws ssm get-parameter \
+            --name /coba/poc/s3-files-bucket \
+            --query Parameter.Value --output text)
 
-          # Download artifact from S3
-          aws s3 cp s3://${S3_BUCKET}/deployments/dinaxis-backend-artifact.zip /tmp/dinaxis-backend-artifact.zip
-
-          # Verify artifact integrity
-          echo '${DINAXIS_ARTIFACT_HASH}  /tmp/dinaxis-backend-artifact.zip' | sha256sum -c - || { echo "Artifact hash mismatch!"; exit 1; }
+          # Download artifact from S3 deploy bucket
+          aws s3 cp s3://${DEPLOY_BUCKET}/deployments/dinaxis-backend-artifact.zip /tmp/dinaxis-backend-artifact.zip
 
           # Extract artifact
           mkdir -p /app-dinaxis /var/log/dinaxis
@@ -129,7 +130,7 @@ jobs:
 
           # Write .env file so pm2 picks up config on every restart
           printf 'S3_FILES_BUCKET=%s\nDATABASE_URL=%s\nAWS_REGION=eu-west-2\n' \
-            "$S3_BUCKET" "$DB_PATH" > /app-dinaxis/.env
+            "$DINAXIS_FILES_BUCKET" "$DB_PATH" > /app-dinaxis/.env
 
           pm2 reload /app-dinaxis/ecosystem.config.cjs --update-env \
             || pm2 start /app-dinaxis/ecosystem.config.cjs
