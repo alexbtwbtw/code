@@ -33,3 +33,8 @@ variable "create_oidc_provider" {
   default     = true
   description = "Set to false if the GitHub OIDC provider already exists in this AWS account"
 }
+
+variable "dinaxis_files_bucket_name" {
+  type        = string
+  description = "Name of the S3 bucket for Dinaxis file uploads"
+}

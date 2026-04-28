@@ -7,7 +7,7 @@
     "node": ">=25.0.0"
   },
   "scripts": {
-    "dev": "concurrently --names \"coba-be,game-be,home-fe,coba-fe,game-fe,proxy\" \"npm --prefix coba run dev:backend\" \"npm --prefix game run dev:backend\" \"npm --prefix home/frontend run dev\" \"npm --prefix coba run dev:frontend\" \"npm --prefix game run dev:frontend\" \"node scripts/dev-proxy.mjs\"",
+    "dev": "concurrently --names \"coba-be,game-be,dinaxis-be,home-fe,coba-fe,game-fe,dinaxis-fe,proxy\" \"npm --prefix coba run dev:backend\" \"npm --prefix game run dev:backend\" \"npm --prefix dinaxis run dev:backend\" \"npm --prefix home/frontend run dev\" \"npm --prefix coba run dev:frontend\" \"npm --prefix game run dev:frontend\" \"npm --prefix dinaxis run dev:frontend\" \"node scripts/dev-proxy.mjs\"",
     "dev:proxy": "node scripts/dev-proxy.mjs"
   },
   "devDependencies": {

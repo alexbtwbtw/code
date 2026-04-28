@@ -37,8 +37,9 @@ module "compute" {
   public_subnet_id  = module.networking.public_subnet_id
   ec2_sg_id         = module.networking.ec2_sg_id
   ssh_key_name      = aws_key_pair.ec2.key_name
-  files_bucket_name = var.files_bucket_name
-  anthropic_api_key = var.anthropic_api_key
+  files_bucket_name         = var.files_bucket_name
+  dinaxis_files_bucket_name = var.dinaxis_files_bucket_name
+  anthropic_api_key         = var.anthropic_api_key
 }
 
 # ── Networking (VPC + subnet + IGW + SG + EIP) ───────────────────────────────
@@ -56,8 +57,9 @@ module "storage" {
   region                = var.region
   vpc_id                = module.networking.vpc_id
   public_route_table_id = module.networking.public_route_table_id
-  files_bucket_name     = var.files_bucket_name
-  frontend_bucket_name  = var.frontend_bucket_name
+  files_bucket_name         = var.files_bucket_name
+  frontend_bucket_name      = var.frontend_bucket_name
+  dinaxis_files_bucket_name = var.dinaxis_files_bucket_name
 }
 
 # ── CDN (CloudFront with default *.cloudfront.net certificate) ────────────────
@@ -97,4 +99,5 @@ module "github_oidc" {
   files_bucket_name           = var.files_bucket_name
   cloudfront_distribution_arn = module.cdn.distribution_arn
   ec2_instance_arn            = module.compute.instance_arn
+  dinaxis_files_bucket_name   = var.dinaxis_files_bucket_name
 }

@@ -23,3 +23,8 @@ variable "github_repo" {
   type        = string
   description = "GitHub repo in owner/name format, e.g. alexbtwbtw/code"
 }
+
+variable "dinaxis_files_bucket_name" {
+  type    = string
+  default = "dinaxis-files-poc"
+}

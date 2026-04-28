@@ -8,7 +8,7 @@ server {
     listen 80;
     server_name _;
     server_tokens off;
-    client_max_body_size 10m;
+    client_max_body_size 50m;
 
     location /api/ {
         proxy_pass         http://127.0.0.1:3000;
@@ -61,10 +61,30 @@ server {
         proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_read_timeout 3600s;
     }
+
+    location /dinaxis/api/ {
+        proxy_pass         http://127.0.0.1:3002/api/;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    location /dinaxis/trpc/ {
+        proxy_pass         http://127.0.0.1:3002/trpc/;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
 }
 NGINX_CONF
 
-mkdir -p /app-game /var/log/game
+mkdir -p /app-game /var/log/game /app-dinaxis /var/log/dinaxis
 
 nginx -t && systemctl reload nginx
 echo "nginx reloaded with game routes"

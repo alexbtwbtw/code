@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Working Style
 
 - **Always delegate implementation work to sub-agents.** Use the `Agent` tool for any non-trivial task — research, coding, edits across multiple files. Only do direct edits for trivial single-line changes (e.g., updating this file).
+- **Always run agents in the background** (`run_in_background: true`) unless you need the result before proceeding to the next step.
 - **Default model is Sonnet** (`claude-sonnet-4-6`) unless the task specifically warrants Opus (e.g., deep security audits, complex architectural reasoning). Pass `model: "sonnet"` when spawning agents unless overriding.
 - Run independent agents in parallel in a single message whenever possible.
 
