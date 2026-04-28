@@ -44,7 +44,7 @@ app.use('*', cors({
     if (!origin) return '*'  // same-origin / non-browser requests
     if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return origin
     if (/^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return origin
-    return false  // reject everything else
+    return null  // reject everything else
   },
 }))
 

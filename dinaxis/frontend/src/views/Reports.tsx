@@ -166,7 +166,7 @@ export default function Reports({ onNavigate: _ }: Props) {
   }
 
   const monthlyData = last12.map(ym => {
-    const [yearStr, monthStr] = ym.split('-')
+    const [, monthStr] = ym.split('-')
     const monthIndex = parseInt(monthStr, 10) - 1
     return { ym, label: MONTHS_PT[monthIndex] ?? ym, count: monthlyCounts[ym] }
   })
