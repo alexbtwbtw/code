@@ -9,7 +9,7 @@ import Experts from './views/Experts'
 
 export type Page =
   | { view: 'dashboard' }
-  | { view: 'claims' }
+  | { view: 'claims'; statusFilter?: string }
   | { view: 'claim'; id: string }
   | { view: 'insurers' }
   | { view: 'reports' }
@@ -62,7 +62,7 @@ export default function App() {
   return (
     <Layout page={page} onNavigate={navigate}>
       {page.view === 'dashboard' && <Dashboard onNavigate={navigate} />}
-      {page.view === 'claims'    && <ClaimsList onNavigate={navigate} />}
+      {page.view === 'claims'    && <ClaimsList onNavigate={navigate} initialStatusFilter={page.statusFilter} />}
       {page.view === 'claim'     && <ClaimDetail id={page.id} onNavigate={navigate} />}
       {page.view === 'insurers'  && <Insurers onNavigate={navigate} />}
       {page.view === 'reports'   && <Reports onNavigate={navigate} />}

@@ -101,24 +101,44 @@ export default function Dashboard({ onNavigate }: Props) {
 
       {/* ── Stats row ── */}
       <div className="section">
-        <div className="stat-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
-          <div className="stat-card">
+        <div className="stat-cards-grid">
+          <div
+            className="stat-card stat-card--clickable"
+            role="button"
+            tabIndex={0}
+            onClick={() => onNavigate({ view: 'claims' })}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate({ view: 'claims' }) } }}
+          >
             <div className="stat-card-value">{String(openCount)}</div>
             <div className="stat-card-label">Sinistros Abertos</div>
           </div>
-          <div className="stat-card">
+          <div
+            className="stat-card stat-card--clickable"
+            role="button"
+            tabIndex={0}
+            onClick={() => onNavigate({ view: 'claims' })}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate({ view: 'claims' }) } }}
+          >
             <div className="stat-card-value" style={{ color: stuckCount > 0 ? '#f59e0b' : undefined }}>
               {String(stuckCount)}
             </div>
             <div className="stat-card-label">Aguardando Ação</div>
           </div>
           <div className="stat-card">
-            <div className="stat-card-value">
-              {s && s.avgDaysToClose != null ? `${s.avgDaysToClose.toFixed(1)} dias` : '—'}
+            <div className="stat-card-value stat-card-value--split">
+              {s && s.avgDaysToClose != null ? (
+                <>{s.avgDaysToClose.toFixed(1)}<span className="stat-card-unit">dias</span></>
+              ) : '—'}
             </div>
-            <div className="stat-card-label">Tempo Médio de Encerramento</div>
+            <div className="stat-card-label">Tempo de Fecho</div>
           </div>
-          <div className="stat-card">
+          <div
+            className="stat-card stat-card--clickable"
+            role="button"
+            tabIndex={0}
+            onClick={() => onNavigate({ view: 'claims', statusFilter: 'disputed' })}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate({ view: 'claims', statusFilter: 'disputed' }) } }}
+          >
             <div className="stat-card-value" style={{ color: disputedCount > 0 ? 'var(--danger)' : undefined }}>
               {String(disputedCount)}
             </div>

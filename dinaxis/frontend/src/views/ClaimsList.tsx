@@ -71,9 +71,9 @@ const defaultForm: NewClaimForm = {
   description: '',
 }
 
-export default function ClaimsList({ onNavigate }: { onNavigate: (p: Page) => void }) {
+export default function ClaimsList({ onNavigate, initialStatusFilter }: { onNavigate: (p: Page) => void; initialStatusFilter?: string }) {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter ?? '')
   const [typeFilter, setTypeFilter] = useState('')
   const [sortBy, setSortBy] = useState<SortBy>('newest')
   const [modalOpen, setModalOpen] = useState(false)
