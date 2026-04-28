@@ -58,7 +58,7 @@ export async function uploadLineItemPhoto(lineItemId: number, file: File): Promi
   const fd = new FormData()
   fd.append('lineItemId', String(lineItemId))
   fd.append('file', file)
-  const res = await fetch('/api/line-item-photos/upload', { method: 'POST', body: fd })
+  const res = await fetch('/dinaxis/api/line-item-photos/upload', { method: 'POST', body: fd })
   if (!res.ok) throw new Error('Upload failed')
   return res.json()
 }

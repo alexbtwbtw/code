@@ -13,8 +13,8 @@ export default defineConfig({
   server: {
     port: 5176,
     proxy: {
-      '/api': 'http://localhost:3002',
-      '/trpc': 'http://localhost:3002',
+      '/dinaxis/api': 'http://localhost:3002',
+      '/dinaxis/trpc': 'http://localhost:3002',
     },
   },
   appType: 'spa',

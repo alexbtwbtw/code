@@ -545,10 +545,10 @@ function LineItemPhotoPanel({ lineItemId }: { lineItemId: number }) {
           {(photos as any[]).map((photo: any) => (
             <div key={photo.id} style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0 }}>
               <img
-                src={`/api/line-item-photos/${photo.id}/blob`}
+                src={`/dinaxis/api/line-item-photos/${photo.id}/blob`}
                 alt={photo.filename}
                 title={photo.filename}
-                onClick={() => setLightbox(`/api/line-item-photos/${photo.id}/blob`)}
+                onClick={() => setLightbox(`/dinaxis/api/line-item-photos/${photo.id}/blob`)}
                 style={{
                   width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px',
                   cursor: 'pointer', border: '1px solid var(--color-border, rgba(0,0,0,0.12))',
@@ -1272,7 +1272,7 @@ function DocumentCard({ doc, onView, onDelete }: { doc: Document; onView: () => 
   const [editDesc, setEditDesc] = useState(doc.description)
   const [lightbox, setLightbox] = useState(false)
 
-  const blobUrl = `/api/documents/${doc.id}/blob`
+  const blobUrl = `/dinaxis/api/documents/${doc.id}/blob`
   const isImage = doc.mimeType.startsWith('image/')
   const displayName = doc.label || doc.filename
 

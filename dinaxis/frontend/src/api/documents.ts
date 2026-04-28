@@ -90,6 +90,6 @@ export async function uploadDocument(claimId: number, file: File, label?: string
   fd.append('file', file)
   if (label) fd.append('label', label)
   if (description) fd.append('description', description)
-  const res = await fetch('/api/documents/upload', { method: 'POST', body: fd })
+  const res = await fetch('/dinaxis/api/documents/upload', { method: 'POST', body: fd })
   if (!res.ok) throw new Error('Upload failed')
 }

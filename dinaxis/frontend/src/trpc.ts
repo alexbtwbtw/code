@@ -6,7 +6,7 @@ import type { AppRouter } from '@backend/router/index'
 export const queryClient = new QueryClient()
 
 const trpcClient = createTRPCClient<AppRouter>({
-  links: [httpBatchLink({ url: '/trpc' })],
+  links: [httpBatchLink({ url: '/dinaxis/trpc' })],
 })
 
 export const trpc = createTRPCOptionsProxy<AppRouter>({
