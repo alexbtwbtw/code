@@ -155,9 +155,10 @@ export function updateClaim(
   const values: unknown[] = []
 
   for (const [key, col] of Object.entries(fieldMap)) {
-    if (key in input) {
+    const val = input[key as keyof typeof input]
+    if (val !== undefined) {
       setClauses.push(`${col} = ?`)
-      values.push(input[key as keyof typeof input])
+      values.push(val)
     }
   }
 
