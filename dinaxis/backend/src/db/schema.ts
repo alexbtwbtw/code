@@ -145,6 +145,37 @@ const SCHEMA_DDL = `
   );
 
   CREATE INDEX IF NOT EXISTS idx_claim_comments_claim ON claim_comments(claim_id);
+
+  CREATE TABLE IF NOT EXISTS invoices (
+    id              TEXT PRIMARY KEY,
+    claim_id        INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
+    invoice_number  TEXT NOT NULL UNIQUE,
+    status          TEXT NOT NULL DEFAULT 'draft',
+    issued_date     TEXT NOT NULL,
+    due_date        TEXT,
+    notes           TEXT NOT NULL DEFAULT '',
+    pdf_storage_key TEXT,
+    pdf_storage_adapter TEXT,
+    total_amount    REAL NOT NULL DEFAULT 0,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_invoices_claim ON invoices(claim_id);
+
+  CREATE TABLE IF NOT EXISTS invoice_items (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_id  TEXT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+    item_type   TEXT NOT NULL,
+    item_id     INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    quantity    REAL NOT NULL DEFAULT 1,
+    unit_price  REAL NOT NULL,
+    amount      REAL NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON invoice_items(invoice_id);
 `
 
 const DROP_DDL = `
@@ -193,6 +224,35 @@ export function initSchema() {
     );
     CREATE INDEX IF NOT EXISTS idx_line_item_photos_item ON line_item_photos(line_item_id);
   `, 'create.line_item_photos')
+  runMigration(`
+    CREATE TABLE IF NOT EXISTS invoices (
+      id              TEXT PRIMARY KEY,
+      claim_id        INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
+      invoice_number  TEXT NOT NULL UNIQUE,
+      status          TEXT NOT NULL DEFAULT 'draft',
+      issued_date     TEXT NOT NULL,
+      due_date        TEXT,
+      notes           TEXT NOT NULL DEFAULT '',
+      pdf_storage_key TEXT,
+      pdf_storage_adapter TEXT,
+      total_amount    REAL NOT NULL DEFAULT 0,
+      created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_invoices_claim ON invoices(claim_id);
+    CREATE TABLE IF NOT EXISTS invoice_items (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      invoice_id  TEXT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+      item_type   TEXT NOT NULL,
+      item_id     INTEGER NOT NULL,
+      description TEXT NOT NULL,
+      quantity    REAL NOT NULL DEFAULT 1,
+      unit_price  REAL NOT NULL,
+      amount      REAL NOT NULL,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON invoice_items(invoice_id);
+  `, 'create.invoices')
 }
 
 export function resetSchema() {

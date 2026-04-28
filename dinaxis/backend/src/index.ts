@@ -253,6 +253,46 @@ app.post('/api/line-item-photos/upload', async (c) => {
   return c.json({ id, lineItemId, filename: safeName, mimeType, sizeBytes: buf.length, uploadedAt: row.uploaded_at }, 201)
 })
 
+// Invoice PDF endpoint
+app.get('/api/invoices/:id/pdf', async (c) => {
+  const id = c.req.param('id')
+  const { getInvoiceById } = await import('./services/invoices')
+  const { generateInvoicePdf } = await import('./services/invoicePdf')
+  const { getStorageAdapter } = await import('./lib/storage')
+  const invoice = getInvoiceById(id)
+  if (!invoice) return c.json({ error: 'Invoice not found' }, 404)
+
+  // If PDF already stored, serve from storage
+  if (invoice.pdfStorageKey) {
+    const adapter = getStorageAdapter()
+    const adapterType = process.env.STORAGE ?? 'blob'
+    if (adapterType === 's3') {
+      const url = await adapter.getServeUrl(invoice.pdfStorageKey)
+      return c.redirect(url)
+    }
+    try {
+      const buf = await adapter.get(invoice.pdfStorageKey)
+      return new Response(new Uint8Array(buf), {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `inline; filename="${invoice.invoiceNumber}.pdf"`,
+          'Cache-Control': 'private, max-age=3600',
+        },
+      })
+    } catch { /* fall through to regenerate */ }
+  }
+
+  // Generate (and store) the PDF
+  const buf = await generateInvoicePdf(id)
+  return new Response(new Uint8Array(buf), {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="${invoice.invoiceNumber}.pdf"`,
+      'Cache-Control': 'private, max-age=3600',
+    },
+  })
+})
+
 app.all('/trpc/*', (c) =>
   fetchRequestHandler({
     endpoint: '/trpc',

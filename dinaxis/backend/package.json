@@ -7,7 +7,9 @@
     "start": "node dist/server.js",
     "build": "tsc"
   },
-  "engines": { "node": ">=25.0.0" },
+  "engines": {
+    "node": ">=25.0.0"
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "~3.1029.0",
     "@aws-sdk/s3-request-presigner": "~3.1029.0",
@@ -16,11 +18,13 @@
     "better-sqlite3": "~12.8.0",
     "dotenv": "~17.4.1",
     "hono": "~4.12.12",
+    "pdfkit": "^0.18.0",
     "zod": "~4.3.6"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.6.0",
+    "@types/pdfkit": "^0.17.6",
     "electron": "^41.2.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"

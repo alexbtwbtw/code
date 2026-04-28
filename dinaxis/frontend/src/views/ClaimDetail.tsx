@@ -6,6 +6,8 @@ import { useInsurersList } from '../api/insurers'
 import { useInspectionsByClaim, useCreateInspection, useUpdateInspection, useDeleteInspection } from '../api/inspections'
 import { useLineItemsByClaim, useClaimTotals, useCreateLineItem, useUpdateLineItem, useDeleteLineItem, useLineItemPhotos, useDeleteLineItemPhoto, uploadLineItemPhoto } from '../api/lineItems'
 import { useBillingItemsByClaim, useBillingTotals, useCreateBillingItem, useUpdateBillingItem, useDeleteBillingItem } from '../api/billing'
+import { useInvoicesByClaim, useLineItemInvoices, useBillingItemInvoices, useCreateInvoice, useUpdateInvoiceStatus, useDeleteInvoice } from '../api/invoices'
+import type { Invoice } from '@backend/types/invoices'
 import {
   useDocumentsByClaim, useDeleteDocument,
   useDocumentServeUrl, useDocumentComments, useAddDocumentComment, useDeleteDocumentComment,
@@ -755,12 +757,13 @@ const defaultLineItemForm: LineItemFormState = {
   notes: '',
 }
 
-function LineItemRow({ item, onEdit, onDelete, expandedId, onToggleExpand }: {
+function LineItemRow({ item, onEdit, onDelete, expandedId, onToggleExpand, invoices }: {
   item: LineItem
   onEdit: (item: LineItem) => void
   onDelete: (item: LineItem) => void
   expandedId: number | null
   onToggleExpand: (id: number) => void
+  invoices: Invoice[]
 }) {
   const { data: photos = [] } = useLineItemPhotos(item.id)
   const photoCount = (photos as any[]).length
@@ -770,7 +773,7 @@ function LineItemRow({ item, onEdit, onDelete, expandedId, onToggleExpand }: {
     <>
       <tr>
         <td>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button
               className="btn btn-ghost btn-sm"
               onClick={() => onToggleExpand(item.id)}
@@ -780,6 +783,7 @@ function LineItemRow({ item, onEdit, onDelete, expandedId, onToggleExpand }: {
               {isExpanded ? '▲' : '▼'} {photoCount > 0 ? <span className="badge" style={{ background: 'var(--color-accent, #5b8dee)', color: '#fff', fontSize: '0.7rem', padding: '0 0.35em' }}>{photoCount}</span> : null}
             </button>
             {item.description}
+            <InvoiceBadgesForLineItem itemId={item.id} invoices={invoices} />
           </div>
         </td>
         <td>
@@ -805,7 +809,7 @@ function LineItemRow({ item, onEdit, onDelete, expandedId, onToggleExpand }: {
   )
 }
 
-function LineItemsSection({ claimId }: { claimId: number }) {
+function LineItemsSection({ claimId, invoices }: { claimId: number; invoices: Invoice[] }) {
   const { data: lineItems = [] } = useLineItemsByClaim(claimId)
   const { data: totals } = useClaimTotals(claimId)
   const createLineItem = useCreateLineItem()
@@ -932,6 +936,7 @@ function LineItemsSection({ claimId }: { claimId: number }) {
                   onDelete={handleDelete}
                   expandedId={expandedItemId}
                   onToggleExpand={toggleExpand}
+                  invoices={invoices}
                 />
               ))}
             </tbody>
@@ -1021,7 +1026,7 @@ const defaultBillingForm: BillingFormState = {
   notes: '',
 }
 
-function BillingSection({ claimId }: { claimId: number }) {
+function BillingSection({ claimId, invoices }: { claimId: number; invoices: Invoice[] }) {
   const { data: billingItems = [] } = useBillingItemsByClaim(claimId)
   const { data: totals } = useBillingTotals(claimId)
   const createBillingItem = useCreateBillingItem()
@@ -1134,7 +1139,10 @@ function BillingSection({ claimId }: { claimId: number }) {
               {(billingItems as BillingItem[]).map(item => (
                 <tr key={item.id}>
                   <td>
-                    {item.description}
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.25rem' }}>
+                      {item.description}
+                      <InvoiceBadgesForBillingItem itemId={item.id} invoices={invoices} />
+                    </div>
                     {item.notes && <span style={{ display: 'block', opacity: 0.55, fontSize: '0.8rem' }}>{item.notes}</span>}
                   </td>
                   <td>
@@ -1725,12 +1733,347 @@ function ClaimCommentsSection({ claimId }: { claimId: number }) {
   )
 }
 
+// ─── Invoice Badges (for line/billing item rows) ──────────────────────────────
+
+function InvoiceBadgesForLineItem({ itemId, invoices }: { itemId: number; invoices: Invoice[] }) {
+  const { data: invoiceIds = [] } = useLineItemInvoices(itemId)
+  if ((invoiceIds as string[]).length === 0) return null
+  return (
+    <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.25rem', marginLeft: '0.4rem' }}>
+      {(invoiceIds as string[]).map(iid => {
+        const inv = invoices.find(i => i.id === iid)
+        if (!inv) return null
+        return (
+          <span
+            key={iid}
+            onClick={() => document.getElementById('faturas')?.scrollIntoView({ behavior: 'smooth' })}
+            title={`Ver fatura ${inv.invoiceNumber}`}
+            style={{
+              display: 'inline-block', fontSize: '0.68rem', padding: '0.1rem 0.45rem',
+              borderRadius: '999px', background: 'var(--surface-2, #f1f5f9)', border: '1px solid var(--border, #e2e8f0)',
+              color: 'var(--text-muted)', cursor: 'pointer', fontVariantNumeric: 'tabular-nums',
+              whiteSpace: 'nowrap', lineHeight: 1.5,
+            }}
+          >
+            {inv.invoiceNumber}
+          </span>
+        )
+      })}
+    </span>
+  )
+}
+
+function InvoiceBadgesForBillingItem({ itemId, invoices }: { itemId: number; invoices: Invoice[] }) {
+  const { data: invoiceIds = [] } = useBillingItemInvoices(itemId)
+  if ((invoiceIds as string[]).length === 0) return null
+  return (
+    <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.25rem', marginLeft: '0.4rem' }}>
+      {(invoiceIds as string[]).map(iid => {
+        const inv = invoices.find(i => i.id === iid)
+        if (!inv) return null
+        return (
+          <span
+            key={iid}
+            onClick={() => document.getElementById('faturas')?.scrollIntoView({ behavior: 'smooth' })}
+            title={`Ver fatura ${inv.invoiceNumber}`}
+            style={{
+              display: 'inline-block', fontSize: '0.68rem', padding: '0.1rem 0.45rem',
+              borderRadius: '999px', background: 'var(--surface-2, #f1f5f9)', border: '1px solid var(--border, #e2e8f0)',
+              color: 'var(--text-muted)', cursor: 'pointer', fontVariantNumeric: 'tabular-nums',
+              whiteSpace: 'nowrap', lineHeight: 1.5,
+            }}
+          >
+            {inv.invoiceNumber}
+          </span>
+        )
+      })}
+    </span>
+  )
+}
+
+// ─── Faturas Section ──────────────────────────────────────────────────────────
+
+interface InvoiceCreationModalProps {
+  claimId: number
+  lineItems: any[]
+  billingItems: any[]
+  onClose: () => void
+}
+
+function InvoiceCreationModal({ claimId, lineItems, billingItems, onClose }: InvoiceCreationModalProps) {
+  const createInvoice = useCreateInvoice()
+  const today = new Date().toISOString().slice(0, 10)
+  const [issuedDate, setIssuedDate] = useState(today)
+  const [dueDate, setDueDate] = useState('')
+  const [notes, setNotes] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [selectedLineItems, setSelectedLineItems] = useState<Set<number>>(new Set())
+  const [selectedBillingItems, setSelectedBillingItems] = useState<Set<number>>(new Set())
+
+  function toggleLineItem(id: number) {
+    setSelectedLineItems(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  function toggleBillingItem(id: number) {
+    setSelectedBillingItems(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const runningTotal = [
+    ...lineItems.filter(li => selectedLineItems.has(li.id)).map(li => li.approvedCost ?? li.estimatedCost ?? 0),
+    ...billingItems.filter(bi => selectedBillingItems.has(bi.id)).map(bi => bi.amount ?? 0),
+  ].reduce((a, b) => a + b, 0)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+
+    const items: any[] = [
+      ...lineItems
+        .filter(li => selectedLineItems.has(li.id))
+        .map(li => ({
+          itemType: 'line_item' as const,
+          itemId: li.id,
+          description: li.description,
+          quantity: 1,
+          unitPrice: li.approvedCost ?? li.estimatedCost ?? 0,
+          amount: li.approvedCost ?? li.estimatedCost ?? 0,
+        })),
+      ...billingItems
+        .filter(bi => selectedBillingItems.has(bi.id))
+        .map(bi => ({
+          itemType: 'billing_item' as const,
+          itemId: bi.id,
+          description: bi.description,
+          quantity: 1,
+          unitPrice: bi.amount ?? 0,
+          amount: bi.amount ?? 0,
+        })),
+    ]
+
+    if (items.length === 0) {
+      setError('Selecione pelo menos um item.')
+      return
+    }
+
+    try {
+      await createInvoice.mutateAsync({
+        claimId,
+        issuedDate,
+        dueDate: dueDate || undefined,
+        notes,
+        items,
+      })
+      onClose()
+    } catch (err: any) {
+      setError(err?.message ?? 'Erro ao gerar fatura.')
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modal" style={{ width: '600px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="modal-header">
+          <h2>Nova Fatura</h2>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div style={{ overflowY: 'auto', flex: 1, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className="grid-2">
+              <div className="form-group">
+                <label>Data de Emissão *</label>
+                <input className="input" type="date" required value={issuedDate} onChange={e => setIssuedDate(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Data de Vencimento</label>
+                <input className="input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+              </div>
+            </div>
+
+            {lineItems.length > 0 && (
+              <div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6, marginBottom: '0.5rem' }}>
+                  Itens de Dano
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {lineItems.map((li: any) => {
+                    const cost = li.approvedCost ?? li.estimatedCost ?? 0
+                    return (
+                      <label key={li.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--border)', cursor: 'pointer', background: selectedLineItems.has(li.id) ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'transparent' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedLineItems.has(li.id)}
+                          onChange={() => toggleLineItem(li.id)}
+                        />
+                        <span style={{ flex: 1, fontSize: '0.875rem' }}>{li.description}</span>
+                        <span style={{ fontSize: '0.875rem', fontVariantNumeric: 'tabular-nums', opacity: 0.75 }}>{formatCurrency(cost)}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {billingItems.length > 0 && (
+              <div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6, marginBottom: '0.5rem' }}>
+                  Itens de Faturamento
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {billingItems.map((bi: any) => (
+                    <label key={bi.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--border)', cursor: 'pointer', background: selectedBillingItems.has(bi.id) ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'transparent' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedBillingItems.has(bi.id)}
+                        onChange={() => toggleBillingItem(bi.id)}
+                      />
+                      <span style={{ flex: 1, fontSize: '0.875rem' }}>{bi.description}</span>
+                      <span style={{ fontSize: '0.875rem', fontVariantNumeric: 'tabular-nums', opacity: 0.75 }}>{formatCurrency(bi.amount)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label>Notas</label>
+              <textarea className="input" rows={3} value={notes} onChange={e => setNotes(e.target.value)} style={{ resize: 'vertical' }} placeholder="Opcional" />
+            </div>
+
+            {(selectedLineItems.size > 0 || selectedBillingItems.size > 0) && (
+              <div style={{ padding: '0.75rem 1rem', background: 'var(--surface-2, #f8fafc)', borderRadius: '0.5rem', border: '1px solid var(--border)', fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
+                <span>Total selecionado</span>
+                <span>{formatCurrency(runningTotal)}</span>
+              </div>
+            )}
+
+            {error && <p style={{ color: 'var(--color-danger, #e55)', margin: 0 }}>{error}</p>}
+          </div>
+          <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', flexShrink: 0, background: 'var(--surface)' }}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="btn btn-primary" disabled={createInvoice.isPending}>
+              {createInvoice.isPending ? 'Gerando…' : 'Gerar Fatura'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+const INVOICE_STATUS_LABELS: Record<string, string> = {
+  draft: 'Rascunho',
+  sent: 'Enviada',
+  paid: 'Paga',
+}
+
+const INVOICE_STATUS_COLORS: Record<string, string> = {
+  draft: '#6b7280',
+  sent: '#3b82f6',
+  paid: '#22c55e',
+}
+
+function FaturasSection({ claimId, lineItems, billingItems }: { claimId: number; lineItems: any[]; billingItems: any[] }) {
+  const { data: invoices = [] } = useInvoicesByClaim(claimId)
+  const updateStatus = useUpdateInvoiceStatus()
+  const deleteInvoice = useDeleteInvoice()
+  const [createOpen, setCreateOpen] = useState(false)
+
+  async function handleStatusChange(id: string, status: string) {
+    await updateStatus.mutateAsync({ id, status: status as any })
+  }
+
+  async function handleDelete(inv: Invoice) {
+    if (!confirm(`Excluir fatura ${inv.invoiceNumber}?`)) return
+    await deleteInvoice.mutateAsync({ id: inv.id })
+  }
+
+  return (
+    <div className="section">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <h2 className="section-title">Faturas</h2>
+        <button className="btn btn-primary btn-sm" onClick={() => setCreateOpen(true)}>+ Nova Fatura</button>
+      </div>
+
+      {(invoices as Invoice[]).length === 0 ? (
+        <div className="empty-state"><p>Nenhuma fatura gerada.</p></div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {(invoices as Invoice[]).map(inv => (
+            <div key={inv.id} className="card" style={{ padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                    <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{inv.invoiceNumber}</strong>
+                    <span style={{
+                      display: 'inline-block', fontSize: '0.75rem', padding: '0.15rem 0.6rem', borderRadius: '999px',
+                      background: INVOICE_STATUS_COLORS[inv.status] ?? '#6b7280', color: '#fff', fontWeight: 600,
+                    }}>
+                      {INVOICE_STATUS_LABELS[inv.status] ?? inv.status}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.7, display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                    <span>Emitida: {inv.issuedDate}</span>
+                    {inv.dueDate && <span>Vencimento: {inv.dueDate}</span>}
+                    <span style={{ fontWeight: 600, opacity: 1 }}>{formatCurrency(inv.totalAmount)}</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', flexShrink: 0 }}>
+                  <a
+                    href={`/dinaxis/api/invoices/${inv.id}/pdf`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-secondary btn-sm"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    Ver PDF
+                  </a>
+                  <select
+                    className="input"
+                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', height: 'auto' }}
+                    value={inv.status}
+                    onChange={e => handleStatusChange(inv.id, e.target.value)}
+                  >
+                    <option value="draft">Rascunho</option>
+                    <option value="sent">Enviada</option>
+                    <option value="paid">Paga</option>
+                  </select>
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(inv)}>Excluir</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {createOpen && (
+        <InvoiceCreationModal
+          claimId={claimId}
+          lineItems={lineItems}
+          billingItems={billingItems}
+          onClose={() => setCreateOpen(false)}
+        />
+      )}
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ClaimDetail({ id, onNavigate }: { id: string; onNavigate: (p: Page) => void }) {
   const claimId = parseInt(id, 10)
   const { data: claim, isLoading, error } = useClaimById(isNaN(claimId) ? 0 : claimId)
   const { data: insurers = [] } = useInsurersList()
+  const { data: invoices = [] } = useInvoicesByClaim(claimId)
+  const { data: lineItems = [] } = useLineItemsByClaim(claimId)
+  const { data: billingItems = [] } = useBillingItemsByClaim(claimId)
   const deleteClaim = useDeleteClaim()
   const [editOpen, setEditOpen] = useState(false)
 
@@ -1825,15 +2168,20 @@ export default function ClaimDetail({ id, onNavigate }: { id: string; onNavigate
 
       {/* Section 3 — Line Items */}
       <div id="itens-dano">
-        <LineItemsSection claimId={claimId} />
+        <LineItemsSection claimId={claimId} invoices={invoices as Invoice[]} />
       </div>
 
       {/* Section 4 — Billing (adjuster's own costs) */}
       <div id="faturamento">
-        <BillingSection claimId={claimId} />
+        <BillingSection claimId={claimId} invoices={invoices as Invoice[]} />
       </div>
 
-      {/* Section 5 — Documents */}
+      {/* Section 5 — Faturas */}
+      <div id="faturas">
+        <FaturasSection claimId={claimId} lineItems={lineItems as any[]} billingItems={billingItems as any[]} />
+      </div>
+
+      {/* Section 6 — Documents */}
       <div id="documentos">
         <DocumentsSection claimId={claimId} />
       </div>
