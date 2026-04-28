@@ -81,176 +81,171 @@ export default function Layout({ page, onNavigate, children }: Props) {
   const isClaimView = page.view === 'claim'
 
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 600)
+  const [menuOpen, setMenuOpen] = useState(false)
+
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 600)
+    const handler = () => {
+      setIsMobile(window.innerWidth < 600)
+      if (window.innerWidth >= 600) setMenuOpen(false)
+    }
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])
+
+  // Close menu on navigation
+  function handleNavigate(p: Page) {
+    setMenuOpen(false)
+    onNavigate(p)
+  }
+
+  const ThemeToggle = () => (
+    <button
+      onClick={toggle}
+      title={theme === 'dark' ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
+        background: 'transparent', border: 'none', cursor: 'pointer',
+        padding: '0.25rem 0.5rem', borderRadius: '999px',
+        color: 'var(--text-muted)', fontSize: '0.75rem',
+      }}
+    >
+      <span style={{ whiteSpace: 'nowrap' }}>
+        {theme === 'dark' ? 'Escuro' : 'Claro'}
+      </span>
+      <div style={{
+        width: '32px', height: '18px', borderRadius: '999px',
+        background: theme === 'dark' ? 'var(--accent)' : 'var(--border)',
+        position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+      }}>
+        <div style={{
+          position: 'absolute', top: '2px',
+          left: theme === 'dark' ? '16px' : '2px',
+          width: '14px', height: '14px', borderRadius: '999px',
+          background: '#fff', transition: 'left 0.2s',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+        }} />
+      </div>
+    </button>
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Top navbar */}
       <header
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: 'var(--surface)',
-          borderBottom: '1px solid var(--border)',
-          display: 'flex',
-          flexDirection: 'column',
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+          background: 'var(--surface)', borderBottom: '1px solid var(--border)',
+          display: 'flex', flexDirection: 'column',
         }}
       >
         {/* Gradient accent strip */}
         <div style={{ height: '3px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', flexShrink: 0 }} />
 
         {/* Main navbar row */}
-        <div
-          style={{
-            height: '53px',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 1.25rem',
-            gap: '1.5rem',
-          }}
-        >
+        <div style={{ height: '53px', display: 'flex', alignItems: 'center', padding: '0 1.25rem', gap: '1.5rem' }}>
           {/* Branding */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-            <div
-              style={{
-                width: '8px',
-                height: '8px',
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                borderRadius: '3px',
-                flexShrink: 0,
-              }}
-            />
+            <div style={{ width: '8px', height: '8px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '3px', flexShrink: 0 }} />
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-              <span
-                style={{
-                  fontSize: '1rem',
-                  fontWeight: 800,
-                  color: 'var(--text)',
-                  letterSpacing: '0.12em',
-                }}
-              >
+              <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text)', letterSpacing: '0.12em' }}>
                 DINAXIS
               </span>
               {!isMobile && (
-                <span
-                  style={{
-                    fontSize: '0.6rem',
-                    color: 'var(--text-muted)',
-                    letterSpacing: '0.03em',
-                    marginTop: '1px',
-                  }}
-                >
+                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.03em', marginTop: '1px' }}>
                   Portal de Sinistros
                 </span>
               )}
             </div>
           </div>
 
-          {/* Nav links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0' : '0.25rem', flex: 1, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          {isMobile ? (
+            /* ── Mobile: spacer + hamburger button ── */
+            <>
+              <div style={{ flex: 1 }} />
+              <button
+                onClick={() => setMenuOpen(o => !o)}
+                aria-label="Abrir menu"
+                style={{
+                  display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                  alignItems: 'center', gap: '5px', width: '40px', height: '40px',
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  borderRadius: '8px', padding: '8px', color: 'var(--text)',
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ display: 'block', width: '20px', height: '2px', background: 'currentColor', borderRadius: '2px', transition: 'transform 0.2s, opacity 0.2s', transform: menuOpen ? 'translateY(7px) rotate(45deg)' : 'none' }} />
+                <span style={{ display: 'block', width: '20px', height: '2px', background: 'currentColor', borderRadius: '2px', transition: 'opacity 0.2s', opacity: menuOpen ? 0 : 1 }} />
+                <span style={{ display: 'block', width: '20px', height: '2px', background: 'currentColor', borderRadius: '2px', transition: 'transform 0.2s, opacity 0.2s', transform: menuOpen ? 'translateY(-7px) rotate(-45deg)' : 'none' }} />
+              </button>
+            </>
+          ) : (
+            /* ── Desktop: nav links + theme toggle ── */
+            <>
+              <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1 }}>
+                {navItems.map(item => {
+                  const isActive = page.view === item.page.view || (item.page.view === 'claims' && page.view === 'claim')
+                  return (
+                    <button
+                      key={item.page.view}
+                      onClick={() => handleNavigate(item.page)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                        padding: '0.375rem 0.75rem', borderRadius: '6px', border: 'none',
+                        background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent',
+                        color: isActive ? 'var(--accent)' : 'var(--text-muted)',
+                        fontSize: '0.8125rem', fontWeight: isActive ? 600 : 400,
+                        cursor: 'pointer', transition: 'background 0.15s ease, color 0.15s ease',
+                        whiteSpace: 'nowrap',
+                      }}
+                      onMouseEnter={e => { if (!isActive) { const el = e.currentTarget as HTMLButtonElement; el.style.background = 'rgba(255,255,255,0.05)'; el.style.color = 'var(--text)' } }}
+                      onMouseLeave={e => { if (!isActive) { const el = e.currentTarget as HTMLButtonElement; el.style.background = 'transparent'; el.style.color = 'var(--text-muted)' } }}
+                    >
+                      {item.icon}{item.label}
+                    </button>
+                  )
+                })}
+              </nav>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                <ThemeToggle />
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', opacity: 0.55, letterSpacing: '0.04em' }}>v0.1.0</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── Mobile drawer menu ── */}
+        {isMobile && menuOpen && (
+          <div style={{
+            borderTop: '1px solid var(--border)',
+            background: 'var(--surface)',
+            padding: '0.5rem 0.75rem 1rem',
+            display: 'flex', flexDirection: 'column', gap: '2px',
+          }}>
             {navItems.map(item => {
-              const isActive =
-                page.view === item.page.view ||
-                (item.page.view === 'claims' && page.view === 'claim')
+              const isActive = page.view === item.page.view || (item.page.view === 'claims' && page.view === 'claim')
               return (
                 <button
                   key={item.page.view}
-                  onClick={() => onNavigate(item.page)}
+                  onClick={() => handleNavigate(item.page)}
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.375rem 0.75rem',
-                    borderRadius: '6px',
-                    border: 'none',
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
                     background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent',
-                    color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                    fontSize: '0.8125rem',
-                    fontWeight: isActive ? 600 : 400,
-                    cursor: 'pointer',
-                    transition: 'background 0.15s ease, color 0.15s ease',
-                  }}
-                  onMouseEnter={e => {
-                    if (!isActive) {
-                      const el = e.currentTarget as HTMLButtonElement
-                      el.style.background = 'rgba(255,255,255,0.05)'
-                      el.style.color = 'var(--text)'
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (!isActive) {
-                      const el = e.currentTarget as HTMLButtonElement
-                      el.style.background = 'transparent'
-                      el.style.color = 'var(--text-muted)'
-                    }
+                    color: isActive ? 'var(--accent)' : 'var(--text)',
+                    fontSize: '0.9375rem', fontWeight: isActive ? 600 : 400,
+                    cursor: 'pointer', textAlign: 'left', width: '100%',
                   }}
                 >
-                  {item.icon}
-                  {!isMobile && item.label}
+                  {item.icon}{item.label}
                 </button>
               )
             })}
-          </nav>
-
-          {/* Right: theme toggle + version */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-            <button
-              onClick={toggle}
-              title={theme === 'dark' ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '0.25rem 0.5rem',
-                borderRadius: '999px',
-                color: 'var(--text-muted)',
-                fontSize: '0.75rem',
-              }}
-            >
-              {!isMobile && (
-                <span style={{ whiteSpace: 'nowrap' }}>
-                  {theme === 'dark' ? 'Escuro' : 'Claro'}
-                </span>
-              )}
-              {/* Toggle pill */}
-              <div style={{
-                width: '32px',
-                height: '18px',
-                borderRadius: '999px',
-                background: theme === 'dark' ? 'var(--accent)' : 'var(--border)',
-                position: 'relative',
-                transition: 'background 0.2s',
-                flexShrink: 0,
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '2px',
-                  left: theme === 'dark' ? '16px' : '2px',
-                  width: '14px',
-                  height: '14px',
-                  borderRadius: '999px',
-                  background: '#fff',
-                  transition: 'left 0.2s',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                }} />
-              </div>
-            </button>
-
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', opacity: 0.55, letterSpacing: '0.04em' }}>
-              v0.1.0
-            </span>
+            <div style={{ height: '1px', background: 'var(--border)', margin: '0.5rem 0' }} />
+            <div style={{ padding: '0.25rem 0.5rem' }}>
+              <ThemeToggle />
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* Body below navbar */}

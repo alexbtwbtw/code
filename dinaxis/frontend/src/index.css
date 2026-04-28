@@ -260,6 +260,10 @@ body {
 
 @media (max-width: 480px) {
   .page { padding: 1rem; }
+  .stat-card { padding: 1rem 1rem; }
+  .stat-card-value { font-size: 1.5rem; }
+  .page-header { flex-wrap: wrap; gap: 0.75rem; }
+  .page-header h1 { font-size: 1.25rem; }
 }
 
 /* ── Top navbar helpers ── */
