@@ -15,8 +15,11 @@ const routes = [
   // is needed. The generic upgrade handler below tunnels them correctly.
   { prefix: '/game/ws',   target: { host: 'localhost', port: 3001 } },
   { prefix: '/game',      target: { host: 'localhost', port: 5174 } },
-  { prefix: '/coba',      target: { host: 'localhost', port: 5173 } },
-  { prefix: '/',          target: { host: 'localhost', port: 5175 } },
+  { prefix: '/coba',           target: { host: 'localhost', port: 5173 } },
+  { prefix: '/dinaxis/api',   target: { host: 'localhost', port: 3002 } },
+  { prefix: '/dinaxis/trpc',  target: { host: 'localhost', port: 3002 } },
+  { prefix: '/dinaxis',       target: { host: 'localhost', port: 5176 } },
+  { prefix: '/',              target: { host: 'localhost', port: 5175 } },
 ]
 
 function resolveTarget(url) {
@@ -106,7 +109,10 @@ server.listen(PORT, () => {
   console.log(`  /game/trpc/* → http://localhost:3001  (Game backend)`)
   console.log(`  /game/ws     → ws://localhost:3001    (Game WS server, same port as backend)`)
   console.log(`  /game/*      → http://localhost:5174  (Game Vite)`)
-  console.log(`  /coba/*      → http://localhost:5173  (COBA Vite)`)
-  console.log(`  /*           → http://localhost:5175  (Home Vite)`)
+  console.log(`  /coba/*           → http://localhost:5173  (COBA Vite)`)
+  console.log(`  /dinaxis/api/*    → http://localhost:3002  (Dinaxis backend)`)
+  console.log(`  /dinaxis/trpc/*   → http://localhost:3002  (Dinaxis backend)`)
+  console.log(`  /dinaxis/*        → http://localhost:5176  (Dinaxis Vite)`)
+  console.log(`  /*                → http://localhost:5175  (Home Vite)`)
   console.log()
 })
