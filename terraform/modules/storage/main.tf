@@ -23,6 +23,29 @@ resource "aws_s3_bucket_cors_configuration" "files" {
   }
 }
 
+resource "aws_s3_bucket" "dinaxis_files" {
+  bucket = var.dinaxis_files_bucket_name
+  tags   = { Name = "dinaxis-poc-files" }
+}
+
+resource "aws_s3_bucket_public_access_block" "dinaxis_files" {
+  bucket                  = aws_s3_bucket.dinaxis_files.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_cors_configuration" "dinaxis_files" {
+  bucket = aws_s3_bucket.dinaxis_files.id
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST"]
+    allowed_origins = ["*"]
+    max_age_seconds = 3000
+  }
+}
+
 resource "aws_s3_bucket" "frontend" {
   bucket = var.frontend_bucket_name
   tags   = { Name = "coba-poc-frontend" }

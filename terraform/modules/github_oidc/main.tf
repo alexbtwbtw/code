@@ -70,6 +70,21 @@ resource "aws_iam_role_policy" "github_actions" {
         ]
       },
       {
+        Sid    = "DinaxisFilesS3"
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket"]
+        Resource = [
+          "arn:aws:s3:::${var.dinaxis_files_bucket_name}",
+          "arn:aws:s3:::${var.dinaxis_files_bucket_name}/*"
+        ]
+      },
+      {
+        Sid    = "DinaxisArtifactUpload"
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:DeleteObject"]
+        Resource = "arn:aws:s3:::${var.files_bucket_name}/deployments/dinaxis-*"
+      },
+      {
         Sid    = "SSMSendCommand"
         Effect = "Allow"
         Action = ["ssm:SendCommand"]

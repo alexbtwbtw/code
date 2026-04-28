@@ -37,6 +37,14 @@ resource "aws_iam_role_policy" "ec2_permissions" {
       },
       {
         Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+        Resource = [
+          "arn:aws:s3:::${var.dinaxis_files_bucket_name}",
+          "arn:aws:s3:::${var.dinaxis_files_bucket_name}/*"
+        ]
+      },
+      {
+        Effect   = "Allow"
         Action   = ["ssm:GetParameter", "ssm:GetParameters"]
         Resource = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/coba/poc/*"
       },
@@ -100,7 +108,7 @@ resource "aws_instance" "backend" {
         listen 80;
         server_name _;
         server_tokens off;
-        client_max_body_size 10m;
+        client_max_body_size 50m;
 
         # COBA — proxy /api/* and /trpc/* to backend on port 3000
         location /api/ {
@@ -143,6 +151,27 @@ resource "aws_instance" "backend" {
             proxy_set_header   X-Forwarded-Proto $scheme;
             proxy_read_timeout 60s;
         }
+
+        # Dinaxis — proxy /dinaxis/api/* and /dinaxis/trpc/* to backend on port 3002
+        location /dinaxis/api/ {
+            proxy_pass         http://127.0.0.1:3002/api/;
+            proxy_http_version 1.1;
+            proxy_set_header   Host              $host;
+            proxy_set_header   X-Real-IP         $remote_addr;
+            proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_read_timeout 60s;
+        }
+
+        location /dinaxis/trpc/ {
+            proxy_pass         http://127.0.0.1:3002/trpc/;
+            proxy_http_version 1.1;
+            proxy_set_header   Host              $host;
+            proxy_set_header   X-Real-IP         $remote_addr;
+            proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_read_timeout 60s;
+        }
     }
     NGINX_CONF
 
@@ -159,8 +188,8 @@ resource "aws_instance" "backend" {
     mount -a
 
     # Create app and log directories with correct ownership
-    mkdir -p /app /app-game /var/log/coba /var/log/game
-    chown -R ec2-user:ec2-user /app /app-game /var/log/coba /var/log/game /data
+    mkdir -p /app /app-game /app-dinaxis /var/log/coba /var/log/game /var/log/dinaxis
+    chown -R ec2-user:ec2-user /app /app-game /app-dinaxis /var/log/coba /var/log/game /var/log/dinaxis /data
   EOF
 
   tags = { Name = "coba-poc-backend" }
@@ -196,4 +225,16 @@ resource "aws_ssm_parameter" "s3_files_bucket" {
   name  = "/coba/poc/s3-files-bucket"
   type  = "String"
   value = var.files_bucket_name
+}
+
+resource "aws_ssm_parameter" "dinaxis_db_path" {
+  name  = "/coba/poc/dinaxis-db-path"
+  type  = "String"
+  value = "/data/dinaxis.db"
+}
+
+resource "aws_ssm_parameter" "dinaxis_s3_files_bucket" {
+  name  = "/coba/poc/dinaxis-s3-files-bucket"
+  type  = "String"
+  value = var.dinaxis_files_bucket_name
 }

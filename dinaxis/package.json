@@ -1,0 +1,42 @@
+{
+  "name": "dinaxis",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron-dist/main.js",
+  "engines": { "node": ">=25.0.0" },
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "electron:compile": "npx --prefix backend tsc --project electron/tsconfig.json",
+    "electron:dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"wait-on tcp:5176 tcp:3002 && electron .\"",
+    "electron:build": "npm run build && npm run electron:compile"
+  },
+  "build": {
+    "appId": "com.dinaxis.app",
+    "productName": "Dinaxis",
+    "asar": false,
+    "directories": { "output": "dist-electron" },
+    "files": ["electron-dist/**", "package.json"],
+    "extraResources": [
+      { "from": "backend/dist", "to": "backend/dist" },
+      {
+        "from": "backend/node_modules",
+        "to": "backend/node_modules",
+        "filter": ["**/*", "!.bin/**", "!tsx/**", "!typescript/**", "!@types/**"]
+      },
+      { "from": "frontend/dist", "to": "frontend/dist" }
+    ],
+    "win": { "target": "dir" },
+    "mac": { "target": "dmg" },
+    "linux": { "target": "AppImage" }
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "concurrently": "^9.1.2",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "wait-on": "^9.0.5"
+  }
+}

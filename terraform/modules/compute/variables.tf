@@ -19,6 +19,10 @@ variable "files_bucket_name" {
   type = string
 }
 
+variable "dinaxis_files_bucket_name" {
+  type = string
+}
+
 variable "anthropic_api_key" {
   type        = string
   sensitive   = true

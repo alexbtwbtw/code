@@ -47,6 +47,19 @@ resource "aws_cloudfront_function" "spa_router" {
         }
       }
 
+      // Dinaxis SPA routing
+      if (uri === '/dinaxis' || uri === '/dinaxis/') {
+        event.request.uri = '/dinaxis/index.html';
+        return event.request;
+      }
+      if (uri.startsWith('/dinaxis/')) {
+        var last = uri.slice(uri.lastIndexOf('/') + 1);
+        if (!last.includes('.')) {
+          event.request.uri = '/dinaxis/index.html';
+          return event.request;
+        }
+      }
+
       return event.request;
     }
   EOF
@@ -125,6 +138,28 @@ resource "aws_cloudfront_distribution" "main" {
   # AllViewerExceptHostHeader forwards Upgrade/Connection headers needed for the WS handshake.
   ordered_cache_behavior {
     path_pattern             = "/game/ws"
+    target_origin_id         = "ec2-backend"
+    viewer_protocol_policy   = "redirect-to-https"
+    allowed_methods          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods           = ["GET", "HEAD"]
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # AllViewerExceptHostHeader
+  }
+
+  # /dinaxis/api/* → EC2 (no cache)
+  ordered_cache_behavior {
+    path_pattern             = "/dinaxis/api/*"
+    target_origin_id         = "ec2-backend"
+    viewer_protocol_policy   = "redirect-to-https"
+    allowed_methods          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods           = ["GET", "HEAD"]
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # AllViewerExceptHostHeader
+  }
+
+  # /dinaxis/trpc/* → EC2 (no cache)
+  ordered_cache_behavior {
+    path_pattern             = "/dinaxis/trpc/*"
     target_origin_id         = "ec2-backend"
     viewer_protocol_policy   = "redirect-to-https"
     allowed_methods          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
