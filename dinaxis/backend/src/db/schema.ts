@@ -162,27 +162,37 @@ const DROP_DDL = `
   DROP TABLE IF EXISTS insurers;
 `
 
+function runMigration(sql: string, name: string) {
+  try {
+    db.exec(sql)
+  } catch (err: any) {
+    const msg: string = err?.message ?? ''
+    if (msg.includes('duplicate column name') || msg.includes('already exists') || msg.includes('table') && msg.includes('already exists')) {
+      return // expected — column/table already exists
+    }
+    throw new Error(`Migration "${name}" failed: ${msg}`)
+  }
+}
+
 export function initSchema() {
   db.exec(SCHEMA_DDL)
   // Migrations for existing databases
-  try { db.exec("ALTER TABLE claims ADD COLUMN custom_type_name TEXT NOT NULL DEFAULT ''") } catch {}
-  try { db.exec("ALTER TABLE documents ADD COLUMN label TEXT NOT NULL DEFAULT ''") } catch {}
-  try { db.exec("ALTER TABLE documents ADD COLUMN description TEXT NOT NULL DEFAULT ''") } catch {}
-  try {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS line_item_photos (
-        id               TEXT PRIMARY KEY,
-        line_item_id     INTEGER NOT NULL REFERENCES line_items(id) ON DELETE CASCADE,
-        filename         TEXT NOT NULL,
-        mime_type        TEXT NOT NULL DEFAULT 'application/octet-stream',
-        storage_key      TEXT NOT NULL,
-        storage_adapter  TEXT NOT NULL DEFAULT 'blob',
-        size_bytes       INTEGER NOT NULL DEFAULT 0,
-        uploaded_at      TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-      CREATE INDEX IF NOT EXISTS idx_line_item_photos_item ON line_item_photos(line_item_id);
-    `)
-  } catch {}
+  runMigration("ALTER TABLE claims ADD COLUMN custom_type_name TEXT NOT NULL DEFAULT ''", 'claims.custom_type_name')
+  runMigration("ALTER TABLE documents ADD COLUMN label TEXT NOT NULL DEFAULT ''", 'documents.label')
+  runMigration("ALTER TABLE documents ADD COLUMN description TEXT NOT NULL DEFAULT ''", 'documents.description')
+  runMigration(`
+    CREATE TABLE IF NOT EXISTS line_item_photos (
+      id               TEXT PRIMARY KEY,
+      line_item_id     INTEGER NOT NULL REFERENCES line_items(id) ON DELETE CASCADE,
+      filename         TEXT NOT NULL,
+      mime_type        TEXT NOT NULL DEFAULT 'application/octet-stream',
+      storage_key      TEXT NOT NULL,
+      storage_adapter  TEXT NOT NULL DEFAULT 'blob',
+      size_bytes       INTEGER NOT NULL DEFAULT 0,
+      uploaded_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_line_item_photos_item ON line_item_photos(line_item_id);
+  `, 'create.line_item_photos')
 }
 
 export function resetSchema() {

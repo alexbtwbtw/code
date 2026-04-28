@@ -46,4 +46,4 @@ unity/
 !*.tfvars.example
 terraform.tfplan
 crash.log
-override.tf
+override.tf.playwright-mcp/

@@ -53,6 +53,8 @@ jobs:
           cd dinaxis/backend
           zip -r ../../dinaxis-backend-artifact.zip dist/ package.json package-lock.json ecosystem.config.cjs
           cd ../..
+          ARTIFACT_HASH=$(sha256sum dinaxis-backend-artifact.zip | awk '{print $1}')
+          echo "DINAXIS_ARTIFACT_HASH=$ARTIFACT_HASH" >> "$GITHUB_ENV"
           echo "Dinaxis artifact size: $(du -sh dinaxis-backend-artifact.zip | cut -f1)"
 
       # ── Sync nginx config via SSM ──────────────────────────────────────────
@@ -113,6 +115,9 @@ jobs:
           # Download artifact from S3
           aws s3 cp s3://${S3_BUCKET}/deployments/dinaxis-backend-artifact.zip /tmp/dinaxis-backend-artifact.zip
 
+          # Verify artifact integrity
+          echo '${DINAXIS_ARTIFACT_HASH}  /tmp/dinaxis-backend-artifact.zip' | sha256sum -c - || { echo "Artifact hash mismatch!"; exit 1; }
+
           # Extract artifact
           mkdir -p /app-dinaxis /var/log/dinaxis
           cd /app-dinaxis
@@ -152,6 +157,7 @@ jobs:
           DINAXIS_DEPLOY_HASH=$(sha256sum dinaxis-deploy.sh | awk '{print $1}')
           [[ "$DINAXIS_DEPLOY_HASH" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid hash"; exit 1; }
           echo "DINAXIS_DEPLOY_HASH=$DINAXIS_DEPLOY_HASH" >> "$GITHUB_ENV"
+          [[ "$DINAXIS_ARTIFACT_HASH" =~ ^[0-9a-f]{64}$ ]] || { echo "Invalid artifact hash"; exit 1; }
           aws s3 cp dinaxis-backend-artifact.zip s3://${{ vars.FILES_BUCKET_NAME }}/deployments/dinaxis-backend-artifact.zip
           aws s3 cp dinaxis-deploy.sh s3://${{ vars.FILES_BUCKET_NAME }}/deployments/dinaxis-deploy.sh
 

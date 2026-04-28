@@ -1,5 +1,6 @@
 import { db } from '../db'
 import { getStorageAdapter } from '../lib/storage'
+import { logAudit } from '../lib/audit'
 import {
   type Document,
   type DocumentComment,
@@ -40,6 +41,7 @@ export function createDocument(params: {
     params.description ?? '',
   )
   const row = db.prepare('SELECT * FROM documents WHERE id = ?').get(params.id) as RawDocument
+  logAudit('CREATE', 'document', params.id, { filename: params.filename, claimId: params.claimId })
   return mapDocument(row)
 }
 
@@ -72,11 +74,13 @@ export function deleteDocument(id: string): { deleted: boolean } {
 
   try {
     getStorageAdapter().delete(doc.storageKey)
-  } catch {
-    // storage delete failures should not block DB delete
+  } catch (err) {
+    console.error(`[audit] storage delete failed for document ${id} (key: ${doc.storageKey}):`, err)
+    return { deleted: false }
   }
 
   const result = db.prepare('DELETE FROM documents WHERE id = ?').run(id)
+  logAudit('DELETE', 'document', id, { filename: doc.filename, claimId: doc.claimId })
   return { deleted: result.changes > 0 }
 }
 
