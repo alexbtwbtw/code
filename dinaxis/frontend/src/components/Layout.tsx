@@ -31,6 +31,16 @@ const navItems: Array<{ label: string; page: Page; icon: React.ReactNode }> = [
     ),
   },
   {
+    label: 'Peritos',
+    page: { view: 'experts' },
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.25" fill="none"/>
+        <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" fill="none"/>
+      </svg>
+    ),
+  },
+  {
     label: 'Seguradoras',
     page: { view: 'insurers' },
     icon: (
